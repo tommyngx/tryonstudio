@@ -1,6 +1,5 @@
 'use client'
-
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Wand2, Sun, Moon, Droplets, Diamond, SlidersHorizontal, Loader2, Sparkles, Palette, Camera, Film, Eraser, Clock, Zap, Smartphone } from 'lucide-react'
 
@@ -40,6 +39,19 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
   const charCount = prompt.length
   const canSubmit = hasImage && !loading && (prompt.trim().length > 0)
 
+  // Debug panel state changes to verify why submit might be disabled
+  useEffect(() => {
+    try {
+      console.log('[AiEditPanel] state', {
+        isOpen,
+        hasImage,
+        loading,
+        charCount,
+        canSubmit
+      })
+    } catch {}
+  }, [isOpen, hasImage, loading, charCount, canSubmit])
+
   const handlePreset = async (presetPrompt: string) => {
     if (!hasImage || loading) return
     setLoading(true)
@@ -51,9 +63,29 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
   }
 
   const handleCustom = async () => {
-    if (!canSubmit) return
+    // Always log click attempt to diagnose disabled states
+    try {
+      console.log('[AiEditPanel] Submit click attempt', {
+        hasImage,
+        loading,
+        promptLength: prompt.trim().length,
+        canSubmit
+      })
+    } catch {}
+
+    if (!canSubmit) {
+      if (!hasImage) {
+        alert('Önce bir try-on sonucu oluşturun veya bir geçmiş görseli seçin.')
+      } else if (loading) {
+        alert('İşlem devam ediyor, lütfen bekleyin.')
+      } else if (prompt.trim().length === 0) {
+        alert('Lütfen bir prompt girin.')
+      }
+      return
+    }
     setLoading(true)
     try {
+      console.log('[AiEditPanel] Submit clicked', { promptLength: prompt.trim().length, strength })
       const resp = await onSubmit({ prompt: prompt.trim(), strength, actionType: 'custom' })
       if (resp) {
         setPrompt('')

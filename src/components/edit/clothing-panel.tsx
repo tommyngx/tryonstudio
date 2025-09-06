@@ -216,46 +216,16 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       return
     }
     
-    setIsProcessing(true)
-    
+    // Not: API çağrısı UI bileşeni içinde yapılmamalıdır. 
+    // Bu bileşen yalnızca kullanıcının yüklediği kıyafet görselini parent'a iletir.
+    // Böylece tek bir merkezde (Edit sayfası) inference çağrısı yapılır ve çift çağrı/yanlış veri rolü sorunları engellenir.
     try {
-      // Model görselini yükle ve base64'e çevir
-      const response = await fetch(selectedModel)
-      const blob = await response.blob()
-      const modelFile = new File([blob], 'model.jpg', { type: 'image/jpeg' })
-      const modelImageData = await convertFileToBase64(modelFile)
-      const modelBase64 = modelImageData.split(',')[1]
-      
-      // Nano Banana API çağrısı
-      const apiResponse = await fetch('/api/nano-banana', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          modelImage: modelBase64,
-          clothingImage: clothingImageData,
-          clothingType: clothingType,
-          options: {}
-        }),
-      })
-      
-      const result = await apiResponse.json()
-      
-      if (result.success && result.data.generatedImage) {
-        // Sonucu parent component'e gönder
-        if (onTryOn) {
-          onTryOn(result.data.generatedImage, clothingType)
-        }
-      } else {
-        alert(`Virtual try-on başarısız: ${result.error || 'Bilinmeyen hata'}`)
+      if (onTryOn) {
+        await onTryOn(clothingImageData, clothingType)
       }
-      
     } catch (error) {
-      console.error('Virtual try-on hatası:', error)
-      alert('Virtual try-on işlemi başarısız oldu')
-    } finally {
-      setIsProcessing(false)
+      console.error('Virtual try-on tetikleme hatası:', error)
+      alert('Virtual try-on işlemi başlatılamadı')
     }
   }
 

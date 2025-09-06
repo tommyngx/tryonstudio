@@ -13,6 +13,13 @@ Tarih: 2025-09-06 16:45 (+03:00)
   - `aiLastResponse: AiResponseMeta | null`
 - `ControlPanel` içine paneli açan buton eklendi.
 
+### Tek Parça Akış Refaktörü (2025-09-06 18:52 +03:00)
+- Tek parça kıyafet denemesinde çift inference sorunu giderildi.
+- UI bileşeni `src/components/edit/clothing-panel.tsx` artık inference çağrısı yapmıyor; yalnızca ham base64 kıyafet görselini parent `src/app/edit/page.tsx`'e iletiyor.
+- Tüm inference işlemleri tek merkezden (`handleTryOnResult`) yönetiliyor. Bu sayede veri rolü karışıklığı ve alakasız sonuçlar engellendi.
+- `clothingType` normalizasyonu eklendi (UI'dan `single` gelirse `kıyafet` olarak kullanılır). API rotasında da aynı normalizasyon uygulanır.
+- Güvenli debug logları eklendi: base64 uzunlukları ve bayraklar loglanır, içerik sızdırılmaz.
+
 ### Collapsible Panel Revizyonu (2025-09-06 18:38 +03:00)
 - Sağ AI paneli, flex child yerine overlay olacak şekilde `absolute right-0 top-0` konumlandırıldı (`src/components/edit/ai-edit-panel.tsx`). Bu sayede kapalıyken layout'ta boşluk/şerit bırakmıyor.
 - Panel açıkken içeriklerin kapanmaması için ana orta konteynerde koşullu sağ padding uygulandı: `pr-[320px] md:pr-[380px]` (`src/app/edit/page.tsx`). Padding değeri panel genişliği ile uyumludur.

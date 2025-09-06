@@ -39,6 +39,7 @@ export default function EditPage() {
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(100)
+  const [isEditing, setIsEditing] = useState(false) // AI Edit async indicator
 
   // AI Düzenleme Paneli ve History yönetimi
   const [editHistory, setEditHistory] = useState<EditHistoryItem[]>([])
@@ -52,6 +53,16 @@ export default function EditPage() {
       ? (tryOnResult ?? null)
       : (editHistory[selectedImageIndex]?.imageUrl ?? null)
     setProcessedImage(selected)
+    // Debug selection changes
+    try {
+      console.log('[Gallery] Selection changed', {
+        selectedImageIndex,
+        hasTryOn: !!tryOnResult,
+        historyCount: editHistory.length,
+        pickedIs: selectedImageIndex === -1 ? 'original' : `history_${selectedImageIndex}`,
+        processedSet: !!selected
+      })
+    } catch {}
   }, [selectedImageIndex, editHistory, tryOnResult])
 
   // Panel açık/kapalı durumunu localStorage'da sakla ve klavye kısayollarını yönet
@@ -107,11 +118,26 @@ export default function EditPage() {
         reader.readAsDataURL(modelBlob)
       })
 
+      // clothingType normalizasyonu
+      const normalizedType = clothingType === 'single' ? 'kıyafet' : clothingType
+
+      // Debug loglar (içerik sızdırmadan uzunluk/metrik)
+      try {
+        console.log('[TryOn] Request prepared', {
+          clothingTypeRaw: clothingType,
+          clothingType: normalizedType,
+          modelBase64Length: modelBase64?.length || 0,
+          clothingBase64Length: clothingImageData?.length || 0,
+          isMultiGarment: !!(additionalClothing && additionalClothing.length > 0),
+          additionalCount: additionalClothing?.length || 0
+        })
+      } catch {}
+
       // API çağrısını hazırla
       const requestBody = {
         modelImage: modelBase64,
         clothingImage: clothingImageData,
-        clothingType,
+        clothingType: normalizedType,
         additionalClothing: additionalClothing || []
       }
 
@@ -321,6 +347,15 @@ export default function EditPage() {
 
         {/* Orta Bölge: Model Görüntüleyici + Thumbnail Galeri + AI Panel */}
         <div className={`flex-1 flex overflow-hidden relative`}>
+          {/* Global editing overlay for AI Edit operations */}
+          {isEditing && (
+            <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
+              <div className="absolute inset-0 bg-white/60" />
+              <div className="relative z-10 px-4 py-2 rounded-lg bg-white shadow border border-gray-200 text-sm text-gray-700">
+                AI editing in progress...
+              </div>
+            </div>
+          )}
           {/* Sol: Görüntüleyici + Alt Kontroller */}
           <div className="flex-1 flex flex-col">
             <ModelViewer
@@ -355,7 +390,10 @@ export default function EditPage() {
             originalImage={tryOnResult}
             history={editHistory}
             selectedIndex={selectedImageIndex}
-            onSelect={setSelectedImageIndex}
+            onSelect={(idx) => {
+              try { console.log('[Gallery] onSelect', { idx }) } catch {}
+              setSelectedImageIndex(idx)
+            }}
           />
 
           {/* Sağ kenar açma togglesı - Panel kapalıyken görünür (sihirli parıltı efekti) */}
@@ -426,13 +464,25 @@ export default function EditPage() {
             hasImage={!!tryOnResult || editHistory.length > 0}
             onSubmit={async ({ prompt, strength, actionType }) => {
               try {
-                // Kullanılacak taban görsel: seçili history veya orijinal try-on
+                setIsEditing(true)
+                // Base image policy: Edit over CURRENT SELECTION if any; otherwise original try-on
                 const base = selectedImageIndex === -1
                   ? tryOnResult
                   : editHistory[selectedImageIndex]?.imageUrl
 
                 if (!base) return null
                 const base64 = base.includes(',') ? base.split(',')[1] : base
+
+                // Debug which base is used
+                try {
+                  console.log('[AI Edit] Submitting edit', {
+                    selectedImageIndex,
+                    usedBase: selectedImageIndex === -1 ? 'original_tryon' : 'history_item',
+                    base64Length: base64?.length || 0,
+                    promptLength: prompt?.length || 0,
+                    strength
+                  })
+                } catch {}
 
                 const resp = await fetch('/api/nano-banana-edit', {
                   method: 'POST',
@@ -457,13 +507,19 @@ export default function EditPage() {
                   meta: { ...meta, actionType, createdAt: new Date().toISOString() }
                 }
 
-                setEditHistory(prev => [...prev, item])
+                // History'ye ekle ve en son eklenen index'i güvenli şekilde seç
+                setEditHistory(prev => {
+                  const next = [...prev, item]
+                  setSelectedImageIndex(next.length - 1)
+                  return next
+                })
                 setAiLastResponse(meta)
-                setSelectedImageIndex(editHistory.length) // yeni eklenen index
                 return meta
               } catch (e) {
                 console.error('AI edit error', e)
                 return null
+              } finally {
+                setIsEditing(false)
               }
             }}
           />

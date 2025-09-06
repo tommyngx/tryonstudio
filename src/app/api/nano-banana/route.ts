@@ -27,29 +27,82 @@ function getMimeTypeFromBase64(base64String: string): string {
   return 'image/jpeg';
 }
 
-// Tek kıyafet için virtual try-on prompt'u oluştur
-function createSingleTryOnPrompt(clothingType: string = 'kıyafet'): string {
-  return `Bu ${clothingType}u modelin üzerinde doğal ve gerçekçi bir şekilde göster. 
-  Kıyafetin model üzerindeki görünümünü, kırışıklıkları, gölgeleri ve ışık-gölge etkilerini 
-  doğru bir şekilde yansıt. Modelin vücut hatları ve duruşunu koruyarak, 
-  kıyafetin ona uygun olduğunu göster. Sonuç profesyonel bir ürün fotoğrafı kalitesinde olsun.`;
+// Üst giyim için prompt (sadece üst değişsin)
+function createUpperOnlyPrompt(): string {
+  return `Follow these rules strictly. Use the given MODEL PHOTO as the base and change ONLY THE UPPER GARMENT:
+
+  PRIMARY GOAL:
+  - Keep the model IDENTICAL: face/identity, hair, skin tone, body proportions, pose, camera angle and BACKGROUND MUST NOT change.
+  - Dress ONLY THE UPPER GARMENT; do not alter lower garment, scene or background.
+
+  VISUAL CONSISTENCY:
+  - Keep lighting/shadows, perspective and scale consistent with the model photo.
+  - Fabric texture, wrinkles, seams and contact shadows must be realistic.
+  - Apply natural masking and edge blending around arms/shoulders (no halo/edge glow).
+
+  CONSTRAINTS:
+  - Do NOT change face/hair/skin tone/body shape/BACKGROUND.
+  - Do NOT add accessories/logos/text.
+  - Do NOT change framing or resolution.`;
+}
+
+// Alt giyim için prompt (sadece alt değişsin)
+function createLowerOnlyPrompt(): string {
+  return `Follow these rules strictly. Use the given MODEL PHOTO as the base and change ONLY THE LOWER GARMENT:
+
+  PRIMARY GOAL:
+  - Keep the model IDENTICAL: face/identity, hair, skin tone, body proportions, pose, camera angle and BACKGROUND MUST NOT change.
+  - Dress ONLY THE LOWER GARMENT; do not alter upper garment, scene or background.
+
+  VISUAL CONSISTENCY:
+  - Keep lighting/shadows, perspective and scale consistent with the model photo.
+  - Fabric texture, wrinkles, seams and contact shadows must be realistic.
+  - Apply natural masking and edge blending around waist/hips/knee areas.
+
+  CONSTRAINTS:
+  - Do NOT change face/hair/skin tone/body shape/BACKGROUND.
+  - Do NOT add accessories/logos/text.
+  - Do NOT change framing or resolution.`;
+}
+
+// Tek parça elbise (dress) için prompt (tam gövde elbise değişimi / yekpare)
+function createDressPrompt(): string {
+  return `Follow these rules strictly. Use the given MODEL PHOTO as the base and dress a ONE-PIECE DRESS:
+
+  PRIMARY GOAL:
+  - Keep the model IDENTICAL: face/identity, hair, skin tone, body proportions, pose, camera angle and BACKGROUND MUST NOT change.
+  - The one-piece dress should naturally fit the body, remaining consistent from top to bottom.
+
+  VISUAL CONSISTENCY:
+  - Keep lighting/shadows, perspective and scale consistent with the model photo.
+  - Fabric behavior and wrinkles must be realistic; produce natural transitions and contact shadows at shoulders/waist/hips/hemline.
+
+  CONSTRAINTS:
+  - Do NOT change face/hair/skin tone/body shape/BACKGROUND.
+  - Do NOT add accessories or fabricate logos/text.
+  - Do NOT change framing or resolution.`;
 }
 
 // Çoklu kıyafet (üst+alt) için özel prompt oluştur
 function createMultiGarmentPrompt(upperType: string, lowerType: string): string {
-  return `Bu modelin üzerinde hem üst giyim (${upperType}) hem de alt giyim (${lowerType}) 
-  birlikte doğal ve uyumlu bir şekilde göster. 
-  
-  ÖNEMLİ KURALLAR:
-  - İki kıyafet de aynı anda modelin üzerinde görünmeli
-  - Üst giyim ve alt giyim arasında doğal bir geçiş olmalı
-  - Kıyafetlerin renkleri ve stilleri uyumlu görünmeli
-  - Her iki kıyafetin de kırışıklıkları, gölgeleri ve ışık etkilerini doğru yansıt
-  - Modelin vücut hatları korunmalı ve kıyafetler ona tam uymalı
-  - Sonuç komple bir outfit görüntüsü olmalı, profesyonel ürün fotoğrafı kalitesinde
-  - Kıyafetler birbirini tamamlamalı ve tek bir koordineli görünüm oluşturmalı
-  
-  Lütfen tam vücut görüntüsü oluştur, hem üst hem alt kıyafet tamamen görünür olsun.`;
+  return `Follow these rules strictly. Use the given MODEL PHOTO as the base and dress both ${upperType} and ${lowerType}:
+
+  PRIMARY GOAL:
+  - Keep the model IDENTICAL: face/identity, hair, skin tone, body proportions, pose, camera angle and BACKGROUND MUST NOT change.
+  - Dress the garments only; do not alter the scene, background, or add accessories.
+
+  VISUAL CONSISTENCY:
+  - ${upperType} and ${lowerType} must look coordinated and consistent together.
+  - Natural transitions at waist/hips/shoulders, realistic fabric behavior and contact shadows.
+  - Perspective, scale, lighting consistent with the model photo.
+
+  CONSTRAINTS:
+  - Do NOT change face/hair/skin tone/body shape/BACKGROUND.
+  - Do NOT add accessories or fabricate logos/text.
+  - Do NOT change framing or resolution.
+
+  GOAL:
+  - A professional product-shoot quality full outfit; both ${upperType} and ${lowerType} should appear clearly and naturally on the model.`;
 }
 
 // Hata yanıtı oluştur
@@ -95,6 +148,19 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Google Vision API key bulunamadı', 500);
     }
 
+    // clothingType normalizasyonu
+    // Varsayılan: tek parça yüklemelerde üst giyim değişsin (best practice)
+    // İsim eşleştirmeleri: 'single' | 'kıyafet' => 'upper', 'elbise' | 'dress' => 'dress'
+    let normalizedType = (clothingType || '').toLowerCase();
+    if (normalizedType === 'single' || normalizedType === 'kıyafet') {
+      normalizedType = 'upper';
+    } else if (['elbise', 'dress', 'tek parça elbise'].includes(normalizedType)) {
+      normalizedType = 'dress';
+    } else if (!['upper', 'lower', 'dress'].includes(normalizedType)) {
+      // Güvenli varsayılan
+      normalizedType = 'upper';
+    }
+
     // Base64 stringlerden MIME tiplerini belirle
     const modelMimeType = getMimeTypeFromBase64(modelImage);
     const clothingMimeType = getMimeTypeFromBase64(clothingImage);
@@ -111,6 +177,18 @@ export async function POST(request: NextRequest) {
 
     // Çoklu kıyafet mi tek kıyafet mi kontrol et
     const isMultiGarment = additionalClothing && additionalClothing.length > 0;
+
+    // Güvenli debug loglar (içerik yazmadan metrik)
+    try {
+      console.log('[NanoBanana] Incoming request', {
+        clothingTypeRaw: clothingType,
+        clothingType: normalizedType,
+        modelLen: modelImage?.length || 0,
+        clothingLen: clothingImage?.length || 0,
+        isMultiGarment,
+        additionalCount: additionalClothing?.length || 0
+      });
+    } catch {}
     
     let prompt: string;
     let contents: any[] = [];
@@ -118,8 +196,8 @@ export async function POST(request: NextRequest) {
     if (isMultiGarment) {
       // Çoklu kıyafet için (üst+alt)
       const additionalItem = additionalClothing[0];
-      const upperType = clothingType === 'upper' ? 'üst giyim' : 'alt giyim';
-      const lowerType = clothingType === 'upper' ? 'alt giyim' : 'üst giyim';
+      const upperType = normalizedType === 'upper' ? 'upper garment' : 'lower garment';
+      const lowerType = normalizedType === 'upper' ? 'lower garment' : 'upper garment';
       
       prompt = createMultiGarmentPrompt(upperType, lowerType);
       
@@ -149,8 +227,15 @@ export async function POST(request: NextRequest) {
         }
       ];
     } else {
-      // Tek kıyafet için
-      prompt = createSingleTryOnPrompt(clothingType);
+      // Tek kıyafet için tür bazlı prompt
+      if (normalizedType === 'upper') {
+        prompt = createUpperOnlyPrompt();
+      } else if (normalizedType === 'lower') {
+        prompt = createLowerOnlyPrompt();
+      } else {
+        // 'dress'
+        prompt = createDressPrompt();
+      }
       
       contents = [
         { text: prompt },
@@ -220,7 +305,7 @@ export async function POST(request: NextRequest) {
     return createSuccessResponse({
       generatedImage: generatedImageData,
       mimeType: 'image/png', // Nano Banana genellikle PNG döndürür
-      clothingType,
+      clothingType: normalizedType,
       isMultiGarment, // Çoklu kıyafet mi belirtir
       garmentCount: isMultiGarment ? additionalClothing.length + 1 : 1,
       prompt: prompt,

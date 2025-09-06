@@ -7,6 +7,9 @@
 - [x] Try-on sonrası panel otomatik açılır
 - [x] ControlPanel: "AI Düzenle" butonu
 - [x] API Stub: `src/app/api/nano-banana-edit/route.ts`
+- [x] Tek parça akışında inference sadece `EditPage` üzerinden çağrılır (UI içinden çift çağrı yok)
+- [x] `clothingType` normalizasyonu (single → kıyafet) ve prompt tutarlılığı
+- [x] Güvenli debug logları (base64 uzunluk metrikleri, flag'ler) eklendi
 - [ ] Undo/Redo ileri-geri butonları (opsiyonel)
 - [ ] Gerçek AI edit servisine entegrasyon (API key, güvenlik)
 - [ ] İndirme/Paylaşma entegrasyonları (export options)

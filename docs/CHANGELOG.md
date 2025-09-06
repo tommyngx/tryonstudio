@@ -22,3 +22,11 @@
  - 18:30: Collapsible AI Edit Panel improvements: added right-edge toggle button to reopen panel when closed, persisted panel open state in localStorage, and introduced keyboard shortcuts (Esc to close, Ctrl/Cmd+E to toggle). Removed FAB to avoid overlay conflicts and white-space issues.
 
  - 18:38: Converted AI Edit Panel to absolute overlay (right:0, top:0) and added conditional right padding (`pr-[320px] md:pr-[380px]`) to the main content container to prevent overlap with the bottom control panel and gallery.
+
+ - 18:52: Fixed double-inference bug in single garment flow by removing internal API call from `src/components/edit/clothing-panel.tsx` and delegating inference to parent `src/app/edit/page.tsx` only.
+ - 18:52: Normalized `clothingType` (maps `single` → `kıyafet`) in `src/app/edit/page.tsx` and `src/app/api/nano-banana/route.ts` to prevent malformed prompts and improve model guidance.
+ - 18:52: Added safe debug logging (base64 length metrics, flags) to `handleTryOnResult` and `nano-banana` API route for better observability without leaking image contents.
+
+ - 18:59: Converted all try-on prompts to English and specialized by garment type: added separate prompts for upper-only, lower-only, dress, and retained multi-garment prompt. Normalized `clothingType` mapping (single→upper, dress aliases→dress) in `src/app/api/nano-banana/route.ts`.
+
+ - 19:02: Edit flow policy updated in `src/app/edit/page.tsx`: AI Edit requests now ALWAYS use the ORIGINAL try-on output as the base image when sending to `/api/nano-banana-edit`. New results are appended to history with a new sequential item and auto-selected.
