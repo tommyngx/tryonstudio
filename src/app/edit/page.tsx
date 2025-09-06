@@ -358,16 +358,59 @@ export default function EditPage() {
             onSelect={setSelectedImageIndex}
           />
 
-          {/* Sağ kenar açma togglesı - Panel kapalıyken görünür */}
+          {/* Sağ kenar açma togglesı - Panel kapalıyken görünür (sihirli parıltı efekti) */}
           {!isAiPanelOpen && (
-            <button
+            <motion.button
               onClick={() => setIsAiPanelOpen(true)}
-              className="absolute top-1/2 -translate-y-1/2 right-0 z-30 bg-white border border-gray-200 rounded-l-lg py-3 px-2 shadow hover:bg-gray-50"
+              className="absolute top-1/2 -translate-y-1/2 right-0 z-30 bg-white border border-gray-200 rounded-l-lg py-3 px-2 shadow hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-300"
               title="AI Düzenle panelini aç"
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.25 }}
             >
-              <Sparkles className="w-4 h-4 text-purple-600" />
+              {/* Parıltı aura - yumuşak nefes efekti */}
+              <motion.span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-l-lg"
+                animate={{ boxShadow: [
+                  '0 0 0px rgba(168,85,247,0.0)',
+                  '0 0 14px rgba(168,85,247,0.35)',
+                  '0 0 0px rgba(168,85,247,0.0)'
+                ]}}
+                transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+              />
+
+              {/* Şerit highlight - sağ kenardan içeri doğru kayar */}
+              <motion.span
+                aria-hidden
+                className="pointer-events-none absolute -inset-0.5 rounded-l-lg bg-gradient-to-r from-purple-400/0 via-purple-400/25 to-purple-400/0"
+                initial={{ x: 16, opacity: 0 }}
+                animate={{ x: [-8, 8, -8], opacity: [0, 1, 0] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+              />
+
+              {/* İkon - hafif titreşim ve parıldama */}
+              <motion.span
+                aria-hidden
+                className="relative block"
+                animate={{ rotate: [0, 8, 0, -6, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                {/* mini sparkle noktaları */}
+                <motion.span
+                  className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-fuchsia-400/80"
+                  animate={{ opacity: [0, 1, 0], scale: [0.6, 1, 0.6], y: [-1, -3, -1] }}
+                  transition={{ duration: 1.6, repeat: Infinity }}
+                />
+                <motion.span
+                  className="absolute -bottom-1 -left-1 w-1 h-1 rounded-full bg-amber-300/80"
+                  animate={{ opacity: [0, 1, 0], scale: [0.6, 1, 0.6], y: [1, 3, 1] }}
+                  transition={{ duration: 2.1, repeat: Infinity, delay: 0.4 }}
+                />
+              </motion.span>
               <span className="sr-only">AI Düzenle</span>
-            </button>
+            </motion.button>
           )}
 
           {/* Spacer: Panel alanını rezerve ederek alt kontrollerin kapanmasını engeller */}
