@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Upload, 
@@ -20,6 +20,9 @@ import { ModelViewer } from '@/components/edit/model-viewer'
 import { ControlPanel } from '@/components/edit/control-panel'
 import { VideoPlayer } from '@/components/edit/video-player'
 import { useRouter } from 'next/navigation'
+import { ThumbnailGallery, EditHistoryItem } from '@/components/edit/thumbnail-gallery'
+import { AiEditPanel } from '@/components/edit/ai-edit-panel'
+import { AiResponseMeta } from '@/components/edit/ai-response-card'
 
 export default function EditPage() {
   const router = useRouter()
@@ -36,6 +39,20 @@ export default function EditPage() {
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(100)
+
+  // AI Düzenleme Paneli ve History yönetimi
+  const [editHistory, setEditHistory] = useState<EditHistoryItem[]>([])
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1) // -1: orijinal (try-on sonucu)
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false)
+  const [aiLastResponse, setAiLastResponse] = useState<AiResponseMeta | null>(null)
+
+  // Seçime göre görüntülenecek işlenmiş görseli güncelle
+  useEffect(() => {
+    const selected = selectedImageIndex === -1
+      ? (tryOnResult ?? null)
+      : (editHistory[selectedImageIndex]?.imageUrl ?? null)
+    setProcessedImage(selected)
+  }, [selectedImageIndex, editHistory, tryOnResult])
 
   // Nano Banana Virtual Try-On callback'i
   const handleTryOnResult = async (clothingImageData: string, clothingType: string, additionalClothing?: any[]) => {
@@ -83,7 +100,9 @@ export default function EditPage() {
         // Base64 görselini data URL formatına çevir
         const imageDataUrl = `data:image/png;base64,${result.data.generatedImage}`
         setTryOnResult(imageDataUrl)
-        setProcessedImage(imageDataUrl)
+        // Try-on sonrası paneli otomatik aç ve orijinali seçili yap
+        setIsAiPanelOpen(true)
+        setSelectedImageIndex(-1)
         
         console.log('Virtual try-on başarılı:', {
           isMultiGarment: result.data.isMultiGarment,
@@ -264,32 +283,93 @@ export default function EditPage() {
           />
         </div>
 
-        {/* Ana İçerik - Model Görüntüleyici */}
-        <div className="flex-1 flex flex-col">
-          <ModelViewer
-            userPhoto={tryOnResult || selectedModel}
-            processedImage={processedImage}
-            selectedClothes={selectedClothes}
-            isProcessing={isProcessing}
-            zoomLevel={zoomLevel}
-            onPhotoUpload={setUserPhoto}
-            onVideoShowcase={handleVideoShowcase}
-            isVideoGenerating={isVideoGenerating}
-          />
-
-          {/* Alt Kontrol Paneli */}
-          <div className="bg-white border-t border-gray-200 p-4">
-            <ControlPanel
-              onTryOn={handleTryOn}
-              isProcessing={isProcessing}
-              hasPhoto={!!selectedModel}
-              hasClothes={!!(selectedClothes.single || selectedClothes.combo)}
+        {/* Orta Bölge: Model Görüntüleyici + Thumbnail Galeri + AI Panel */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Sol: Görüntüleyici + Alt Kontroller */}
+          <div className="flex-1 flex flex-col">
+            <ModelViewer
+              userPhoto={tryOnResult || selectedModel}
               processedImage={processedImage}
-              onZoomChange={setZoomLevel}
+              selectedClothes={selectedClothes}
+              isProcessing={isProcessing}
+              zoomLevel={zoomLevel}
+              onPhotoUpload={setUserPhoto}
               onVideoShowcase={handleVideoShowcase}
               isVideoGenerating={isVideoGenerating}
             />
+
+            {/* Alt Kontrol Paneli */}
+            <div className="bg-white border-t border-gray-200 p-4">
+              <ControlPanel
+                onTryOn={handleTryOn}
+                isProcessing={isProcessing}
+                hasPhoto={!!selectedModel}
+                hasClothes={!!(selectedClothes.single || selectedClothes.combo)}
+                processedImage={processedImage}
+                onZoomChange={setZoomLevel}
+                onVideoShowcase={handleVideoShowcase}
+                isVideoGenerating={isVideoGenerating}
+                onOpenAiEditPanel={() => setIsAiPanelOpen(true)}
+              />
+            </div>
           </div>
+
+          {/* Orta: Dikey Thumbnail Galerisi */}
+          <ThumbnailGallery
+            originalImage={tryOnResult}
+            history={editHistory}
+            selectedIndex={selectedImageIndex}
+            onSelect={setSelectedImageIndex}
+          />
+
+          {/* Sağ: AI Düzenleme Paneli */}
+          <AiEditPanel
+            isOpen={isAiPanelOpen}
+            onClose={() => setIsAiPanelOpen(false)}
+            hasImage={!!tryOnResult || editHistory.length > 0}
+            onSubmit={async ({ prompt, strength, actionType }) => {
+              try {
+                // Kullanılacak taban görsel: seçili history veya orijinal try-on
+                const base = selectedImageIndex === -1
+                  ? tryOnResult
+                  : editHistory[selectedImageIndex]?.imageUrl
+
+                if (!base) return null
+                const base64 = base.includes(',') ? base.split(',')[1] : base
+
+                const resp = await fetch('/api/nano-banana-edit', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ baseImage: base64, prompt, strength })
+                })
+
+                const data = await resp.json()
+                if (!data.success || !data.data?.generatedImage) return null
+
+                const newDataUrl = `data:image/png;base64,${data.data.generatedImage}`
+                const meta: AiResponseMeta = {
+                  prompt,
+                  strength,
+                  durationMs: data.data.meta?.durationMs ?? 0,
+                  model: data.data.meta?.model ?? 'edit-stub-v1'
+                }
+
+                const item: EditHistoryItem = {
+                  id: `edit_${Date.now()}`,
+                  imageUrl: newDataUrl,
+                  meta: { ...meta, actionType, createdAt: new Date().toISOString() }
+                }
+
+                setEditHistory(prev => [...prev, item])
+                setAiLastResponse(meta)
+                setSelectedImageIndex(editHistory.length) // yeni eklenen index
+                return meta
+              } catch (e) {
+                console.error('AI edit error', e)
+                return null
+              }
+            }}
+          />
         </div>
       </div>
 

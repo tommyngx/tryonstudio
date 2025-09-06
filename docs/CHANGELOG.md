@@ -1,0 +1,20 @@
+# CHANGELOG
+
+## 2025-09-06
+
+- 16:45: Added right-side AI Edit Panel (`src/components/edit/ai-edit-panel.tsx`) with collapsible design, preset prompts, custom prompt textarea (500 chars), real-time counter, strength slider (0.1–1.0), and response card.
+- 16:45: Added vertical Thumbnail Gallery (`src/components/edit/thumbnail-gallery.tsx`) to display original try-on image and edit history as small thumbnails with selection and badges.
+- 16:45: Implemented AI Response Card (`src/components/edit/ai-response-card.tsx`) to show prompt, strength, duration and model info with gradient style.
+- 16:45: Integrated panel and gallery into Edit page (`src/app/edit/page.tsx`): added state management (`editHistory`, `selectedImageIndex`, `isAiPanelOpen`, `aiLastResponse`), auto-open panel after try-on, and full wiring.
+- 16:45: Updated `ControlPanel` (`src/components/edit/control-panel.tsx`) to include an "AI Düzenle" button that opens the panel when a result exists.
+- 16:45: Added API stub for AI editing at `src/app/api/nano-banana-edit/route.ts` returning simulated results and meta.
+ - 16:56: Polished `AiEditPanel` to match provided design: gradient header icon, compact 2x2 quick actions, list-style preset items with emojis, disabled textarea when no image, percentage label for slider, Hafif/Güçlü labels, and sticky bottom action bar with primary gradient button.
+ - 16:56: Refactored `ThumbnailGallery` to fixed 24-width sidebar equivalent (`w-24`) with "Geçmiş" header and list-style thumbnails (3:4 aspect), matching screenshot layout.
+ - 16:59: Completely redesigned `AiEditPanel` to match exact UI from provided screenshot: gradient purple header background, colorful quick action cards with gradients, emoji-based preset list with gray backgrounds, custom slider styling with purple fill, and bottom action bar with "Send element" button.
+ - 17:02: Removed "Send console errors" button from AI Edit Panel, simplified bottom action bar to show only the main "AI ile Düzenle" button at full width.
+ - 17:03: Updated AI Edit Panel layout: changed button to purple-pink gradient, made preset prompts smaller (2x2 grid, 10px font), and made input area fixed at bottom to prevent page overflow.
+ - 17:05: Removed AI Response Card (düzenleme detayları) from AI Edit Panel to simplify the interface - no more detail cards shown after editing.
+ - 17:06: Fixed UI issues in AI Edit Panel: added safe area below button (pb-6) and fixed slider overflow issue where purple fill was appearing in front of the slider thumb by implementing proper z-index layering.
+ - 17:07: Fixed TypeScript error in page.tsx by removing lastResponse prop from AiEditPanel component call (prop no longer exists after removing AI Response Card).
+ - 17:08: Completely redesigned slider component with modern best practices: custom thumb with hover effects, purple gradient fill, percentage badge, visual indicators for Hafif/Güçlü labels, smooth animations, and improved accessibility.
+ - 17:09: Complete AI Edit Panel optimization: fixed button positioning, compact layout (2-row textarea), single-column preset prompts, custom scrollbar, hover animations, modern button styling with lift effect, proper overflow handling, and responsive design improvements.

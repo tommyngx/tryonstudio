@@ -23,6 +23,7 @@ interface ControlPanelProps {
   onZoomChange?: (zoom: number) => void
   onVideoShowcase?: () => void
   isVideoGenerating?: boolean
+  onOpenAiEditPanel?: () => void
 }
 
 export function ControlPanel({ 
@@ -33,7 +34,8 @@ export function ControlPanel({
   processedImage,
   onZoomChange,
   onVideoShowcase,
-  isVideoGenerating
+  isVideoGenerating,
+  onOpenAiEditPanel
 }: ControlPanelProps) {
   const [processingStep, setProcessingStep] = useState('')
   const [qualityMode, setQualityMode] = useState<'fast' | 'balanced' | 'high'>('balanced')
@@ -89,6 +91,17 @@ export function ControlPanel({
         >
           <RotateCcw className="w-4 h-4" />
           <span className="text-sm">Yeniden</span>
+        </button>
+
+        {/* AI Düzenle */}
+        <button
+          onClick={onOpenAiEditPanel}
+          disabled={!hasResult || isProcessing}
+          className="flex items-center space-x-2 px-4 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          title={hasResult ? 'AI Düzenleme panelini aç' : 'Önce bir sonuç üretin'}
+        >
+          <Wand2 className="w-4 h-4" />
+          <span className="text-sm">AI Düzenle</span>
         </button>
 
         {/* 360° Video */}
