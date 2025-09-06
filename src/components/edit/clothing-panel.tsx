@@ -414,27 +414,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
               </div>
             </div>
 
-            {/* Üst+Alt Deneme Butonu */}
-            {upperClothing && lowerClothing && (
-              <button
-                onClick={handleUpperLowerTryOn}
-                disabled={isProcessing || !selectedModel}
-                className={`w-full py-3 px-4 text-sm font-medium rounded-lg transition-colors ${
-                  isProcessing || !selectedModel
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-500 to-green-500 text-white hover:from-blue-600 hover:to-green-600 shadow-md'
-                }`}
-              >
-                {isProcessing ? (
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Üst+Alt Birlikte Deneniyor...
-                  </div>
-                ) : (
-                  '🤖 AI ile Üst+Alt Dene'
-                )}
-              </button>
-            )}
+            {/* Üst+Alt Deneme Butonu kaldırıldı: sol alttaki ana buton kullanılacak */}
           </div>
         )}
 
