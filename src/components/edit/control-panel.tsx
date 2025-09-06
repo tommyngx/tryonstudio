@@ -25,6 +25,8 @@ interface ControlPanelProps {
   isVideoGenerating?: boolean
   onOpenAiEditPanel?: () => void
   onDownload?: () => void
+  onFixedTryOn?: () => void
+  canFixedTryOn?: boolean
 }
 
 export function ControlPanel({ 
@@ -37,7 +39,9 @@ export function ControlPanel({
   onVideoShowcase,
   isVideoGenerating,
   onOpenAiEditPanel,
-  onDownload
+  onDownload,
+  onFixedTryOn,
+  canFixedTryOn = false
 }: ControlPanelProps) {
   const [processingStep, setProcessingStep] = useState('')
   const [qualityMode, setQualityMode] = useState<'fast' | 'balanced' | 'high'>('balanced')
@@ -49,15 +53,7 @@ export function ControlPanel({
     <div className="flex items-center justify-between">
       {/* Sol taraf - Ana kontroller */}
       <div className="flex items-center space-x-4">
-        {/* Ana Try-On Butonu - Deaktif, ClothingPanel'daki butonları kullan */}
-        <motion.button
-          disabled={true}
-          className="flex items-center space-x-3 px-6 py-3 rounded-lg font-semibold text-base bg-gray-300 text-gray-500 cursor-not-allowed"
-          title="Kıyafet seçin ve sol paneldeki 'AI ile Dene' butonunu kullanın"
-        >
-          <Sparkles className="w-5 h-5" />
-          <span>AI ile Dene</span>
-        </motion.button>
+        {/* Not: AI ile Dene ana butonu sol panele taşındı. Buradaki buton KALDIRILDI. */}
 
         {/* Kalite Seçimi */}
         <div className="flex items-center space-x-2">

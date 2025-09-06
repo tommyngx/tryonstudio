@@ -36,3 +36,5 @@
  - 19:22: Unified Download behavior. Bottom control panel Download button now uses the same logic as the header and downloads the currently selected image (history item if selected, otherwise original try-on). Also added blob fallback for non-data URLs to ensure downloads work reliably (`src/app/edit/page.tsx`, `src/components/edit/control-panel.tsx`).
 
  - 19:23: UI polish in Clothing Panel: moved the plus icon to the LEFT of the "Tek Parça Kıyafet Ekle" text and adjusted paddings/gaps for better fit on narrow widths (`src/components/edit/clothing-panel.tsx`).
+
+ - 19:29: Refactored Try-On trigger flow. Removed per-item "AI ile Dene" button under uploaded items and introduced a fixed bottom-left main button in `ControlPanel` that becomes enabled when a try-on trigger is available (uploaded single item selected, or both upper+lower provided). Wiring done via `registerTryOnTrigger` from `ClothingPanel` → `EditPage` → `ControlPanel`. Files: `src/components/edit/clothing-panel.tsx`, `src/app/edit/page.tsx`, `src/components/edit/control-panel.tsx`.

@@ -40,6 +40,7 @@ export default function EditPage() {
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(100)
   const [isEditing, setIsEditing] = useState(false) // AI Edit async indicator
+  const [tryOnTrigger, setTryOnTrigger] = useState<(() => Promise<void> | void) | null>(null)
 
   // İndir: Seçili görseli (history seçiliyse onu, değilse orijinal try-on) indir
   const handleDownload = async () => {
@@ -399,6 +400,7 @@ export default function EditPage() {
             selectedModel={selectedModel}
             onModelSelect={setSelectedModel}
             onTryOn={handleTryOnResult}
+            registerTryOnTrigger={(fn) => setTryOnTrigger(fn)}
           />
         </div>
 
@@ -443,6 +445,8 @@ export default function EditPage() {
                 isVideoGenerating={isVideoGenerating}
                 onOpenAiEditPanel={() => setIsAiPanelOpen(true)}
                 onDownload={handleDownload}
+                onFixedTryOn={() => { try { if (tryOnTrigger) { const r = tryOnTrigger(); if (r instanceof Promise) r.catch(console.error) } } catch (e) { console.error('fixed try-on error', e) } }}
+                canFixedTryOn={!!tryOnTrigger}
               />
             </div>
           </div>

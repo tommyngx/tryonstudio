@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Upload, Info, X, Loader2 } from 'lucide-react'
+import { Plus, Upload, Info, X, Loader2, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 import { allMenClothing, getMenClothingByType, ClothingSet } from '@/data/men-clothing'
 
@@ -22,9 +22,11 @@ interface ClothingPanelProps {
   selectedModel?: string
   onModelSelect?: (modelPath: string) => void
   onTryOn?: (clothingImageData: string, clothingType: string, additionalClothing?: any[]) => void
+  // Parent, panel içindeki "AI ile Dene" tetikleyicisini kayıt edebilir
+  registerTryOnTrigger?: (fn: (() => Promise<void> | void) | null) => void
 }
 
-export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel, onModelSelect, onTryOn }: ClothingPanelProps) {
+export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel, onModelSelect, onTryOn, registerTryOnTrigger }: ClothingPanelProps) {
   const [activeTab, setActiveTab] = useState<'single' | 'combo'>('single')
   const [genderTab, setGenderTab] = useState<'men' | 'women'>('men') // Cinsiyet sekmesi
   const [uploadedClothes, setUploadedClothes] = useState<UploadedClothing[]>([])
@@ -56,8 +58,8 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
     try {
       const file = files[0]
       
-      // Dosya formatı kontrolü
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp']
+      // Dosya formatı kontrolü (HEIC/HEIF desteği eklendi)
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/heic', 'image/heif']
       if (!allowedTypes.includes(file.type)) {
         alert('Desteklenen formatlar: JPEG, PNG, WebP, GIF, BMP')
         return
@@ -83,6 +85,8 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       }
       
       setUploadedClothes(prev => [uploadedItem, ...prev])
+      // Son yüklenen öğeyi otomatik seç
+      setSelectedUploadedItem(uploadedItem.id)
       
     } catch (error) {
       console.error('Dosya yükleme hatası:', error)
@@ -101,8 +105,8 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
     try {
       const file = files[0]
       
-      // Dosya kontrolü
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp']
+      // Dosya kontrolü (HEIC/HEIF desteği eklendi)
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/heic', 'image/heif']
       if (!allowedTypes.includes(file.type)) {
         alert('Desteklenen formatlar: JPEG, PNG, WebP, GIF, BMP')
         return
@@ -126,6 +130,8 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       }
       
       setUpperClothing(upperItem)
+      // Üst giyim seçildiğinde tek parça seçimi kaldır
+      setSelectedUploadedItem(null)
       
     } catch (error) {
       console.error('Üst giyim yükleme hatası:', error)
@@ -169,6 +175,8 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       }
       
       setLowerClothing(lowerItem)
+      // Alt giyim seçildiğinde tek parça seçimi kaldır
+      setSelectedUploadedItem(null)
       
     } catch (error) {
       console.error('Alt giyim yükleme hatası:', error)
@@ -309,34 +317,36 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
 
         {/* Upload Areas - Tab'a göre değişir */}
         {activeTab === 'single' ? (
-          // Tek Parça Upload Area
-          <div className="mb-6">
-            <div 
-              className="border-2 border-dashed border-gray-300 rounded-lg p-6 md:p-8 hover:border-blue-400 hover:bg-blue-50/50 transition-colors cursor-pointer relative"
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            >
-              {isUploading ? (
-                <div className="flex items-center justify-center gap-3">
-                  <Loader2 className="w-6 h-6 md:w-8 md:h-8 text-blue-500 animate-spin" />
-                  <div className="text-left">
-                    <p className="text-base font-medium text-blue-600 leading-tight">Yükleniyor...</p>
-                    <p className="text-sm text-gray-500">Lütfen bekleyin</p>
+          // Tek Parça Upload Area (Eğer kullanıcı en az bir görsel yüklediyse gizle)
+          uploadedClothes.length === 0 ? (
+            <div className="mb-6">
+              <div 
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 md:p-8 hover:border-blue-400 hover:bg-blue-50/50 transition-colors cursor-pointer relative"
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
+                {isUploading ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <Loader2 className="w-6 h-6 md:w-8 md:h-8 text-blue-500 animate-spin" />
+                    <div className="text-left">
+                      <p className="text-base font-medium text-blue-600 leading-tight">Yükleniyor...</p>
+                      <p className="text-sm text-gray-500">Lütfen bekleyin</p>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-3 md:gap-4">
-                  <Plus className="w-6 h-6 md:w-8 md:h-8 text-teal-500" />
-                  <div className="text-left">
-                    <p className="text-base font-medium text-teal-600 leading-tight">Tek Parça Kıyafet Ekle</p>
-                    <p className="text-sm text-gray-500">Veya buraya sürükleyip bırakın</p>
-                    <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WebP, GIF, BMP (Max 10MB)</p>
+                ) : (
+                  <div className="flex items-center justify-center gap-3 md:gap-4">
+                    <Plus className="w-6 h-6 md:w-8 md:h-8 text-teal-500" />
+                    <div className="text-left">
+                      <p className="text-base font-medium text-teal-600 leading-tight">Tek Parça Kıyafet Ekle</p>
+                      <p className="text-sm text-gray-500">Veya buraya sürükleyip bırakın</p>
+                      <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WebP, GIF, BMP (Max 10MB)</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          ) : null
         ) : (
           // Üst & Alt Upload Areas
           <div className="mb-6 space-y-4">
@@ -433,7 +443,17 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">Yüklenen Kıyafetler</h3>
-              <span className="text-xs text-gray-500">{uploadedClothes.length} öğe</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">{uploadedClothes.length} öğe</span>
+                {/* Küçük ekle butonu: gizli input'u tetikler */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-2 py-1 text-[11px] rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  title="Yeni kıyafet ekle"
+                >
+                  + Ekle
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {uploadedClothes.map((item) => (
@@ -450,12 +470,9 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 >
                   {/* Kıyafet görseli */}
                   <div className="aspect-[3/4] bg-gray-50 relative">
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
+                    {/* upload edilmiş blob/object URL'ler için native img kullan */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.imageUrl} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
                   </div>
                   
                   {/* Silme butonu */}
@@ -480,27 +497,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                   <div className="p-2">
                     <h3 className="text-xs font-medium text-gray-900 truncate">{item.name}</h3>
                     <p className="text-xs text-gray-500">{item.type === 'single' ? 'Tek parça' : 'Üst & Alt'}</p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleVirtualTryOn(item.imageData, item.type)
-                      }}
-                      disabled={isProcessing || !selectedModel}
-                      className={`w-full mt-2 py-1 px-2 text-xs rounded-md transition-colors ${
-                        isProcessing || !selectedModel
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-teal-500 text-white hover:bg-teal-600'
-                      }`}
-                    >
-                      {isProcessing ? (
-                        <div className="flex items-center justify-center">
-                          <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                          İşleniyor...
-                        </div>
-                      ) : (
-                        '🤖 AI ile Dene'
-                      )}
-                    </button>
+                    {/* Öğenin altındaki yerel "AI ile Dene" butonu kaldırıldı; sol alttaki sabit buton kullanılacak */}
                   </div>
                 </motion.div>
               ))}
@@ -686,16 +683,6 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 </div>
               </motion.div>
             ))}
-            
-            {/* Alt ekle butonu */}
-            <motion.div
-              className="flex flex-col justify-center items-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Plus className="w-8 h-8 text-gray-400 mb-2" />
-              <p className="text-xs text-gray-600 text-center font-medium">Alt ekle</p>
-            </motion.div>
           </div>
         ) : (
           /* Üst & Alt kombinasyonları */
@@ -748,18 +735,58 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 </div>
               </motion.div>
             ))}
-            
-            {/* Kombinasyon ekle butonu */}
-            <motion.div
-              className="flex flex-col justify-center items-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Plus className="w-8 h-8 text-gray-400 mb-2" />
-              <p className="text-xs text-gray-600 text-center font-medium">Kombinasyon Ekle</p>
-            </motion.div>
           </div>
         )}
+      </div>
+
+      {/* Fixed bottom-left Try-On area inside the left panel */}
+      <div className="mt-auto border-t border-gray-200 p-3 sticky bottom-0 bg-white">
+        {/* Mini status line */}
+        <div className="flex items-center justify-between mb-2 text-[11px] text-gray-600">
+          <span className="px-2 py-0.5 rounded-full bg-gray-100 border border-gray-200">
+            {selectedModel ? 'Model seçildi' : 'Model bekleniyor'}
+          </span>
+          <span className="px-2 py-0.5 rounded-full bg-gray-100 border border-gray-200">
+            {uploadedClothes.find(u => u.id === selectedUploadedItem)
+              ? 'Seçili: Tek parça'
+              : (upperClothing && lowerClothing)
+                ? 'Seçili: Üst + Alt'
+                : 'Kıyafet bekleniyor'}
+          </span>
+        </div>
+        <motion.button
+          onClick={async () => {
+            const selectedItem = uploadedClothes.find(u => u.id === selectedUploadedItem)
+            if (selectedItem && selectedModel) {
+              await handleVirtualTryOn(selectedItem.imageData, selectedItem.type)
+              return
+            }
+            if (upperClothing && lowerClothing && selectedModel) {
+              await handleUpperLowerTryOn()
+              return
+            }
+          }}
+          disabled={
+            isProcessing || !selectedModel || (
+              !uploadedClothes.find(u => u.id === selectedUploadedItem) && !(upperClothing && lowerClothing)
+            )
+          }
+          className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-colors ${
+            isProcessing || !selectedModel || (!uploadedClothes.find(u => u.id === selectedUploadedItem) && !(upperClothing && lowerClothing))
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:from-teal-600 hover:to-emerald-600 shadow'
+          }`}
+          title={
+            !selectedModel
+              ? 'Önce bir model seçin'
+              : uploadedClothes.find(u => u.id === selectedUploadedItem) || (upperClothing && lowerClothing)
+                ? 'Seçili kıyafeti dene'
+                : 'Önce bir kıyafet yükleyin/seçin'
+          }
+        >
+          <Sparkles className="w-5 h-5" />
+          <span className="text-sm">AI ile Dene</span>
+        </motion.button>
       </div>
     </div>
   )
