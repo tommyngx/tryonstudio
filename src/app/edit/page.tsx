@@ -456,6 +456,20 @@ export default function EditPage() {
               try { console.log('[Gallery] onSelect', { idx }) } catch {}
               setSelectedImageIndex(idx)
             }}
+            onDelete={(idx) => {
+              // Seçili öğeyi siliyorsak, seçim indexini ayarla
+              setEditHistory(prev => {
+                const next = prev.filter((_, i) => i !== idx)
+                // Seçim güncellemesi: silinen index'ten önce/sonra durumları
+                setSelectedImageIndex(current => {
+                  if (current === -1) return -1
+                  if (current === idx) return -1 // orijinale dön
+                  if (current > idx) return current - 1
+                  return current
+                })
+                return next
+              })
+            }}
           />
 
           {/* Sağ kenar açma togglesı - Panel kapalıyken görünür (sihirli parıltı efekti) */}

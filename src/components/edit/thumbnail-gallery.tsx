@@ -27,9 +27,10 @@ interface ThumbnailGalleryProps {
   history: EditHistoryItem[]
   selectedIndex: number // -1 = original, >=0 = history index
   onSelect: (index: number) => void
+  onDelete?: (index: number) => void
 }
 
-export function ThumbnailGallery({ originalImage, history, selectedIndex, onSelect }: ThumbnailGalleryProps) {
+export function ThumbnailGallery({ originalImage, history, selectedIndex, onSelect, onDelete }: ThumbnailGalleryProps) {
   if (!originalImage && history.length === 0) return null
 
   return (
@@ -61,23 +62,33 @@ export function ThumbnailGallery({ originalImage, history, selectedIndex, onSele
 
         {/* History */}
         {history.map((item, idx) => (
-          <button
-            key={item.id}
-            onClick={() => onSelect(idx)}
-            className={`relative w-full rounded-lg overflow-hidden border ${
-              selectedIndex === idx ? 'border-purple-500 ring-2 ring-purple-200' : 'border-gray-200 hover:border-purple-300'
-            }`}
-            title={`#${idx + 1}`}
-          >
-            <div className="relative w-full aspect-[3/4] bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.imageUrl} alt={`Düzenleme #${idx + 1}`} className="absolute inset-0 w-full h-full object-cover" />
-            </div>
-            <span className="absolute top-1 left-1 bg-purple-600 text-white text-[10px] px-1 rounded">#{idx + 1}</span>
-            {selectedIndex === idx && (
-              <span className="absolute bottom-1 right-1 bg-purple-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">✓</span>
+          <div key={item.id} className="relative">
+            <button
+              onClick={() => onSelect(idx)}
+              className={`relative w-full rounded-lg overflow-hidden border ${
+                selectedIndex === idx ? 'border-purple-500 ring-2 ring-purple-200' : 'border-gray-200 hover:border-purple-300'
+              }`}
+              title={`#${idx + 1}`}
+            >
+              <div className="relative w-full aspect-[3/4] bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={item.imageUrl} alt={`Düzenleme #${idx + 1}`} className="absolute inset-0 w-full h-full object-cover" />
+              </div>
+              <span className="absolute top-1 left-1 bg-purple-600 text-white text-[10px] px-1 rounded">#{idx + 1}</span>
+              {selectedIndex === idx && (
+                <span className="absolute bottom-1 right-1 bg-purple-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">✓</span>
+              )}
+            </button>
+            {onDelete && (
+              <button
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center shadow hover:bg-red-600"
+                title="Sil"
+                onClick={(e) => { e.stopPropagation(); onDelete(idx); }}
+              >
+                ×
+              </button>
             )}
-          </button>
+          </div>
         ))}
       </div>
     </aside>
