@@ -404,7 +404,7 @@ export default function EditPage() {
           />
         </div>
 
-        {/* Orta Bölge: Model Görüntüleyici + Thumbnail Galeri + AI Panel */}
+        {/* Orta Bölge: Model Görüntüleyici + AI Panel */}
         <div className={`flex-1 flex overflow-hidden relative`}>
           {/* Global editing overlay for AI Edit operations */}
           {isEditing && (
@@ -419,7 +419,8 @@ export default function EditPage() {
               </div>
             </div>
           )}
-          {/* Sol: Görüntüleyici + Alt Kontroller */}
+          
+          {/* Model Görüntüleyici + Alt Kontroller */}
           <div className="flex-1 flex flex-col">
             <ModelViewer
               userPhoto={tryOnResult || selectedModel}
@@ -450,31 +451,6 @@ export default function EditPage() {
               />
             </div>
           </div>
-
-          {/* Orta: Dikey Thumbnail Galerisi */}
-          <ThumbnailGallery
-            originalImage={tryOnResult}
-            history={editHistory}
-            selectedIndex={selectedImageIndex}
-            onSelect={(idx) => {
-              try { console.log('[Gallery] onSelect', { idx }) } catch {}
-              setSelectedImageIndex(idx)
-            }}
-            onDelete={(idx) => {
-              // Seçili öğeyi siliyorsak, seçim indexini ayarla
-              setEditHistory(prev => {
-                const next = prev.filter((_, i) => i !== idx)
-                // Seçim güncellemesi: silinen index'ten önce/sonra durumları
-                setSelectedImageIndex(current => {
-                  if (current === -1) return -1
-                  if (current === idx) return -1 // orijinale dön
-                  if (current > idx) return current - 1
-                  return current
-                })
-                return next
-              })
-            }}
-          />
 
           {/* Sağ kenar açma togglesı - Panel kapalıyken görünür (sihirli parıltı efekti) */}
           {!isAiPanelOpen && (
@@ -537,7 +513,7 @@ export default function EditPage() {
             className={`flex-none transition-[width] duration-300 ease-out ${isAiPanelOpen ? 'w-[320px] md:w-[380px]' : 'w-0'}`}
           />
 
-          {/* Sağ: AI Düzenleme Paneli */}
+          {/* AI Düzenleme Paneli */}
           <AiEditPanel
             isOpen={isAiPanelOpen}
             onClose={() => setIsAiPanelOpen(false)}
@@ -604,6 +580,31 @@ export default function EditPage() {
             }}
           />
         </div>
+
+        {/* Sağ: Dikey Thumbnail Galerisi - AI Panel'in sağında */}
+        <ThumbnailGallery
+          originalImage={tryOnResult}
+          history={editHistory}
+          selectedIndex={selectedImageIndex}
+          onSelect={(idx) => {
+            try { console.log('[Gallery] onSelect', { idx }) } catch {}
+            setSelectedImageIndex(idx)
+          }}
+          onDelete={(idx) => {
+            // Seçili öğeyi siliyorsak, seçim indexini ayarla
+            setEditHistory(prev => {
+              const next = prev.filter((_, i) => i !== idx)
+              // Seçim güncellemesi: silinen index'ten önce/sonra durumları
+              setSelectedImageIndex(current => {
+                if (current === -1) return -1
+                if (current === idx) return -1 // orijinale dön
+                if (current > idx) return current - 1
+                return current
+              })
+              return next
+            })
+          }}
+        />
       </div>
 
       {/* Video Player Modal */}

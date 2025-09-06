@@ -34,12 +34,15 @@ export function ThumbnailGallery({ originalImage, history, selectedIndex, onSele
   if (!originalImage && history.length === 0) return null
 
   return (
-    <aside className="w-24 bg-gray-50 border-l border-gray-200 h-full flex flex-col">
+    <aside className="w-20 md:w-24 bg-gray-50 border-l border-gray-200 h-full flex flex-col">
       {/* Başlık */}
-      <div className="px-3 py-2 text-[11px] font-medium text-gray-600">Geçmiş</div>
+      <div className="px-2 md:px-3 py-2 text-[10px] md:text-[11px] font-medium text-gray-600 text-center">
+        <span className="hidden md:inline">Geçmiş</span>
+        <span className="md:hidden">📷</span>
+      </div>
 
       {/* Liste */}
-      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
+      <div className="flex-1 overflow-y-auto px-2 md:px-3 pb-3 space-y-2">
         {/* Orijinal */}
         {originalImage && (
           <button

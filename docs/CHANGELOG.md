@@ -38,3 +38,16 @@
  - 19:23: UI polish in Clothing Panel: moved the plus icon to the LEFT of the "Tek Parça Kıyafet Ekle" text and adjusted paddings/gaps for better fit on narrow widths (`src/components/edit/clothing-panel.tsx`).
 
  - 19:29: Refactored Try-On trigger flow. Removed per-item "AI ile Dene" button under uploaded items and introduced a fixed bottom-left main button in `ControlPanel` that becomes enabled when a try-on trigger is available (uploaded single item selected, or both upper+lower provided). Wiring done via `registerTryOnTrigger` from `ClothingPanel` → `EditPage` → `ControlPanel`. Files: `src/components/edit/clothing-panel.tsx`, `src/app/edit/page.tsx`, `src/components/edit/control-panel.tsx`.
+
+ - 21:37: Successfully installed all project dependencies via npm install. Resolved npm cache permission issues and installed 463 packages with 0 vulnerabilities. All dependencies from package.json are now available including Next.js 14.2.32, React 18.3.1, TypeScript 5.9.2, and AI/ML libraries (@google/genai, @runwayml/sdk, replicate).
+
+ - 21:40: Created `.env.local` and populated required environment variables with placeholders. Keys: `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_BASE_URL`, `GOOGLE_VISION_API_KEY`, `REPLICATE_API_TOKEN`, `RUNWAYML_API_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `OPENAI_API_KEY`, `STABILITY_API_KEY`, `GOOGLE_CLOUD_PROJECT_ID`, `GOOGLE_CLOUD_STORAGE_BUCKET`, `MAX_FILE_SIZE`, `API_RATE_LIMIT`. Notes: `.env*.local` is git-ignored; fill real secrets locally and rotate keys if exposed.
+
+ - 21:49: Added horizontal bottom history gallery for small screens and limited vertical gallery to md+ only. Implemented `HorizontalThumbnailGallery` (`src/components/edit/horizontal-thumbnail-gallery.tsx`) and integrated it in `src/app/edit/page.tsx` below `ModelViewer` (visible on `md:hidden`). Vertical `ThumbnailGallery` now wrapped with `hidden md:block`. Spacer for AI panel reservation is also limited to md+ (`hidden md:block`).
+
+ - 21:56: Next.js config updated for v14 App Router best practices. Removed deprecated `experimental.appDir` and top-level `api` options, migrated `images.domains` to `images.remotePatterns`, kept `images.formats` and `compiler.removeConsole`. File: `next.config.js`. Note: Dev server restart may be required to clear warnings.
+
+ - 21:58: Removed deprecated `@next/font` from dependencies in `package.json`. Project search shows no code importing `@next/font`, so codemod is unnecessary for now. Action required: reinstall packages and restart the dev server to clear the warning.
+
+ - 22:16: Layout iyileştirmesi: Geçmiş bölümü (ThumbnailGallery) AI panelinin arkasında kalma sorununu çözmek için sağ sidebar'ın sağına taşındı. Artık layout şu şekilde: Sol Panel (320px) | Model Viewer | AI Panel (320-380px) | Thumbnail Gallery (80-96px). Bu sayede AI paneli açık olduğunda da geçmiş bölümü görünür kalıyor.
+ - 22:16: ThumbnailGallery responsive iyileştirmeleri: Küçük ekranlarda genişlik 80px'e düşürüldü (md+ 96px), başlık küçük ekranlarda emoji (📷) olarak gösteriliyor, padding değerleri responsive hale getirildi.

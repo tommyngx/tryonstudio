@@ -1,36 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
   images: {
-    domains: [
-      'localhost',
-      'storage.googleapis.com',
-      'res.cloudinary.com',
-      'replicate.delivery',
-      'pbxt.replicate.delivery'
+    // Next 14: use remotePatterns instead of deprecated images.domains
+    remotePatterns: [
+      // Local dev assets
+      { protocol: 'http', hostname: 'localhost', pathname: '**' },
+      // Google Cloud Storage
+      { protocol: 'https', hostname: 'storage.googleapis.com', pathname: '**' },
+      // Cloudinary
+      { protocol: 'https', hostname: 'res.cloudinary.com', pathname: '**' },
+      // Replicate delivery
+      { protocol: 'https', hostname: 'replicate.delivery', pathname: '**' },
+      { protocol: 'https', hostname: 'pbxt.replicate.delivery', pathname: '**' },
     ],
     formats: ['image/webp', 'image/avif'],
   },
-  // API dosyalarının boyut limitini artır (AI generated images için)
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-    responseLimit: '10mb',
-  },
-  // Build optimizasyonları
+  // Build optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
-  },
-  // Runtime konfigürasyonu
-  serverRuntimeConfig: {
-    // Sadece server tarafında erişilebilir
-  },
-  publicRuntimeConfig: {
-    // Hem server hem client tarafında erişilebilir
-    appName: 'TryOnX',
   },
 }
 
