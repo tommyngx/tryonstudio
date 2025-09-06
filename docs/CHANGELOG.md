@@ -32,3 +32,7 @@
  - 19:02: Edit flow policy updated in `src/app/edit/page.tsx`: AI Edit requests now ALWAYS use the ORIGINAL try-on output as the base image when sending to `/api/nano-banana-edit`. New results are appended to history with a new sequential item and auto-selected.
 
  - 19:15: Enabled Enter-to-submit in AI Edit Panel textarea (`src/components/edit/ai-edit-panel.tsx`). Shift+Enter inserts a newline; Enter triggers submit.
+
+ - 19:22: Unified Download behavior. Bottom control panel Download button now uses the same logic as the header and downloads the currently selected image (history item if selected, otherwise original try-on). Also added blob fallback for non-data URLs to ensure downloads work reliably (`src/app/edit/page.tsx`, `src/components/edit/control-panel.tsx`).
+
+ - 19:23: UI polish in Clothing Panel: moved the plus icon to the LEFT of the "Tek Parça Kıyafet Ekle" text and adjusted paddings/gaps for better fit on narrow widths (`src/components/edit/clothing-panel.tsx`).

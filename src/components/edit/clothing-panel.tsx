@@ -312,27 +312,31 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
           // Tek Parça Upload Area
           <div className="mb-6">
             <div 
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-colors cursor-pointer relative"
+              className="border-2 border-dashed border-gray-300 rounded-lg p-6 md:p-8 hover:border-blue-400 hover:bg-blue-50/50 transition-colors cursor-pointer relative"
               onClick={() => fileInputRef.current?.click()}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
               {isUploading ? (
-                <div className="flex flex-col items-center">
-                  <Loader2 className="w-8 h-8 text-blue-500 mb-3 animate-spin" />
-                  <p className="text-base font-medium text-blue-600 mb-1">Yükleniyor...</p>
-                  <p className="text-sm text-gray-500">Lütfen bekleyin</p>
+                <div className="flex items-center justify-center gap-3">
+                  <Loader2 className="w-6 h-6 md:w-8 md:h-8 text-blue-500 animate-spin" />
+                  <div className="text-left">
+                    <p className="text-base font-medium text-blue-600 leading-tight">Yükleniyor...</p>
+                    <p className="text-sm text-gray-500">Lütfen bekleyin</p>
+                  </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center">
-                  <Plus className="w-8 h-8 text-teal-500 mb-3" />
-                  <p className="text-base font-medium text-teal-600 mb-1">Tek Parça Kıyafet Ekle</p>
-                  <p className="text-sm text-gray-500">Veya buraya sürükleyip bırakın</p>
-                  <p className="text-xs text-gray-400 mt-2">JPEG, PNG, WebP, GIF, BMP (Max 10MB)</p>
-              </div>
-            )}
+                <div className="flex items-center justify-center gap-3 md:gap-4">
+                  <Plus className="w-6 h-6 md:w-8 md:h-8 text-teal-500" />
+                  <div className="text-left">
+                    <p className="text-base font-medium text-teal-600 leading-tight">Tek Parça Kıyafet Ekle</p>
+                    <p className="text-sm text-gray-500">Veya buraya sürükleyip bırakın</p>
+                    <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WebP, GIF, BMP (Max 10MB)</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
         ) : (
           // Üst & Alt Upload Areas
           <div className="mb-6 space-y-4">

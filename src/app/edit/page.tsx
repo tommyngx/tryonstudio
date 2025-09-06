@@ -41,6 +41,48 @@ export default function EditPage() {
   const [zoomLevel, setZoomLevel] = useState(100)
   const [isEditing, setIsEditing] = useState(false) // AI Edit async indicator
 
+  // İndir: Seçili görseli (history seçiliyse onu, değilse orijinal try-on) indir
+  const handleDownload = async () => {
+    // Öncelik: seçili history; yoksa orijinal try-on; o da yoksa vazgeç
+    const selected = selectedImageIndex === -1
+      ? (tryOnResult ?? null)
+      : (editHistory[selectedImageIndex]?.imageUrl ?? null)
+
+    if (!selected) {
+      alert('İndirilecek bir görsel bulunamadı. Önce try-on yapın veya bir geçmiş görseli seçin.')
+      return
+    }
+
+    // Dosya adı
+    const ts = new Date().toISOString().replace(/[:.]/g, '-')
+    const name = selectedImageIndex === -1 ? `tryon-original-${ts}.png` : `tryon-edit-${selectedImageIndex + 1}-${ts}.png`
+
+    try {
+      let href = selected
+      let revoke: (() => void) | null = null
+
+      // Eğer data URL değilse blob'a çevir
+      if (!selected.startsWith('data:')) {
+        const resp = await fetch(selected)
+        const blob = await resp.blob()
+        const url = URL.createObjectURL(blob)
+        href = url
+        revoke = () => URL.revokeObjectURL(url)
+      }
+
+      const a = document.createElement('a')
+      a.href = href
+      a.download = name
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      if (revoke) revoke()
+    } catch (e) {
+      console.error('Download error', e)
+      alert('Görsel indirilemedi')
+    }
+  }
+
   // AI Düzenleme Paneli ve History yönetimi
   const [editHistory, setEditHistory] = useState<EditHistoryItem[]>([])
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1) // -1: orijinal (try-on sonucu)
@@ -64,6 +106,21 @@ export default function EditPage() {
       })
     } catch {}
   }, [selectedImageIndex, editHistory, tryOnResult])
+
+  // Model değiştiğinde geçmişi ve sonuçları temizle
+  useEffect(() => {
+    // Yeni modele geçildiğinde, önceki try-on sonucu ve edit geçmişi anlamsız hale gelir
+    setTryOnResult(null)
+    setProcessedImage(null)
+    setEditHistory([])
+    setSelectedImageIndex(-1)
+    setAiLastResponse(null)
+    // İsteğe bağlı: AI paneli kapat
+    setIsAiPanelOpen(false)
+    try {
+      console.log('[Model] Changed. Cleared tryOnResult and edit history.')
+    } catch {}
+  }, [selectedModel])
 
   // Panel açık/kapalı durumunu localStorage'da sakla ve klavye kısayollarını yönet
   useEffect(() => {
@@ -312,7 +369,7 @@ export default function EditPage() {
           </div>
 
           {/* Action Buttons */}
-          <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+          <button onClick={handleDownload} className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
             <Download className="w-4 h-4" />
             <span>İndir</span>
           </button>
@@ -349,10 +406,14 @@ export default function EditPage() {
         <div className={`flex-1 flex overflow-hidden relative`}>
           {/* Global editing overlay for AI Edit operations */}
           {isEditing && (
-            <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
-              <div className="absolute inset-0 bg-white/60" />
-              <div className="relative z-10 px-4 py-2 rounded-lg bg-white shadow border border-gray-200 text-sm text-gray-700">
-                AI editing in progress...
+            <div className="pointer-events-auto absolute inset-0 z-40 flex items-center justify-center">
+              <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px]" />
+              <div className="relative z-10 px-5 py-3 rounded-xl bg-white shadow-lg border border-gray-200 text-sm text-gray-800 flex items-center gap-3">
+                <svg className="animate-spin h-4 w-4 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                <span className="font-medium">AI editing in progress…</span>
               </div>
             </div>
           )}
@@ -381,6 +442,7 @@ export default function EditPage() {
                 onVideoShowcase={handleVideoShowcase}
                 isVideoGenerating={isVideoGenerating}
                 onOpenAiEditPanel={() => setIsAiPanelOpen(true)}
+                onDownload={handleDownload}
               />
             </div>
           </div>

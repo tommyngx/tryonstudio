@@ -24,6 +24,7 @@ interface ControlPanelProps {
   onVideoShowcase?: () => void
   isVideoGenerating?: boolean
   onOpenAiEditPanel?: () => void
+  onDownload?: () => void
 }
 
 export function ControlPanel({ 
@@ -35,7 +36,8 @@ export function ControlPanel({
   onZoomChange,
   onVideoShowcase,
   isVideoGenerating,
-  onOpenAiEditPanel
+  onOpenAiEditPanel,
+  onDownload
 }: ControlPanelProps) {
   const [processingStep, setProcessingStep] = useState('')
   const [qualityMode, setQualityMode] = useState<'fast' | 'balanced' | 'high'>('balanced')
@@ -136,6 +138,7 @@ export function ControlPanel({
 
         {/* İndir */}
         <button
+          onClick={onDownload}
           disabled={!hasResult || isProcessing}
           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
