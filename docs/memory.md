@@ -1,6 +1,12 @@
-# Memory - AI Edit Panel & Thumbnail Gallery
+# Memory - AI Edit Panel, Thumbnail Gallery & Face Swap
+### Kendiniz Akışı (2025-09-07 00:05 +03:00)
+- "Kendiniz" seçeneği eklendi. Bu modda Face Swap UI GÖSTERİLMEZ.
+- Kullanıcı fotoğrafını yüklediğinde bu fotoğraf doğrudan model olarak seçilir (`onModelSelect(imageUrl)`).
+- Alt akış (AI ile Dene) ve try-on mantığı değişmeden çalışır; seçilen model artık kullanıcının fotoğrafıdır.
+- Dosya: `src/components/edit/clothing-panel.tsx` (self bölümü, gizli file input, `handleUserPhotoUpload` içinde auto-select).
 
-Tarih: 2025-09-06 16:45 (+03:00)
+
+Tarih: 2025-09-06 22:20 (+03:00)
 
 ## Mimari Kararlar
 - Sağ panel bağımsız bir bileşen olarak tasarlandı: `src/components/edit/ai-edit-panel.tsx`.
@@ -50,8 +56,26 @@ Tarih: 2025-09-06 16:45 (+03:00)
 - `AiEditPanel.onSubmit` → API çağrısı → `editHistory.push()` → `selectedImageIndex = last` → `aiLastResponse = meta`.
 - `ModelViewer.processedImage` her seçimde senkronize edilir (before/after/split korunur).
 
+### Face Swap Özelliği (2025-09-06 22:20 +03:00)
+- **Face Swap API**: `src/app/api/face-swap/route.ts` - Easel Advanced Face Swap modeli kullanır
+- **UI Entegrasyonu**: `ClothingPanel` bileşenine Face Swap toggle ve kullanıcı fotoğrafı yükleme alanı eklendi
+- **Akış**: Kullanıcı fotoğrafı + manken model → Face swap → Virtual try-on
+- **State Yönetimi**: 
+  - `userPhotoBase64`: Kullanıcının yüklediği fotoğraf (base64)
+  - `faceSwappedModel`: Face swap sonucu (data URL)
+  - `isFaceSwapping`: Face swap işlem durumu
+- **Entegrasyon**: Face swap sonucu varsa try-on işleminde swap'lenmiş model kullanılır
+- **UX**: Toggle ile aktif/pasif, fotoğraf önizleme, loading durumları
+
 ## Gelecek Geliştirmeler
 - Undo/Redo ileri-geri butonları (seçili index üzerinden navigasyon).
 - Gerçek AI düzenleme servisi, güvenli anahtar yönetimi.
 - Export/Paylaşım entegrasyonları.
 - E2E ve görsel regresyon testleri.
+- Face swap kalite ayarları ve yüz algılama hassasiyeti kontrolü.
+
+### Clothing Panel Cinsiyet Dropdown Dönüşümü (2025-09-07 00:00 +03:00)
+- Önceden `clothing-panel.tsx` içinde cinsiyet seçimi iki buton (👨 Erkek / 👩 Kadın) olarak sunuluyordu.
+- Bu bölüm şık ve erişilebilir bir `select` dropdown ile değiştirildi. Dosya: `src/components/edit/clothing-panel.tsx`.
+- State: `genderTab` aynı şekilde korunuyor; `useEffect` (`genderTab` bağımlı) `onModelSelect` ile varsayılan modeli (erkek/kadın) otomatik atamaya devam ediyor.
+- UI Etkisi: Sadece üstteki seçim kontrolü değişti; altında yer alan "Model Grid" gösterimi ve seçim davranışı aynen korunuyor.

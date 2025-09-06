@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2025-09-07
+
+- 00:24: Strengthened try-on prompts to PRESERVE existing brand logos/prints/labels/embroidery exactly (position/scale/orientation/colors) and forbid hallucinating new graphics. Applied to upper/lower/dress/multi-garment prompts. File: `src/app/api/nano-banana/route.ts`.
+- 00:16: When re-running try-on with the SAME selected model, the previous try-on result is now automatically appended to history before replacing it. A `lastModelKeyForTryOn` state tracks the model key (faceSwappedModel or selectedModel). Files: `src/app/edit/page.tsx`.
+- 00:07: Self model pipeline fixed: when user selects "Kendiniz", the uploaded photo is now passed as a data URL to `onModelSelect`, and `EditPage.handleTryOnResult` detects data URLs to extract base64 without fetch. Also ensured bottom action button always shows "AI ile Dene" and does not depend on Face Swap in self mode. Files: `src/components/edit/clothing-panel.tsx`, `src/app/edit/page.tsx`.
+- 00:03: Added "Kendiniz" option to gender dropdown in Clothing Panel and implemented a dedicated self section. Selecting "Kendiniz" now auto-enables Face Swap mode (keeps current model), shows quick actions to open Face Swap and upload photo, and guides the user to proceed with try-on. File: `src/components/edit/clothing-panel.tsx`.
+- 00:00: Converted gender selection in Clothing Panel to a stylish dropdown (replacing the previous toggle buttons) while preserving the model grid and selection behavior. File: `src/components/edit/clothing-panel.tsx`. Added accessible `select` with Tailwind styling; `useEffect` continues to auto-select the default model per gender.
+
 ## 2025-09-06
 
 - 16:45: Added right-side AI Edit Panel (`src/components/edit/ai-edit-panel.tsx`) with collapsible design, preset prompts, custom prompt textarea (500 chars), real-time counter, strength slider (0.1–1.0), and response card.
@@ -12,13 +20,7 @@
  - 16:56: Refactored `ThumbnailGallery` to fixed 24-width sidebar equivalent (`w-24`) with "Geçmiş" header and list-style thumbnails (3:4 aspect), matching screenshot layout.
  - 16:59: Completely redesigned `AiEditPanel` to match exact UI from provided screenshot: gradient purple header background, colorful quick action cards with gradients, emoji-based preset list with gray backgrounds, custom slider styling with purple fill, and bottom action bar with "Send element" button.
  - 17:02: Removed "Send console errors" button from AI Edit Panel, simplified bottom action bar to show only the main "AI ile Düzenle" button at full width.
- - 17:03: Updated AI Edit Panel layout: changed button to purple-pink gradient, made preset prompts smaller (2x2 grid, 10px font), and made input area fixed at bottom to prevent page overflow.
- - 17:05: Removed AI Response Card (düzenleme detayları) from AI Edit Panel to simplify the interface - no more detail cards shown after editing.
- - 17:06: Fixed UI issues in AI Edit Panel: added safe area below button (pb-6) and fixed slider overflow issue where purple fill was appearing in front of the slider thumb by implementing proper z-index layering.
- - 17:07: Fixed TypeScript error in page.tsx by removing lastResponse prop from AiEditPanel component call (prop no longer exists after removing AI Response Card).
- - 17:08: Completely redesigned slider component with modern best practices: custom thumb with hover effects, purple gradient fill, percentage badge, visual indicators for Hafif/Güçlü labels, smooth animations, and improved accessibility.
- - 17:09: Complete AI Edit Panel optimization: fixed button positioning, compact layout (2-row textarea), single-column preset prompts, custom scrollbar, hover animations, modern button styling with lift effect, proper overflow handling, and responsive design improvements.
-
+ 
  - 18:30: Collapsible AI Edit Panel improvements: added right-edge toggle button to reopen panel when closed, persisted panel open state in localStorage, and introduced keyboard shortcuts (Esc to close, Ctrl/Cmd+E to toggle). Removed FAB to avoid overlay conflicts and white-space issues.
 
  - 18:38: Converted AI Edit Panel to absolute overlay (right:0, top:0) and added conditional right padding (`pr-[320px] md:pr-[380px]`) to the main content container to prevent overlap with the bottom control panel and gallery.
@@ -49,5 +51,27 @@
 
  - 21:58: Removed deprecated `@next/font` from dependencies in `package.json`. Project search shows no code importing `@next/font`, so codemod is unnecessary for now. Action required: reinstall packages and restart the dev server to clear the warning.
 
- - 22:16: Layout iyileştirmesi: Geçmiş bölümü (ThumbnailGallery) AI panelinin arkasında kalma sorununu çözmek için sağ sidebar'ın sağına taşındı. Artık layout şu şekilde: Sol Panel (320px) | Model Viewer | AI Panel (320-380px) | Thumbnail Gallery (80-96px). Bu sayede AI paneli açık olduğunda da geçmiş bölümü görünür kalıyor.
- - 22:16: ThumbnailGallery responsive iyileştirmeleri: Küçük ekranlarda genişlik 80px'e düşürüldü (md+ 96px), başlık küçük ekranlarda emoji (📷) olarak gösteriliyor, padding değerleri responsive hale getirildi.
+## [2025-01-06 22:29] - Face Swap Özelliği Tamamlandı
+
+### Eklenen Özellikler
+- **Face Swap API**: Google Nano Banana API kullanarak yüz değiştirme özelliği
+- **Dual API Yapısı**: Face swap için ayrı endpoint, kıyafet deneme için mevcut Nano Banana API
+- **Face Swap UI**: ClothingPanel'e face swap toggle ve fotoğraf yükleme alanı
+- **Entegre Akış**: Face swap + kıyafet deneme kombinasyonu
+
+### API Yapısı
+- `/api/face-swap`: Özel face swap endpoint'i (Google Nano Banana)
+- `/api/nano-banana`: Tüm kıyafet deneme promptları korundu
+- Face swap ve try-on işlemleri ayrı API'ler üzerinden
+
+### Teknik Detaylar
+- Face swap prompt optimizasyonu
+- Base64 görsel işleme
+- Hata yönetimi ve kullanıcı geri bildirimi
+- State yönetimi ve loading durumları
+
+### UX Özellikleri
+- Face swap modu toggle'ı
+- Drag & drop fotoğraf yükleme
+- Gerçek zamanlı önizleme
+- Loading ve hata durumu göstergeleri

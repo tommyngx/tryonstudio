@@ -42,7 +42,14 @@ function createUpperOnlyPrompt(): string {
 
   CONSTRAINTS:
   - Do NOT change face/hair/skin tone/body shape/BACKGROUND.
-  - Do NOT add accessories/logos/text.
+  - Preserve EXISTING BRAND LOGOS, PRINTS, EMBROIDERY, LABELS, and GRAPHICS from the clothing image EXACTLY as they are.
+  - Keep logo/print position, scale, orientation, perspective warp, and colors faithful to the clothing image; do not blur or remove them.
+  - Do NOT hallucinate or add new logos/text/graphics that are not present in the clothing image.
+  
+  WORDMARK FIDELITY:
+  - Reproduce brand wordmarks and typography EXACTLY as in the clothing image (same letters, font look, spacing/kerning).
+  - No character substitutions or misspellings (e.g., "BOSS" must read exactly "BOSS", not "BOAX").
+  - Ensure legibility and sharp edges on wordmarks; avoid blur, smearing, or distortion.
   - Do NOT change framing or resolution.`;
 }
 
@@ -61,7 +68,9 @@ function createLowerOnlyPrompt(): string {
 
   CONSTRAINTS:
   - Do NOT change face/hair/skin tone/body shape/BACKGROUND.
-  - Do NOT add accessories/logos/text.
+  - Preserve EXISTING BRAND LOGOS, PRINTS, EMBROIDERY, LABELS, and GRAPHICS from the clothing image EXACTLY as they are.
+  - Keep logo/print position, scale, orientation, perspective warp, and colors faithful to the clothing image; do not blur or remove them.
+  - Do NOT hallucinate or add new logos/text/graphics that are not present in the clothing image.
   - Do NOT change framing or resolution.`;
 }
 
@@ -79,8 +88,38 @@ function createDressPrompt(): string {
 
   CONSTRAINTS:
   - Do NOT change face/hair/skin tone/body shape/BACKGROUND.
-  - Do NOT add accessories or fabricate logos/text.
+  - Preserve EXISTING BRAND LOGOS, PRINTS, EMBROIDERY, LABELS, and GRAPHICS from the clothing image EXACTLY as they are.
+  - Keep logo/print position, scale, orientation, perspective warp, and colors faithful to the clothing image; do not blur or remove them.
+  - Do NOT hallucinate or add new logos/text/graphics that are not present in the clothing image.
   - Do NOT change framing or resolution.`;
+}
+
+// Face swap için özel prompt
+function createFaceSwapPrompt(): string {
+  return `Follow these rules strictly for FACE SWAP operation:
+
+  PRIMARY GOAL:
+  - Take the FACE from the first image (user photo) and seamlessly place it on the second image (target model)
+  - Keep the target model's body, pose, clothing, background, and scene EXACTLY the same
+  - Only replace the face/head area with natural blending
+
+  FACE SWAP REQUIREMENTS:
+  - Preserve the user's facial features, skin tone, and facial structure
+  - Match lighting, shadows, and perspective of the target image
+  - Ensure natural edge blending around face/neck/hairline
+  - Keep the target's hair, clothing, body proportions, and background unchanged
+
+  VISUAL CONSISTENCY:
+  - Maintain the target image's lighting conditions and camera angle
+  - Apply realistic shadows and highlights to the swapped face
+  - Ensure skin tone consistency and natural transitions
+  - No visible seams, halos, or artificial edges
+
+  CONSTRAINTS:
+  - Do NOT change the target's body, clothing, pose, or background
+  - Do NOT alter the target's hair unless it overlaps with face area
+  - Do NOT add accessories, makeup, or modify facial expressions drastically
+  - Do NOT change image resolution, framing, or composition`;
 }
 
 // Çoklu kıyafet (üst+alt) için özel prompt oluştur
@@ -98,7 +137,14 @@ function createMultiGarmentPrompt(upperType: string, lowerType: string): string 
 
   CONSTRAINTS:
   - Do NOT change face/hair/skin tone/body shape/BACKGROUND.
-  - Do NOT add accessories or fabricate logos/text.
+  - Preserve EXISTING BRAND LOGOS, PRINTS, EMBROIDERY, LABELS, and GRAPHICS from the clothing images EXACTLY as they are for each garment.
+  - Keep logo/print position, scale, orientation, perspective warp, and colors faithful to each clothing image; do not blur or remove them.
+  - Do NOT hallucinate or add new logos/text/graphics that are not present in the clothing images.
+  
+  WORDMARK FIDELITY:
+  - Reproduce brand wordmarks and typography EXACTLY as in the clothing images (same letters, font look, spacing/kerning).
+  - No character substitutions or misspellings (e.g., "BOSS" must read exactly "BOSS", not "BOAX").
+  - Ensure legibility and sharp edges on wordmarks; avoid blur, smearing, or distortion.
   - Do NOT change framing or resolution.
 
   GOAL:
@@ -135,12 +181,23 @@ export async function POST(request: NextRequest) {
       clothingImage, 
       clothingType = 'kıyafet', 
       additionalClothing = [], // Çoklu kıyafet için ek kıyafetler
-      options = {} 
+      options = {},
+      // Face swap parametreleri
+      userImage, // Face swap için kullanıcı fotoğrafı
+      targetImage, // Face swap için hedef model
+      operationType = 'tryon' // 'tryon' veya 'faceswap'
     } = body;
 
-    // Gerekli alanları kontrol et
-    if (!modelImage || !clothingImage) {
-      return createErrorResponse('Model görüntüsü ve kıyafet görüntüsü gerekli', 400);
+    // İşlem tipine göre gerekli alanları kontrol et
+    if (operationType === 'faceswap') {
+      if (!userImage || !targetImage) {
+        return createErrorResponse('Face swap için kullanıcı fotoğrafı ve hedef model gerekli', 400);
+      }
+    } else {
+      // Normal try-on işlemi
+      if (!modelImage || !clothingImage) {
+        return createErrorResponse('Model görüntüsü ve kıyafet görüntüsü gerekli', 400);
+      }
     }
 
     // API key kontrolü
@@ -148,52 +205,91 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Google Vision API key bulunamadı', 500);
     }
 
-    // clothingType normalizasyonu
-    // Varsayılan: tek parça yüklemelerde üst giyim değişsin (best practice)
-    // İsim eşleştirmeleri: 'single' | 'kıyafet' => 'upper', 'elbise' | 'dress' => 'dress'
-    let normalizedType = (clothingType || '').toLowerCase();
-    if (normalizedType === 'single' || normalizedType === 'kıyafet') {
-      normalizedType = 'upper';
-    } else if (['elbise', 'dress', 'tek parça elbise'].includes(normalizedType)) {
-      normalizedType = 'dress';
-    } else if (!['upper', 'lower', 'dress'].includes(normalizedType)) {
-      // Güvenli varsayılan
-      normalizedType = 'upper';
-    }
+    let normalizedType = 'upper'; // Face swap için varsayılan
+    let modelMimeType, clothingMimeType, userMimeType, targetMimeType;
 
-    // Base64 stringlerden MIME tiplerini belirle
-    const modelMimeType = getMimeTypeFromBase64(modelImage);
-    const clothingMimeType = getMimeTypeFromBase64(clothingImage);
+    if (operationType === 'faceswap') {
+      // Face swap için MIME tipleri
+      userMimeType = getMimeTypeFromBase64(userImage);
+      targetMimeType = getMimeTypeFromBase64(targetImage);
+    } else {
+      // Normal try-on için clothingType normalizasyonu
+      normalizedType = (clothingType || '').toLowerCase();
+      if (normalizedType === 'single' || normalizedType === 'kıyafet') {
+        normalizedType = 'upper';
+      } else if (['elbise', 'dress', 'tek parça elbise'].includes(normalizedType)) {
+        normalizedType = 'dress';
+      } else if (!['upper', 'lower', 'dress'].includes(normalizedType)) {
+        normalizedType = 'upper';
+      }
+
+      // Base64 stringlerden MIME tiplerini belirle
+      modelMimeType = getMimeTypeFromBase64(modelImage);
+      clothingMimeType = getMimeTypeFromBase64(clothingImage);
+    }
 
     // Gemini 2.5 Flash Image Preview modelini başlat
     const model = genAI.getGenerativeModel({ 
       model: "gemini-2.5-flash-image-preview",
       generationConfig: {
-        temperature: 0.3, // Çoklu kıyafet için daha düşük temperature
+        temperature: 0.2, // Detay/typography korunumu için daha stabil sonuçlar
         topP: 0.9,
         maxOutputTokens: 4096,
       },
     });
 
-    // Çoklu kıyafet mi tek kıyafet mi kontrol et
-    const isMultiGarment = additionalClothing && additionalClothing.length > 0;
-
-    // Güvenli debug loglar (içerik yazmadan metrik)
+    // İşlem tipine göre debug logları
     try {
-      console.log('[NanoBanana] Incoming request', {
-        clothingTypeRaw: clothingType,
-        clothingType: normalizedType,
-        modelLen: modelImage?.length || 0,
-        clothingLen: clothingImage?.length || 0,
-        isMultiGarment,
-        additionalCount: additionalClothing?.length || 0
-      });
+      if (operationType === 'faceswap') {
+        console.log('[NanoBanana] Face swap request', {
+          operationType,
+          userImageLen: userImage?.length || 0,
+          targetImageLen: targetImage?.length || 0
+        });
+      } else {
+        const isMultiGarment = additionalClothing && additionalClothing.length > 0;
+        console.log('[NanoBanana] Try-on request', {
+          operationType,
+          clothingTypeRaw: clothingType,
+          clothingType: normalizedType,
+          modelLen: modelImage?.length || 0,
+          clothingLen: clothingImage?.length || 0,
+          isMultiGarment,
+          additionalCount: additionalClothing?.length || 0
+        });
+      }
     } catch {}
     
     let prompt: string;
     let contents: any[] = [];
 
-    if (isMultiGarment) {
+    if (operationType === 'faceswap') {
+      // Face swap işlemi
+      prompt = createFaceSwapPrompt();
+      
+      contents = [
+        { text: prompt },
+        {
+          inlineData: {
+            mimeType: userMimeType,
+            data: userImage
+          }
+        },
+        {
+          inlineData: {
+            mimeType: targetMimeType,
+            data: targetImage
+          }
+        },
+        { 
+          text: `Face swap işlemi: İlk fotoğraftaki yüzü ikinci fotoğraftaki modelin üzerine doğal şekilde yerleştir.` 
+        }
+      ];
+    } else {
+      // Normal try-on işlemi
+      const isMultiGarment = additionalClothing && additionalClothing.length > 0;
+      
+      if (isMultiGarment) {
       // Çoklu kıyafet için (üst+alt)
       const additionalItem = additionalClothing[0];
       const upperType = normalizedType === 'upper' ? 'upper garment' : 'lower garment';
@@ -255,6 +351,7 @@ export async function POST(request: NextRequest) {
           text: `Kıyafet tipi: ${clothingType}. Lütfen bu kıyafeti modelin üzerinde doğal ve gerçekçi bir şekilde göster.` 
         }
       ];
+      }
     }
 
     // Google Nano Banana API çağrısını yap
@@ -302,16 +399,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Başarılı yanıt döndür
-    return createSuccessResponse({
+    const responseData: any = {
       generatedImage: generatedImageData,
-      mimeType: 'image/png', // Nano Banana genellikle PNG döndürür
-      clothingType: normalizedType,
-      isMultiGarment, // Çoklu kıyafet mi belirtir
-      garmentCount: isMultiGarment ? additionalClothing.length + 1 : 1,
+      mimeType: 'image/png',
+      operationType,
       prompt: prompt,
       apiResponse: responseText,
       processingTime: Date.now()
-    });
+    };
+
+    if (operationType === 'faceswap') {
+      responseData.swappedImage = generatedImageData; // Face swap için alias
+      responseData.meta = {
+        model: 'gemini-2.5-flash-image-preview',
+        timestamp: new Date().toISOString()
+      };
+    } else {
+      const isMultiGarment = additionalClothing && additionalClothing.length > 0;
+      responseData.clothingType = normalizedType;
+      responseData.isMultiGarment = isMultiGarment;
+      responseData.garmentCount = isMultiGarment ? additionalClothing.length + 1 : 1;
+    }
+
+    return createSuccessResponse(responseData);
 
   } catch (error: any) {
     console.error('Google Nano Banana API Error:', error);

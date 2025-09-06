@@ -10,6 +10,9 @@
 - [x] Tek parça akışında inference sadece `EditPage` üzerinden çağrılır (UI içinden çift çağrı yok)
 - [x] `clothingType` normalizasyonu (single → kıyafet) ve prompt tutarlılığı
 - [x] Güvenli debug logları (base64 uzunluk metrikleri, flag'ler) eklendi
+- [x] Clothing Panel UX: Cinsiyet seçimi toggle butonlarından dropdown'a geçirildi (erişilebilir `select`, Tailwind stilleri)
+- [x] Clothing Panel UX: Dropdown değişimi sonrası model grid ve otomatik model seçim davranışı korundu (useEffect ile)
+- [x] Clothing Panel UX: Dropdown'a "Kendiniz" seçeneği eklendi; seçilince Face Swap otomatik açılır ve özel bilgilendirme bölümü görünür
 - [ ] Undo/Redo ileri-geri butonları (opsiyonel)
 - [ ] Gerçek AI edit servisine entegrasyon (API key, güvenlik)
 - [ ] İndirme/Paylaşma entegrasyonları (export options)
