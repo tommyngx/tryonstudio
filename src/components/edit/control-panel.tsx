@@ -1,0 +1,149 @@
+'use client'
+
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { 
+  Sparkles, 
+  Download, 
+  Share2, 
+  Video, 
+  ShoppingCart, 
+  RotateCcw,
+  Settings,
+  Wand2,
+  Loader2
+} from 'lucide-react'
+
+interface ControlPanelProps {
+  onTryOn: () => void
+  isProcessing: boolean
+  hasPhoto: boolean
+  hasClothes: boolean
+  processedImage: string | null
+}
+
+export function ControlPanel({ 
+  onTryOn, 
+  isProcessing, 
+  hasPhoto, 
+  hasClothes, 
+  processedImage 
+}: ControlPanelProps) {
+  const [processingStep, setProcessingStep] = useState('')
+  const [qualityMode, setQualityMode] = useState<'fast' | 'balanced' | 'high'>('balanced')
+
+  const canTryOn = hasPhoto && hasClothes && !isProcessing
+  const hasResult = !!processedImage
+
+  return (
+    <div className="flex items-center justify-between">
+      {/* Sol taraf - Ana kontroller */}
+      <div className="flex items-center space-x-4">
+        {/* Ana Dene Butonu */}
+        <motion.button
+          onClick={onTryOn}
+          disabled={!canTryOn}
+          className={`flex items-center space-x-3 px-6 py-3 rounded-lg font-semibold text-base transition-all ${
+            canTryOn
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+          whileHover={canTryOn ? { scale: 1.02 } : {}}
+          whileTap={canTryOn ? { scale: 0.98 } : {}}
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>İşleniyor...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-5 h-5" />
+              <span>AI ile Dene</span>
+            </>
+          )}
+        </motion.button>
+
+        {/* Kalite Seçimi */}
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-600">Kalite:</span>
+          <select
+            value={qualityMode}
+            onChange={(e) => setQualityMode(e.target.value as any)}
+            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={isProcessing}
+          >
+            <option value="fast">Hızlı</option>
+            <option value="balanced">Dengeli</option>
+            <option value="high">Yüksek</option>
+          </select>
+        </div>
+
+        {/* İlerleme Durumu */}
+        {isProcessing && (
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <span>{processingStep || 'AI modeli çalışıyor...'}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Sağ taraf - İkincil eylemler */}
+      <div className="flex items-center space-x-2">
+        {/* Yeniden İşle */}
+        <button
+          onClick={onTryOn}
+          disabled={!hasResult || isProcessing}
+          className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RotateCcw className="w-4 h-4" />
+          <span className="text-sm">Yeniden</span>
+        </button>
+
+        {/* 360° Video */}
+        <button
+          disabled={!hasResult || isProcessing}
+          className="flex items-center space-x-2 px-4 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Video className="w-4 h-4" />
+          <span className="text-sm">360° Video</span>
+        </button>
+
+        {/* Ürün Bul */}
+        <button
+          disabled={!hasResult || isProcessing}
+          className="flex items-center space-x-2 px-4 py-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ShoppingCart className="w-4 h-4" />
+          <span className="text-sm">Ürün Bul</span>
+        </button>
+
+        {/* Divider */}
+        <div className="w-px h-6 bg-gray-300 mx-2"></div>
+
+        {/* İndir */}
+        <button
+          disabled={!hasResult || isProcessing}
+          className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="w-4 h-4" />
+          <span className="text-sm">İndir</span>
+        </button>
+
+        {/* Paylaş */}
+        <button
+          disabled={!hasResult || isProcessing}
+          className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Share2 className="w-4 h-4" />
+          <span className="text-sm">Paylaş</span>
+        </button>
+
+        {/* Gelişmiş Ayarlar */}
+        <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+          <Settings className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  )
+}
