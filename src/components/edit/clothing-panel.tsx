@@ -595,7 +595,6 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 
                 <div className="p-2">
                   <p className="text-xs font-medium text-gray-900">Model 1</p>
-                  <p className="text-xs text-blue-600">👨 Erkek</p>
                 </div>
               </motion.div>
             ) : (
@@ -628,7 +627,6 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 
                 <div className="p-2">
                   <p className="text-xs font-medium text-gray-900">Model 1</p>
-                  <p className="text-xs text-pink-600">👩 Kadın</p>
                 </div>
               </motion.div>
             )}
