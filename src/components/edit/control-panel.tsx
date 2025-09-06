@@ -20,6 +20,9 @@ interface ControlPanelProps {
   hasPhoto: boolean
   hasClothes: boolean
   processedImage: string | null
+  onZoomChange?: (zoom: number) => void
+  onVideoShowcase?: () => void
+  isVideoGenerating?: boolean
 }
 
 export function ControlPanel({ 
@@ -27,7 +30,10 @@ export function ControlPanel({
   isProcessing, 
   hasPhoto, 
   hasClothes, 
-  processedImage 
+  processedImage,
+  onZoomChange,
+  onVideoShowcase,
+  isVideoGenerating
 }: ControlPanelProps) {
   const [processingStep, setProcessingStep] = useState('')
   const [qualityMode, setQualityMode] = useState<'fast' | 'balanced' | 'high'>('balanced')
@@ -39,29 +45,14 @@ export function ControlPanel({
     <div className="flex items-center justify-between">
       {/* Sol taraf - Ana kontroller */}
       <div className="flex items-center space-x-4">
-        {/* Ana Dene Butonu */}
+        {/* Ana Try-On Butonu - Deaktif, ClothingPanel'daki butonları kullan */}
         <motion.button
-          onClick={onTryOn}
-          disabled={!canTryOn}
-          className={`flex items-center space-x-3 px-6 py-3 rounded-lg font-semibold text-base transition-all ${
-            canTryOn
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-          whileHover={canTryOn ? { scale: 1.02 } : {}}
-          whileTap={canTryOn ? { scale: 0.98 } : {}}
+          disabled={true}
+          className="flex items-center space-x-3 px-6 py-3 rounded-lg font-semibold text-base bg-gray-300 text-gray-500 cursor-not-allowed"
+          title="Kıyafet seçin ve sol paneldeki 'AI ile Dene' butonunu kullanın"
         >
-          {isProcessing ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>İşleniyor...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-5 h-5" />
-              <span>AI ile Dene</span>
-            </>
-          )}
+          <Sparkles className="w-5 h-5" />
+          <span>AI ile Dene</span>
         </motion.button>
 
         {/* Kalite Seçimi */}
@@ -102,11 +93,20 @@ export function ControlPanel({
 
         {/* 360° Video */}
         <button
-          disabled={!hasResult || isProcessing}
-          className="flex items-center space-x-2 px-4 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={onVideoShowcase}
+          disabled={!hasResult || isProcessing || isVideoGenerating}
+          className={`flex items-center space-x-2 px-4 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            isVideoGenerating ? 'bg-purple-100' : ''
+          }`}
         >
-          <Video className="w-4 h-4" />
-          <span className="text-sm">360° Video</span>
+          {isVideoGenerating ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Video className="w-4 h-4" />
+          )}
+          <span className="text-sm">
+            {isVideoGenerating ? 'Video Oluşturuluyor...' : '360° Video'}
+          </span>
         </button>
 
         {/* Ürün Bul */}

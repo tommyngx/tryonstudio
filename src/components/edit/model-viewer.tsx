@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { useDropzone } from 'react-dropzone'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, ZoomIn, ZoomOut, RotateCcw, RefreshCw, Eye, EyeOff, Sparkles, User } from 'lucide-react'
+import { Upload, Sparkles, Eye, Users, Video, Loader2, RefreshCw, User } from 'lucide-react'
+import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
 import { uploadImage, performVirtualTryOn, getFullImageUrl } from '@/lib/api'
 import { useAppStore } from '@/stores/app-store'
@@ -15,6 +15,8 @@ interface ModelViewerProps {
   isProcessing: boolean
   zoomLevel: number
   onPhotoUpload: (photo: string) => void
+  onVideoShowcase?: () => void
+  isVideoGenerating?: boolean
 }
 
 export function ModelViewer({ 
@@ -23,7 +25,9 @@ export function ModelViewer({
   selectedClothes, 
   isProcessing, 
   zoomLevel, 
-  onPhotoUpload 
+  onPhotoUpload,
+  onVideoShowcase,
+  isVideoGenerating = false
 }: ModelViewerProps) {
   const [viewMode, setViewMode] = useState<'before' | 'after' | 'split'>('after')
   const [dragPosition, setDragPosition] = useState(50) // Split view için

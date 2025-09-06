@@ -18,6 +18,7 @@ import {
 import { ClothingPanel } from '@/components/edit/clothing-panel'
 import { ModelViewer } from '@/components/edit/model-viewer'
 import { ControlPanel } from '@/components/edit/control-panel'
+import { VideoPlayer } from '@/components/edit/video-player'
 import { useRouter } from 'next/navigation'
 
 export default function EditPage() {
@@ -31,6 +32,9 @@ export default function EditPage() {
   const [processedImage, setProcessedImage] = useState<string | null>(null)
   const [tryOnResult, setTryOnResult] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isVideoGenerating, setIsVideoGenerating] = useState(false)
+  const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(100)
 
   // Nano Banana Virtual Try-On callback'i
@@ -95,6 +99,79 @@ export default function EditPage() {
       alert('Virtual try-on işlemi başarısız oldu')
     } finally {
       setIsProcessing(false)
+    }
+  }
+
+  // 360° Video Generation fonksiyonu
+  const handleVideoShowcase = async () => {
+    if (!tryOnResult) {
+      alert('Önce virtual try-on işlemi yapın')
+      return
+    }
+
+    setIsVideoGenerating(true)
+
+    try {
+      // Try-on sonucundan base64 data'yı çıkar
+      const base64Data = tryOnResult.split(',')[1]
+
+      const requestBody = {
+        tryOnResultImage: base64Data,
+        clothingDescription: 'stylish outfit',
+        videoDuration: '8 seconds',
+        videoStyle: 'professional fashion showcase'
+      }
+
+      console.log('Veo 3 Video Generation API çağrısı başlatılıyor...')
+
+      const response = await fetch('/api/veo3-video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      const result = await response.json()
+
+      console.log('API Response:', result)
+      console.log('Generated Video Data Length:', result.data?.generatedVideo?.length)
+      console.log('API Response Message:', result.data?.apiResponse)
+
+      if (result.success && result.data.generatedVideo) {
+        // Base64 stringin gerçek video olup olmadığını kontrol et
+        const videoBase64 = result.data.generatedVideo
+        
+        // Placeholder string kontrolü
+        if (videoBase64 === 'VklERU9fUExBQ0VIT0xERVJfRkFTSElPTl9TSE9XQ0FTRQ==') {
+          console.warn('⚠️ Simulated video response alındı - Gerçek video değil!')
+          
+          // Demo amaçlı sample video kullan
+          console.log('🎬 Demo video ile test edilecek...')
+          setGeneratedVideo('/demo-video.mp4') // Public klasöründen demo video
+          setShowVideoPlayer(true)
+          
+          alert('🎬 Video Generation Demo!\n\n⚠️ Bu simulated response (gerçek API için valid key gerekli)\n📹 Demo video player ile test ediliyor\n\nAPI: ' + (result.data.apiResponse || 'Unknown'))
+          return
+        }
+        
+        // Gerçek video data ise data URL oluştur
+        const videoDataUrl = `data:video/mp4;base64,${videoBase64}`
+        setGeneratedVideo(videoDataUrl)
+        setShowVideoPlayer(true)
+        
+        console.log('✅ 360° video başarıyla oluşturuldu!')
+        console.log('Video Data URL length:', videoDataUrl.length)
+      } else {
+        console.error('Video API hatası:', result.error)
+        alert(`Video oluşturma başarısız: ${result.error || 'Bilinmeyen hata'}`)
+      }
+
+    } catch (error) {
+      console.error('Video generation error:', error)
+      alert('Video oluşturma işlemi başarısız oldu')
+    } finally {
+      setIsVideoGenerating(false)
     }
   }
 
@@ -196,6 +273,8 @@ export default function EditPage() {
             isProcessing={isProcessing}
             zoomLevel={zoomLevel}
             onPhotoUpload={setUserPhoto}
+            onVideoShowcase={handleVideoShowcase}
+            isVideoGenerating={isVideoGenerating}
           />
 
           {/* Alt Kontrol Paneli */}
@@ -206,60 +285,21 @@ export default function EditPage() {
               hasPhoto={!!selectedModel}
               hasClothes={!!(selectedClothes.single || selectedClothes.combo)}
               processedImage={processedImage}
+              onZoomChange={setZoomLevel}
+              onVideoShowcase={handleVideoShowcase}
+              isVideoGenerating={isVideoGenerating}
             />
           </div>
         </div>
-
-        {/* Sağ Panel - Seçenekler (İsteğe bağlı) */}
-        <div className="w-64 bg-white border-l border-gray-200 p-4">
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-3">Seçilen Kıyafetler</h3>
-              <div className="space-y-2">
-                {selectedClothes.single && (
-                  <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded-lg">
-                    <div className="w-8 h-8 bg-blue-200 rounded"></div>
-                    <span className="text-sm">Tek Parça: {selectedClothes.single.name}</span>
-                  </div>
-                )}
-                {selectedClothes.combo && (
-                  <div className="flex items-center space-x-2 p-2 bg-green-50 rounded-lg">
-                    <div className="w-8 h-8 bg-green-200 rounded"></div>
-                    <span className="text-sm">Üst & Alt: {selectedClothes.combo.name}</span>
-                  </div>
-                )}
-                {!selectedClothes.single && !selectedClothes.combo && (
-                  <p className="text-sm text-gray-500">Henüz kıyafet seçilmedi</p>
-                )}
-                {tryOnResult && (
-                  <div className="flex items-center space-x-2 p-2 bg-teal-50 rounded-lg">
-                    <div className="w-8 h-8 bg-teal-200 rounded"></div>
-                    <span className="text-sm">AI Sonuç Hazır</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-3">Hızlı İşlemler</h3>
-              <div className="space-y-2">
-                <button className="w-full flex items-center space-x-2 px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                  <Camera className="w-4 h-4" />
-                  <span>Fotoğraf Değiştir</span>
-                </button>
-                <button className="w-full flex items-center space-x-2 px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                  <Video className="w-4 h-4" />
-                  <span>360° Video</span>
-                </button>
-                <button className="w-full flex items-center space-x-2 px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Sıfırla</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
+
+      {/* Video Player Modal */}
+      <VideoPlayer
+        videoUrl={generatedVideo}
+        isVisible={showVideoPlayer}
+        onClose={() => setShowVideoPlayer(false)}
+        title="🎬 AI Generated 360° Fashion Showcase"
+      />
     </div>
   )
 }

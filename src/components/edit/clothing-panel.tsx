@@ -437,7 +437,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                     Üst+Alt Birlikte Deneniyor...
                   </div>
                 ) : (
-                  '👕👖 Üst+Alt Birlikte Dene'
+                  '🤖 AI ile Üst+Alt Dene'
                 )}
               </button>
             )}
@@ -514,7 +514,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                           İşleniyor...
                         </div>
                       ) : (
-                        'Dene'
+                        '🤖 AI ile Dene'
                       )}
                     </button>
                   </div>
