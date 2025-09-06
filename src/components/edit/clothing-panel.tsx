@@ -629,7 +629,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
               >
                 <option value="men">👨 Erkek</option>
                 <option value="women">👩 Kadın</option>
-                <option value="self">🧑 Kendiniz</option>
+                <option value="self">🧑 Modeliniz</option>
               </select>
               {/* Dropdown ok ikonu */}
               <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
@@ -638,7 +638,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
             </div>
           </div>
 
-          {/* Model Grid veya Kendiniz Bölümü */}
+          {/* Model Grid veya Modeliniz Bölümü */}
           {genderTab !== 'self' ? (
             <div className="grid grid-cols-3 gap-3">
             {genderTab === 'men' ? (
@@ -735,12 +735,12 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
             </motion.div>
           </div>
           ) : (
-            // Kendiniz Bölümü: Face Swap yönlendirmesi ve hızlı yükleme
+            // Modeliniz Bölümü: Face Swap yönlendirmesi ve hızlı yükleme
             <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-purple-600 mt-0.5" />
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-purple-900">Kendiniz</h4>
+                  <h4 className="text-sm font-semibold text-purple-900">Modeliniz</h4>
                   <p className="text-xs text-purple-800 mt-0.5">Kendi fotoğrafınızı yükleyin; fotoğrafınız doğrudan model olarak kullanılacaktır. Yükledikten sonra alttaki "AI ile Dene" butonu ile devam edin.</p>
                   {/* Self modu için gizli input (Face Swap UI gizli olduğunda da kullanılabilir) */}
                   <input

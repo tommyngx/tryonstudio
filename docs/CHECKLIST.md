@@ -13,6 +13,9 @@
 - [x] Clothing Panel UX: Cinsiyet seçimi toggle butonlarından dropdown'a geçirildi (erişilebilir `select`, Tailwind stilleri)
 - [x] Clothing Panel UX: Dropdown değişimi sonrası model grid ve otomatik model seçim davranışı korundu (useEffect ile)
 - [x] Clothing Panel UX: Dropdown'a "Kendiniz" seçeneği eklendi; seçilince Face Swap otomatik açılır ve özel bilgilendirme bölümü görünür
+- [x] ModelViewer: Sorunsuz zoom & pan (wheel/pinch zoom, mouse/touch pan, klavye ok tuşları, +/- zoom, R reset)
+- [x] Zoom senkronizasyonu: `onZoomChange` ile üstteki butonlarla tam uyum
+- [x] Dokümantasyon güncellemesi: CHANGELOG ve memory kaydı eklendi
 - [ ] Undo/Redo ileri-geri butonları (opsiyonel)
 - [ ] Gerçek AI edit servisine entegrasyon (API key, güvenlik)
 - [ ] İndirme/Paylaşma entegrasyonları (export options)

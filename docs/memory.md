@@ -1,4 +1,12 @@
 # Memory - AI Edit Panel, Thumbnail Gallery & Face Swap
+### ModelViewer Etkileşimleri (2025-09-07 01:00 +03:00)
+- ModelViewer'a sorunsuz zoom & pan eklendi.
+- Zoom: Mouse wheel/trackpad pinch (ctrl/cmd) ile; klavye `+`/`-` ile. Min 25%, max 400%, step 10.
+- Pan: Mouse sürükleme ve tek parmak touch hareketi ile (ok tuşları ile de pan mümkün).
+- Reset: `R` ile pan ve zoom 0/100'e döner.
+- Uygulama tek bir transform wrapper üzerinde `translate(x,y) + scale(s)` ile yapılır; Next `Image` bileşenleri `select-none` ve `draggable={false}`.
+- Üst çubuktaki zoom kontrolü ile senkron için `onZoomChange` prop'u eklendi ve `EditPage` içinde `setZoomLevel` bağlandı.
+
 ### Kendiniz Akışı (2025-09-07 00:05 +03:00)
 - "Kendiniz" seçeneği eklendi. Bu modda Face Swap UI GÖSTERİLMEZ.
 - Kullanıcı fotoğrafını yüklediğinde bu fotoğraf doğrudan model olarak seçilir (`onModelSelect(imageUrl)`).

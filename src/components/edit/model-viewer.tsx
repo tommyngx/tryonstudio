@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Upload, Sparkles, Eye, Users, Video, Loader2, RefreshCw, User } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
@@ -14,6 +14,11 @@ interface ModelViewerProps {
   selectedClothes: { single?: any; combo?: any }
   isProcessing: boolean
   zoomLevel: number
+  // Zoom seviyesi dışarıdan butonlarla değiştiği için, wheel/pinch zoom'u senkron tutmak adına
+  // opsiyonel bir onZoomChange callback'i destekliyoruz.
+  onZoomChange?: (nextZoom: number) => void
+  // Dışarıdan reset tetiklemek için bir sinyal. Değeri değiştiğinde pan/zoom sıfırlanır.
+  resetSignal?: number
   onPhotoUpload: (photo: string) => void
   onVideoShowcase?: () => void
   isVideoGenerating?: boolean
@@ -25,12 +30,141 @@ export function ModelViewer({
   selectedClothes, 
   isProcessing, 
   zoomLevel, 
+  onZoomChange,
+  resetSignal,
   onPhotoUpload,
   onVideoShowcase,
   isVideoGenerating = false
 }: ModelViewerProps) {
   const [viewMode, setViewMode] = useState<'before' | 'after' | 'split'>('after')
   const [dragPosition, setDragPosition] = useState(50) // Split view için
+
+  // ---------------------------------------------------------------------------
+  // Etkileşimli Zoom & Pan Durumları
+  // - panX/panY: görüntünün sürükleme ile taşınması
+  // - isPanning: aktif sürükleme olup olmadığı
+  // - lastPointer: pan başlangıç noktası
+  // - Konst değerler: min/max zoom ve step
+  // ---------------------------------------------------------------------------
+  const [panX, setPanX] = useState(0)
+  const [panY, setPanY] = useState(0)
+  const [isPanning, setIsPanning] = useState(false)
+  const lastPointer = useRef<{ x: number; y: number } | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  const MIN_ZOOM = 25
+  const MAX_ZOOM = 400
+  const ZOOM_STEP = 10
+
+  // Ölçek değerini hesapla (yüzde → scale katsayısı)
+  const scale = useMemo(() => Math.max(0.01, zoomLevel / 100), [zoomLevel])
+
+  // Panning’i resetlemek ve zoom’u varsayılan hale getirmek için yardımcı fonksiyon
+  const resetView = useCallback(() => {
+    // Bu blok: pan ve zoom resetler
+    setPanX(0)
+    setPanY(0)
+    if (onZoomChange) onZoomChange(100)
+  }, [onZoomChange])
+
+  // Wheel ile pan/zoom (trackpad pinch genellikle ctrlKey ile gelir)
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    // Bu blok: wheel olayını özelleştirerek pan/zoom etkileşimini uygular
+    if (isProcessing) return
+    // Shift ile yatay kaydırmaya öncelik verilebilir; biz pan yapacağız
+    const isPinchZoom = e.ctrlKey || e.metaKey
+    if (isPinchZoom && onZoomChange) {
+      e.preventDefault()
+      const delta = -e.deltaY // trackpad pinch: aşağı negatif → zoom in
+      const next = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoomLevel + Math.sign(delta) * ZOOM_STEP))
+      onZoomChange(next)
+      return
+    }
+
+    // Aksi halde pan: deltaX/deltaY değerlerini uygula
+    // Magic number kullanmamak için direkt delta değerini kullanıyoruz, hassasiyet iyi.
+    e.preventDefault()
+    setPanX(prev => prev - e.deltaX)
+    setPanY(prev => prev - e.deltaY)
+  }, [isProcessing, onZoomChange, zoomLevel])
+
+  // Mouse sürükleme ile pan
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    // Bu blok: mouse down ile pan başlangıcı
+    if (isProcessing) return
+    setIsPanning(true)
+    lastPointer.current = { x: e.clientX, y: e.clientY }
+  }, [isProcessing])
+
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
+    // Bu blok: mouse move ile pan güncelleme
+    if (!isPanning || !lastPointer.current) return
+    const dx = e.clientX - lastPointer.current.x
+    const dy = e.clientY - lastPointer.current.y
+    setPanX(prev => prev + dx)
+    setPanY(prev => prev + dy)
+    lastPointer.current = { x: e.clientX, y: e.clientY }
+  }, [isPanning])
+
+  const endPan = useCallback(() => {
+    // Bu blok: pan işlemini sonlandırır
+    setIsPanning(false)
+    lastPointer.current = null
+  }, [])
+
+  // Touch desteği (tek parmak pan, iki parmak pinch → wheel event emüle edilmez; min destek pan)
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    // Bu blok: dokunma ile pan başlangıcı (tek parmak)
+    if (isProcessing) return
+    if (e.touches.length === 1) {
+      const t = e.touches[0]
+      lastPointer.current = { x: t.clientX, y: t.clientY }
+      setIsPanning(true)
+    }
+  }, [isProcessing])
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    // Bu blok: dokunma ile pan güncelleme
+    if (!isPanning || !lastPointer.current) return
+    const t = e.touches[0]
+    const dx = t.clientX - lastPointer.current.x
+    const dy = t.clientY - lastPointer.current.y
+    setPanX(prev => prev + dx)
+    setPanY(prev => prev + dy)
+    lastPointer.current = { x: t.clientX, y: t.clientY }
+  }, [isPanning])
+
+  const onTouchEnd = useCallback(() => {
+    // Bu blok: dokunma pan bitişi
+    setIsPanning(false)
+    lastPointer.current = null
+  }, [])
+
+  // Klavye desteği (ok tuşları pan, +/- zoom; R reset)
+  const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // Bu blok: klavye kısayolları ile pan/zoom kontrolü sağlar
+    if (isProcessing) return
+    const move = 20
+    if (e.key === 'ArrowLeft') { e.preventDefault(); setPanX(p => p + move) }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); setPanX(p => p - move) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setPanY(p => p + move) }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); setPanY(p => p - move) }
+    else if ((e.key === '+' || e.key === '=') && onZoomChange) { e.preventDefault(); onZoomChange(Math.min(MAX_ZOOM, zoomLevel + ZOOM_STEP)) }
+    else if ((e.key === '-' || e.key === '_') && onZoomChange) { e.preventDefault(); onZoomChange(Math.max(MIN_ZOOM, zoomLevel - ZOOM_STEP)) }
+    else if (e.key.toLowerCase() === 'r') { e.preventDefault(); resetView() }
+  }, [isProcessing, onZoomChange, zoomLevel, resetView])
+
+  // resetSignal değişince pan/zoom resetle
+  // Bu sayede parent (EditPage) header butonu ile sıfırlama yapabilir
+  // Not: zoom reseti parent setZoomLevel ile sağlanır; burada pan resetlenir ve ek güvenlik için zoom reset callback’i çağrılır.
+  useEffect(() => {
+    if (resetSignal === undefined) return
+    // Pan'ı sıfırla
+    setPanX(0)
+    setPanY(0)
+    // Zoom'u 100'e çekmesi için parent'a haber ver
+    if (onZoomChange) onZoomChange(100)
+  }, [resetSignal, onZoomChange])
 
   // Fotoğraf yükleme
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -55,6 +189,7 @@ export function ModelViewer({
   })
 
   return (
+    // Bu blok: ana kapsayıcı. overflow-hidden ile dış scroll’u devre dışı bırakıyoruz.
     <div className="flex-1 bg-gray-100 relative overflow-hidden">
       {/* View Mode Toggle */}
       {userPhoto && (
@@ -130,7 +265,24 @@ export function ModelViewer({
           </div>
         ) : (
           // Model görüntüleyici
-          <div className="relative h-full w-full max-w-2xl">
+          <div
+            className="relative h-full w-full max-w-2xl"
+            // Etkileşim alanı: wheel, pan ve klavye odaklanma
+            ref={containerRef}
+            onWheel={handleWheel}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={endPan}
+            onMouseLeave={endPan}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onKeyDown={onKeyDown}
+            onDoubleClick={resetView}
+            tabIndex={0}
+            style={{ touchAction: 'none', cursor: isPanning ? 'grabbing' : 'grab' }}
+            aria-label="Model görüntüleyici alanı (zoom ve pan destekli)"
+          >
             <AnimatePresence mode="wait">
               {viewMode === 'before' && (
                 <motion.div
@@ -140,14 +292,18 @@ export function ModelViewer({
                   exit={{ opacity: 0 }}
                   className="h-full w-full relative"
                 >
-                  <div className="absolute inset-4 bg-transparent rounded-2xl overflow-hidden">
-                    <div className="h-full relative">
+                  <div className="absolute inset-0 bg-transparent rounded-2xl overflow-hidden">
+                    {/* Bu blok: transform katmanı. translate + scale birlikte uygulanır. */}
+                    <div
+                      className="h-full relative will-change-transform"
+                      style={{ transform: `translate(${panX}px, ${panY}px) scale(${scale})` }}
+                    >
                       <Image
                         src={userPhoto}
                         alt="Orijinal fotoğraf"
                         fill
-                        className="object-contain"
-                        style={{ transform: `scale(${zoomLevel / 100})` }}
+                        className="object-contain select-none"
+                        draggable={false}
                       />
                       <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
                         Orijinal
@@ -165,8 +321,12 @@ export function ModelViewer({
                   exit={{ opacity: 0 }}
                   className="h-full w-full relative"
                 >
-                  <div className="absolute inset-4 bg-transparent rounded-2xl overflow-hidden">
-                    <div className="h-full relative">
+                  <div className="absolute inset-0 bg-transparent rounded-2xl overflow-hidden">
+                    {/* Bu blok: transform katmanı. translate + scale birlikte uygulanır. */}
+                    <div
+                      className="h-full relative will-change-transform"
+                      style={{ transform: `translate(${panX}px, ${panY}px) scale(${scale})` }}
+                    >
                       {isProcessing ? (
                         <div className="h-full flex items-center justify-center bg-gray-100">
                           <div className="text-center">
@@ -186,12 +346,9 @@ export function ModelViewer({
                             src={processedImage}
                             alt="AI işlenmiş fotoğraf"
                             fill
-                            className="object-contain"
-                            style={{ transform: `scale(${zoomLevel / 100})` }}
+                            className="object-contain select-none"
+                            draggable={false}
                           />
-                          <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                            AI Sonucu
-                          </div>
                         </>
                       ) : (
                         <div className="h-full flex items-center justify-center bg-gray-100">
@@ -235,16 +392,22 @@ export function ModelViewer({
                   exit={{ opacity: 0 }}
                   className="h-full w-full relative"
                 >
-                  <div className="absolute inset-4 bg-transparent rounded-2xl overflow-hidden flex">
+                  <div className="absolute inset-0 bg-transparent rounded-2xl overflow-hidden flex">
                     {/* Sol taraf - Orijinal */}
                     <div className="w-1/2 relative border-r border-gray-200">
-                      <Image
-                        src={userPhoto}
-                        alt="Orijinal"
-                        fill
-                        className="object-contain"
-                        style={{ transform: `scale(${zoomLevel / 100})` }}
-                      />
+                      {/* Bu blok: sol görüntü için transform katmanı */}
+                      <div
+                        className="absolute inset-0 will-change-transform"
+                        style={{ transform: `translate(${panX}px, ${panY}px) scale(${scale})` }}
+                      >
+                        <Image
+                          src={userPhoto}
+                          alt="Orijinal"
+                          fill
+                          className="object-contain select-none"
+                          draggable={false}
+                        />
+                      </div>
                       <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
                         Önce
                       </div>
@@ -254,13 +417,19 @@ export function ModelViewer({
                     <div className="w-1/2 relative">
                       {processedImage ? (
                         <>
-                          <Image
-                            src={processedImage}
-                            alt="İşlenmiş"
-                            fill
-                            className="object-contain"
-                            style={{ transform: `scale(${zoomLevel / 100})` }}
-                          />
+                          {/* Bu blok: sağ görüntü için transform katmanı */}
+                          <div
+                            className="absolute inset-0 will-change-transform"
+                            style={{ transform: `translate(${panX}px, ${panY}px) scale(${scale})` }}
+                          >
+                            <Image
+                              src={processedImage}
+                              alt="İşlenmiş"
+                              fill
+                              className="object-contain select-none"
+                              draggable={false}
+                            />
+                          </div>
                           <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
                             Sonra
                           </div>

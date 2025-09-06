@@ -2,6 +2,9 @@
 
 ## 2025-09-07
 
+- 01:17: ModelViewer içinde "AI Sonucu" yazılı overlay etiketi kaldırıldı; görsel üzerinde gereksiz metin kalabalığı azaltıldı. Dosya: `src/components/edit/model-viewer.tsx`.
+- 01:10: Pan alanı genişletildi: Görsel oluşturma alanı artık tam alan üzerinde (inset-0) etkileşimli; önceki çerçeve (inset-4) kısıtı kaldırıldı. Header'a zoom butonlarının yanına Reset (100%) eklendi. `ModelViewer`'a `resetSignal` prop'u ve çift tık ile reset davranışı eklendi. Dosyalar: `src/components/edit/model-viewer.tsx`, `src/app/edit/page.tsx`.
+- 01:00: Model görüntüleyicide sorunsuz zoom & pan etkileşimi eklendi. Mouse wheel/trackpad pinch ile zoom (ctrl/cmd destekli), mouse sürükleme ve tek parmak touch ile pan, ok tuşları ile pan; +/− ile zoom; R ile reset eklendi. Transformlar tek bir wrapper üzerinde `translate + scale` ile uygulanıyor. `onZoomChange` prop'u ile üstteki zoom kontrolleriyle tam senkron çalışır. Dosyalar: `src/components/edit/model-viewer.tsx`, `src/app/edit/page.tsx`.
 - 00:24: Strengthened try-on prompts to PRESERVE existing brand logos/prints/labels/embroidery exactly (position/scale/orientation/colors) and forbid hallucinating new graphics. Applied to upper/lower/dress/multi-garment prompts. File: `src/app/api/nano-banana/route.ts`.
 - 00:16: When re-running try-on with the SAME selected model, the previous try-on result is now automatically appended to history before replacing it. A `lastModelKeyForTryOn` state tracks the model key (faceSwappedModel or selectedModel). Files: `src/app/edit/page.tsx`.
 - 00:07: Self model pipeline fixed: when user selects "Kendiniz", the uploaded photo is now passed as a data URL to `onModelSelect`, and `EditPage.handleTryOnResult` detects data URLs to extract base64 without fetch. Also ensured bottom action button always shows "AI ile Dene" and does not depend on Face Swap in self mode. Files: `src/components/edit/clothing-panel.tsx`, `src/app/edit/page.tsx`.

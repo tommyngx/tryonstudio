@@ -42,6 +42,7 @@ export default function EditPage() {
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(100)
+  const [viewerResetKey, setViewerResetKey] = useState(0)
   const [isEditing, setIsEditing] = useState(false) // AI Edit async indicator
   const [tryOnTrigger, setTryOnTrigger] = useState<(() => Promise<void> | void) | null>(null)
   // Aynı model ile yapılan ardışık try-on sonuçlarını geçmişe eklemek için kullanılan anahtar
@@ -560,6 +561,13 @@ export default function EditPage() {
             >
               <ZoomIn className="w-4 h-4" />
             </button>
+            <button
+              onClick={() => { setZoomLevel(100); setViewerResetKey(k => k + 1) }}
+              className="p-2 hover:bg-white rounded-md transition-colors"
+              title="Reset (100%)"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Action Buttons */}
@@ -651,6 +659,8 @@ export default function EditPage() {
               selectedClothes={selectedClothes}
               isProcessing={isProcessing || isFaceSwapping}
               zoomLevel={zoomLevel}
+              onZoomChange={setZoomLevel}
+              resetSignal={viewerResetKey}
               onPhotoUpload={(photo) => setUserPhoto(photo)}
               onVideoShowcase={handleVideoShowcase}
               isVideoGenerating={isVideoGenerating}
@@ -805,7 +815,7 @@ export default function EditPage() {
         </div>
 
         {/* Sağ: Dikey Thumbnail Galerisi - AI Panel'in sağında */}
-        {/* "Kendiniz" modunda (selectedModel data URL ise) orijinal olarak kullanıcı fotoğrafını göster */}
+        {/* "Modeliniz" modunda (selectedModel data URL ise) orijinal olarak kullanıcı fotoğrafını göster */}
         <ThumbnailGallery
           originalImage={selectedModel?.startsWith('data:') ? selectedModel : tryOnResult}
           history={editHistory}
