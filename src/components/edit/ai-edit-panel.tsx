@@ -62,6 +62,15 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
     }
   }
 
+  // Enter to submit (Shift+Enter = new line)
+  const handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      // attempt submit regardless; handleCustom shows helpful alerts if disabled
+      void handleCustom()
+    }
+  }
+
   const handleCustom = async () => {
     // Always log click attempt to diagnose disabled states
     try {
@@ -200,6 +209,7 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
                     onChange={(e) => {
                       if (e.target.value.length <= 500) setPrompt(e.target.value)
                     }}
+                    onKeyDown={handleKeyDown}
                     placeholder="Görselinizde ne değişmesini istiyorsunuz?"
                     rows={2}
                     disabled={!hasImage || loading}

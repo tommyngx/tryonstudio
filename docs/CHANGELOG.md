@@ -30,3 +30,5 @@
  - 18:59: Converted all try-on prompts to English and specialized by garment type: added separate prompts for upper-only, lower-only, dress, and retained multi-garment prompt. Normalized `clothingType` mapping (single→upper, dress aliases→dress) in `src/app/api/nano-banana/route.ts`.
 
  - 19:02: Edit flow policy updated in `src/app/edit/page.tsx`: AI Edit requests now ALWAYS use the ORIGINAL try-on output as the base image when sending to `/api/nano-banana-edit`. New results are appended to history with a new sequential item and auto-selected.
+
+ - 19:15: Enabled Enter-to-submit in AI Edit Panel textarea (`src/components/edit/ai-edit-panel.tsx`). Shift+Enter inserts a newline; Enter triggers submit.
