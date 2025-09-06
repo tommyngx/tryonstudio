@@ -72,7 +72,7 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 420, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-          className="w-[380px] min-w-[320px] bg-white border-l border-gray-200 h-full flex flex-col shadow-lg"
+          className="absolute right-0 top-0 z-40 w-[320px] md:w-[380px] bg-white border-l border-gray-200 h-full flex flex-col shadow-lg"
         >
           {/* Header - Gradient Background */}
           <div className="px-4 py-3 bg-gradient-to-r from-purple-100 to-pink-100 border-b border-purple-200 flex items-center justify-between">

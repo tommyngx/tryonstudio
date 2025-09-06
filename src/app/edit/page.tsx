@@ -54,6 +54,42 @@ export default function EditPage() {
     setProcessedImage(selected)
   }, [selectedImageIndex, editHistory, tryOnResult])
 
+  // Panel açık/kapalı durumunu localStorage'da sakla ve klavye kısayollarını yönet
+  useEffect(() => {
+    // İlk yüklemede kaydedilmiş durumu uygula
+    try {
+      const saved = localStorage.getItem('ai_panel_open')
+      if (saved !== null) {
+        setIsAiPanelOpen(saved === '1')
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    // Durumu kalıcı hale getir
+    try {
+      localStorage.setItem('ai_panel_open', isAiPanelOpen ? '1' : '0')
+    } catch {}
+  }, [isAiPanelOpen])
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      // Esc ile kapat
+      if (e.key === 'Escape' && isAiPanelOpen) {
+        e.preventDefault()
+        setIsAiPanelOpen(false)
+        return
+      }
+      // Ctrl/Cmd + E ile aç/kapa
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+        e.preventDefault()
+        setIsAiPanelOpen(prev => !prev)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isAiPanelOpen])
+
   // Nano Banana Virtual Try-On callback'i
   const handleTryOnResult = async (clothingImageData: string, clothingType: string, additionalClothing?: any[]) => {
     setIsProcessing(true)
@@ -284,7 +320,7 @@ export default function EditPage() {
         </div>
 
         {/* Orta Bölge: Model Görüntüleyici + Thumbnail Galeri + AI Panel */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className={`flex-1 flex overflow-hidden relative`}>
           {/* Sol: Görüntüleyici + Alt Kontroller */}
           <div className="flex-1 flex flex-col">
             <ModelViewer
@@ -293,7 +329,7 @@ export default function EditPage() {
               selectedClothes={selectedClothes}
               isProcessing={isProcessing}
               zoomLevel={zoomLevel}
-              onPhotoUpload={setUserPhoto}
+              onPhotoUpload={(photo) => setUserPhoto(photo)}
               onVideoShowcase={handleVideoShowcase}
               isVideoGenerating={isVideoGenerating}
             />
@@ -320,6 +356,24 @@ export default function EditPage() {
             history={editHistory}
             selectedIndex={selectedImageIndex}
             onSelect={setSelectedImageIndex}
+          />
+
+          {/* Sağ kenar açma togglesı - Panel kapalıyken görünür */}
+          {!isAiPanelOpen && (
+            <button
+              onClick={() => setIsAiPanelOpen(true)}
+              className="absolute top-1/2 -translate-y-1/2 right-0 z-30 bg-white border border-gray-200 rounded-l-lg py-3 px-2 shadow hover:bg-gray-50"
+              title="AI Düzenle panelini aç"
+            >
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              <span className="sr-only">AI Düzenle</span>
+            </button>
+          )}
+
+          {/* Spacer: Panel alanını rezerve ederek alt kontrollerin kapanmasını engeller */}
+          <div
+            aria-hidden
+            className={`flex-none transition-[width] duration-300 ease-out ${isAiPanelOpen ? 'w-[320px] md:w-[380px]' : 'w-0'}`}
           />
 
           {/* Sağ: AI Düzenleme Paneli */}

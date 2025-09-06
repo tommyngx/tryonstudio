@@ -11,3 +11,10 @@
 - [ ] Gerçek AI edit servisine entegrasyon (API key, güvenlik)
 - [ ] İndirme/Paylaşma entegrasyonları (export options)
 - [ ] E2E testler ve görsel regresyon testleri
+
+## UX - Collapsible Panel
+
+- [x] Panel kapalıyken sağ kenarda toggle butonu (Sparkles) ile açma
+- [x] Panel açıkken sol kenarda collapse handle (Chevron) ile kapatma
+- [x] Klavye kısayolları: Esc (kapat), Ctrl/Cmd + E (aç/kapa)
+- [x] Panel açık/kapalı durumu localStorage ile kalıcı

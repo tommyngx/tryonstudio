@@ -18,3 +18,7 @@
  - 17:07: Fixed TypeScript error in page.tsx by removing lastResponse prop from AiEditPanel component call (prop no longer exists after removing AI Response Card).
  - 17:08: Completely redesigned slider component with modern best practices: custom thumb with hover effects, purple gradient fill, percentage badge, visual indicators for Hafif/Güçlü labels, smooth animations, and improved accessibility.
  - 17:09: Complete AI Edit Panel optimization: fixed button positioning, compact layout (2-row textarea), single-column preset prompts, custom scrollbar, hover animations, modern button styling with lift effect, proper overflow handling, and responsive design improvements.
+
+ - 18:30: Collapsible AI Edit Panel improvements: added right-edge toggle button to reopen panel when closed, persisted panel open state in localStorage, and introduced keyboard shortcuts (Esc to close, Ctrl/Cmd+E to toggle). Removed FAB to avoid overlay conflicts and white-space issues.
+
+ - 18:38: Converted AI Edit Panel to absolute overlay (right:0, top:0) and added conditional right padding (`pr-[320px] md:pr-[380px]`) to the main content container to prevent overlap with the bottom control panel and gallery.

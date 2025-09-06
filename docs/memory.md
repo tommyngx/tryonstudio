@@ -13,6 +13,18 @@ Tarih: 2025-09-06 16:45 (+03:00)
   - `aiLastResponse: AiResponseMeta | null`
 - `ControlPanel` içine paneli açan buton eklendi.
 
+### Collapsible Panel Revizyonu (2025-09-06 18:38 +03:00)
+- Sağ AI paneli, flex child yerine overlay olacak şekilde `absolute right-0 top-0` konumlandırıldı (`src/components/edit/ai-edit-panel.tsx`). Bu sayede kapalıyken layout'ta boşluk/şerit bırakmıyor.
+- Panel açıkken içeriklerin kapanmaması için ana orta konteynerde koşullu sağ padding uygulandı: `pr-[320px] md:pr-[380px]` (`src/app/edit/page.tsx`). Padding değeri panel genişliği ile uyumludur.
+- Ekstra sol kenar kapatma handle'ı kaldırıldı; kapatma için header'daki `X` butonu tek kaynak olarak kullanılıyor.
+
+### Collapsible Panel (2025-09-06 18:30 +03:00)
+- Panel kapalıyken sağ kenarda `Sparkles` ikonlu bir toggle butonu ile açılır (konum: `page.tsx`, orta konteyner `relative`).
+- Panel açıkken panelin sol kenarında `ChevronRight` ikonlu bir collapse handle ile kapatılır (konum: `ai-edit-panel.tsx`, `motion.aside` `relative`).
+- Klavye kısayolları: `Esc` (kapat), `Ctrl/Cmd + E` (aç/kapa), `page.tsx` içinde global `keydown` listener.
+- Açık/kapalı durumu `localStorage('ai_panel_open')` ile kalıcı hale getirildi.
+- FAB yaklaşımı, örtüşme/boşluk problemleri ve görsel karmaşayı artırdığı için kaldırıldı; kenar toggles ile UX sadeleştirildi.
+
 ## UI/UX İlkeleri
 - Collapsible sağ panel (380px, min 320px). Try-on sonucu oluşursa otomatik açılır.
 - Preset chips, özel prompt (500 karakter), canlı karakter sayacı, strength slider (0.1–1.0).
