@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Upload, Info, X, Loader2 } from 'lucide-react'
 import Image from 'next/image'
@@ -26,6 +26,7 @@ interface ClothingPanelProps {
 
 export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel, onModelSelect, onTryOn }: ClothingPanelProps) {
   const [activeTab, setActiveTab] = useState<'single' | 'combo'>('single')
+  const [genderTab, setGenderTab] = useState<'men' | 'women'>('men') // Cinsiyet sekmesi
   const [uploadedClothes, setUploadedClothes] = useState<UploadedClothing[]>([])
   const [upperClothing, setUpperClothing] = useState<UploadedClothing | null>(null) // Üst giyim
   const [lowerClothing, setLowerClothing] = useState<UploadedClothing | null>(null) // Alt giyim
@@ -36,6 +37,15 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
   
   // Aktif tab'a göre kıyafetleri getir
   const clothingItems = getMenClothingByType(activeTab)
+  
+  // Cinsiyet değiştiğinde otomatik model seçimi
+  useEffect(() => {
+    if (genderTab === 'men' && onModelSelect) {
+      onModelSelect('/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg')
+    } else if (genderTab === 'women' && onModelSelect) {
+      onModelSelect('/images/women/a29ec4e4-0344-4dcb-9c57-ec6d367567ad.jpg')
+    }
+  }, [genderTab, onModelSelect])
   
   // Dosya yükleme işlemi (tek parça için)
   const handleFileUpload = async (files: FileList) => {
@@ -524,45 +534,112 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
           </div>
         )}
 
-        {/* Erkek Modeller Bölümü */}
+        {/* Model Seçimi Bölümü */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Erkek Modeller</h3>
+          {/* Cinsiyet Sekmeleri */}
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-900">Manken Modeller</h3>
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setGenderTab('men')}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                  genderTab === 'men' 
+                    ? 'bg-blue-500 text-white shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                👨 Erkek
+              </button>
+              <button
+                onClick={() => setGenderTab('women')}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                  genderTab === 'women' 
+                    ? 'bg-pink-500 text-white shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                👩 Kadın
+              </button>
+            </div>
+          </div>
+
+          {/* Model Grid */}
           <div className="grid grid-cols-3 gap-3">
-            <motion.div
-              className={`relative bg-white border-2 rounded-lg overflow-hidden cursor-pointer transition-all ${
-                selectedModel === '/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg'
-                  ? 'border-teal-500 ring-2 ring-teal-200'
-                  : 'border-gray-200 hover:border-blue-400'
-              }`}
-              onClick={() => onModelSelect && onModelSelect('/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg')}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="aspect-[3/4] bg-gray-50 relative">
-                <Image
-                  src="/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg"
-                  alt="Erkek Model"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              
-              {/* Seçim göstergesi */}
-              {selectedModel === '/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg' && (
-                <div className="absolute top-2 right-2 w-6 h-6 bg-teal-500 text-white rounded-full flex items-center justify-center">
-                  ✓
+            {genderTab === 'men' ? (
+              // Erkek Modeller
+              <motion.div
+                className={`relative bg-white border-2 rounded-lg overflow-hidden cursor-pointer transition-all ${
+                  selectedModel === '/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg'
+                    ? 'border-blue-500 ring-2 ring-blue-200'
+                    : 'border-gray-200 hover:border-blue-400'
+                }`}
+                onClick={() => onModelSelect && onModelSelect('/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="aspect-[3/4] bg-gray-50 relative">
+                  <Image
+                    src="/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg"
+                    alt="Erkek Model"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
-              )}
-              
-              <div className="p-2">
-                <p className="text-xs font-medium text-gray-900">Model 1</p>
-                <p className="text-xs text-gray-500">Erkek</p>
-              </div>
-            </motion.div>
+                
+                {/* Seçim göstergesi */}
+                {selectedModel === '/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg' && (
+                  <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center">
+                    ✓
+                  </div>
+                )}
+                
+                <div className="p-2">
+                  <p className="text-xs font-medium text-gray-900">Model 1</p>
+                  <p className="text-xs text-blue-600">👨 Erkek</p>
+                </div>
+              </motion.div>
+            ) : (
+              // Kadın Modeller
+              <motion.div
+                className={`relative bg-white border-2 rounded-lg overflow-hidden cursor-pointer transition-all ${
+                  selectedModel === '/images/women/a29ec4e4-0344-4dcb-9c57-ec6d367567ad.jpg'
+                    ? 'border-pink-500 ring-2 ring-pink-200'
+                    : 'border-gray-200 hover:border-pink-400'
+                }`}
+                onClick={() => onModelSelect && onModelSelect('/images/women/a29ec4e4-0344-4dcb-9c57-ec6d367567ad.jpg')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="aspect-[3/4] bg-gray-50 relative">
+                  <Image
+                    src="/images/women/a29ec4e4-0344-4dcb-9c57-ec6d367567ad.jpg"
+                    alt="Kadın Model"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                
+                {/* Seçim göstergesi */}
+                {selectedModel === '/images/women/a29ec4e4-0344-4dcb-9c57-ec6d367567ad.jpg' && (
+                  <div className="absolute top-2 right-2 w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center">
+                    ✓
+                  </div>
+                )}
+                
+                <div className="p-2">
+                  <p className="text-xs font-medium text-gray-900">Model 1</p>
+                  <p className="text-xs text-pink-600">👩 Kadın</p>
+                </div>
+              </motion.div>
+            )}
             
             {/* Model ekleme placeholder'ları */}
             <motion.div
-              className="aspect-[3/4] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/50 transition-colors cursor-pointer"
+              className={`aspect-[3/4] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:bg-opacity-50 transition-colors cursor-pointer ${
+                genderTab === 'men' 
+                  ? 'hover:border-blue-400 hover:bg-blue-50' 
+                  : 'hover:border-pink-400 hover:bg-pink-50'
+              }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -571,7 +648,11 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
             </motion.div>
             
             <motion.div
-              className="aspect-[3/4] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/50 transition-colors cursor-pointer"
+              className={`aspect-[3/4] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:bg-opacity-50 transition-colors cursor-pointer ${
+                genderTab === 'men' 
+                  ? 'hover:border-blue-400 hover:bg-blue-50' 
+                  : 'hover:border-pink-400 hover:bg-pink-50'
+              }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
