@@ -1,3 +1,19 @@
+# Memory - Edit Başlığı Markalama Güncellemesi (2025-09-07 21:36 +03:00)
+- Karar: Edit sayfasındaki stüdyo başlığı metni marka yönergelerine uygun olacak şekilde "TryOn Studio" olarak standardize edildi.
+- Değişiklik: i18n sözlüklerindeki `common.studio_title` anahtarı güncellendi (TR/EN).
+- Etkilenen Dosyalar:
+  - `src/i18n/tr.json`
+  - `src/i18n/en.json`
+- Beklenen Etki: Edit sayfası üst başlığı artık her iki dilde de "TryOn Studio" olarak görünür.
+
+# Memory - Edit Başlığı Markalama Güncellemesi (2025-09-07 21:37 +03:00)
+- Karar: Edit sayfasındaki stüdyo başlığı metni marka yönergelerine uygun olacak şekilde "TryOn Studio" olarak standardize edildi.
+- Değişiklik: i18n sözlüklerindeki `common.studio_title` anahtarı güncellendi (TR/EN).
+- Etkilenen Dosyalar:
+  - `src/i18n/tr.json`
+  - `src/i18n/en.json`
+- Beklenen Etki: Edit sayfası üst başlığı artık her iki dilde de "TryOn Studio" olarak görünür.
+
 # Memory - Clothing Panel i18n (2025-09-07 16:04 +03:00)
 - `src/components/edit/clothing-panel.tsx` i18n'e geçirildi. Tüm kullanıcıya görünen metinler sözlüğe taşındı; `useI18n().t()` ile çağrılıyor.
 - TR ve EN sözlüklerine `clothing` alanı eklendi (tabs, upload alanı, hata mesajları, model seçim, durum rozetleri, buton metinleri).
@@ -139,3 +155,11 @@ Tarih: 2025-09-06 22:20 (+03:00)
 - Kalıcılık: `localStorage('self_model_data_url')` ile son yüklenen self model hatırlanır; self sekmesine geçildiğinde otomatik uygulanır.
 - i18n: EN ve TR sözlüklerine `clothing.model.self_*` anahtarları eklendi (title, button, change/remove, preview_alt, selected_badge, hint).
 - Amaç: Kullanıcının kendi fotoğrafını doğrudan model olarak seçip kişiselleştirilmiş try-on deneyimi yaşaması.
+
+## Memory - Edit Başlığı Markalama Güncellemesi (2025-09-07 21:36 +03:00)
+- Karar: Edit sayfasındaki stüdyo başlığı metni marka yönergelerine uygun olacak şekilde "TryOn Studio" olarak standardize edildi.
+- Değişiklik: i18n sözlüklerindeki `common.studio_title` anahtarı güncellendi (TR/EN).
+- Etkilenen Dosyalar:
+  - `src/i18n/tr.json`
+  - `src/i18n/en.json`
+- Beklenen Etki: Edit sayfası üst başlığı artık her iki dilde de "TryOn Studio" olarak görünür.

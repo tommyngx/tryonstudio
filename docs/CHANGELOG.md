@@ -1,3 +1,15 @@
+## [2025-09-07 21:36] - Edit Başlığı Markalama: "TryOn Studio"
+
+### 🔤 Metin/Marka Güncellemesi
+- Edit sayfasındaki başlık metni markaya uygun olacak şekilde güncellendi: "TryOnX Studio" → "TryOn Studio".
+
+### 📁 Etkilenen Dosyalar
+- Güncellendi: `src/i18n/en.json` (`common.studio_title`)
+- Güncellendi: `src/i18n/tr.json` (`common.studio_title`)
+
+### ✅ Beklenen Sonuç
+- Edit sayfasında görünen stüdyo başlığı artık "TryOn Studio" olarak görüntülenir (TR/EN).
+
 ## [2025-09-07 21:22] - Combo Sekmesinde Hedef Bölge Gizlendi
 
 ### 🎯 UX Düzenlemesi

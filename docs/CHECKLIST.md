@@ -24,6 +24,7 @@
 - [x] Tekrar yükleme hatası: Gizli `input[type="file"]` değerleri yükleme sonrası ve tıklama öncesi sıfırlanıyor (re-upload garanti)
 - [x] Blob URL yönetimi: Kaldırma/değiştirme akışlarında `URL.revokeObjectURL(...)` ile nesne URL’leri serbest bırakılıyor
 - [x] Clothing Panel: "Your Model" (self) sekmesinde kullanıcı model fotoğrafı yükleme/önizleme/değiştir/kaldır UI'si ve `onModelSelect` entegrasyonu
+- [x] Edit sayfası başlığı markaya göre güncellendi: "TryOn Studio"
 - [ ] Undo/Redo ileri-geri butonları (opsiyonel)
 - [ ] Gerçek AI edit servisine entegrasyon (API key, güvenlik)
 - [ ] İndirme/Paylaşma entegrasyonları (export options)
