@@ -31,13 +31,9 @@ export default function EditPage() {
     combo?: any
   }>({})
   const [selectedModel, setSelectedModel] = useState<string>('/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg')
-  const [userPhoto, setUserPhoto] = useState<string | null>(null)
-  const [userPhotoBase64, setUserPhotoBase64] = useState<string | null>(null) // Face swap için kullanıcı fotoğrafı
-  const [faceSwappedModel, setFaceSwappedModel] = useState<string | null>(null) // Face swap sonucu
   const [processedImage, setProcessedImage] = useState<string | null>(null)
   const [tryOnResult, setTryOnResult] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isFaceSwapping, setIsFaceSwapping] = useState(false) // Face swap işlemi durumu
   const [isVideoGenerating, setIsVideoGenerating] = useState(false)
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
@@ -48,10 +44,10 @@ export default function EditPage() {
   // Aynı model ile yapılan ardışık try-on sonuçlarını geçmişe eklemek için kullanılan anahtar
   const [lastModelKeyForTryOn, setLastModelKeyForTryOn] = useState<string | null>(null)
 
-  // İndir: Seçili görseli (history seçiliyse onu, değilse orijinal try-on) indir
+  // İndir: Seçili görseli (history seçiliyse onu, değilse try-on sonucu veya orijinal) indir
   const handleDownload = async () => {
     const selected = selectedImageIndex === -1 
-      ? (faceSwappedModel || selectedModel) 
+      ? (tryOnResult || selectedModel) 
       : editHistory[selectedImageIndex]?.imageUrl
     if (!selected) {
       alert('İndirilecek görsel bulunamadı')
@@ -96,8 +92,10 @@ export default function EditPage() {
 
   // Seçime göre görüntülenecek işlenmiş görseli güncelle
   useEffect(() => {
-    const selected = selectedImageIndex === -1
-      ? (faceSwappedModel || selectedModel) // Orijinal model göster
+    // ÖNEMLİ: Orijinal (index=-1) seçildiğinde daima orijinal model gösterilmeli.
+    // Try-on sonucu artık sağdaki geçmişte ayrı bir öğe olarak yer alıyor.
+    const selected = selectedImageIndex === -1 
+      ? selectedModel
       : (editHistory[selectedImageIndex]?.imageUrl ?? null)
     setProcessedImage(selected)
     // Debug selection changes
@@ -105,11 +103,12 @@ export default function EditPage() {
       console.log('[Gallery] Selection changed', {
         selectedImageIndex,
         historyCount: editHistory.length,
+        hasTryOnResult: !!tryOnResult,
         pickedIs: selectedImageIndex === -1 ? 'original_model' : `generated_${selectedImageIndex + 1}`,
         processedSet: !!selected
       })
     } catch {}
-  }, [selectedImageIndex, editHistory, faceSwappedModel, selectedModel])
+  }, [selectedImageIndex, editHistory, tryOnResult, selectedModel])
 
   // Model değiştiğinde geçmişi ve sonuçları temizle
   useEffect(() => {
@@ -119,7 +118,6 @@ export default function EditPage() {
     setEditHistory([])
     setSelectedImageIndex(-1)
     setAiLastResponse(null)
-    setFaceSwappedModel(null) // Face swap sonucunu da temizle
     setLastModelKeyForTryOn(null)
     // İsteğe bağlı: AI paneli kapat
     setIsAiPanelOpen(false)
@@ -164,128 +162,7 @@ export default function EditPage() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isAiPanelOpen])
 
-  // Face swap işlemi
-  const handleFaceSwap = async (userImageBase64: string, targetModelPath: string): Promise<boolean> => {
-    setIsFaceSwapping(true)
-    
-    try {
-      // Hedef model görselini base64'e çevir
-      const modelImageResponse = await fetch(targetModelPath)
-      const modelBlob = await modelImageResponse.blob()
-      const modelBase64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader()
-        reader.onload = () => {
-          const base64 = (reader.result as string).split(',')[1]
-          resolve(base64)
-        }
-        reader.readAsDataURL(modelBlob)
-      })
-
-      console.log('Face swap başlatılıyor...');
-      
-      const response = await fetch('/api/face-swap', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userImage: userImageBase64,
-          targetImage: modelBase64,
-          swapStrength: 1.0
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.swappedImage) {
-        console.log('Face swap başarılı');
-        setFaceSwappedModel(`data:image/png;base64,${data.swappedImage}`);
-        return true;
-      } else {
-        console.error('Face swap hatası:', data.error);
-        alert(`Face swap hatası: ${data.error || 'Bilinmeyen hata'}`);
-        return false;
-      }
-    } catch (error) {
-      console.error('Face swap API hatası:', error);
-      alert('Face swap sırasında bir hata oluştu. Lütfen tekrar deneyin.');
-      return false;
-    } finally {
-      setIsFaceSwapping(false);
-    }
-  }
-
-  // Face swap'li model ile try-on işlemi
-  const handleTryOnWithSwappedModel = async (
-    clothingImageData: string,
-    clothingType: string,
-    additionalClothing?: any[],
-    options?: { region?: 'upper' | 'lower' | 'dress'; fit?: 'normal' | 'slim' | 'oversize'; forceReplaceUpper?: boolean }
-  ) => {
-    if (!faceSwappedModel) {
-      console.error('Face swap\'li model bulunamadı')
-      return
-    }
-
-    setIsProcessing(true)
-    
-    try {
-      // Face swap'li modeli base64'e çevir
-      const faceSwappedBase64 = faceSwappedModel.split(',')[1] // data:image/png;base64, kısmını çıkar
-
-      const response = await fetch('/api/nano-banana', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          modelImage: faceSwappedBase64,
-          clothingImage: clothingImageData,
-          clothingType: clothingType,
-          additionalClothing: additionalClothing || [],
-          options: options || {}
-        }),
-      })
-
-      const result = await response.json()
-
-      // API tutarlılığı: normal akışta result.data.generatedImage kullanılıyor
-      if (result.success && (result.data?.generatedImage)) {
-        // Aynı model anahtarı ile tekrar try-on yapılıyorsa mevcut sonucu history'e ekle
-        const modelKey = faceSwappedModel || selectedModel
-        // Face swap'li model ile try-on sonucunu history'e ekle
-        const newUrl = `data:image/png;base64,${result.data.generatedImage}`
-        const newItem: EditHistoryItem = {
-          id: `tryon_faceswap_${Date.now()}_${editHistory.length + 1}`,
-          imageUrl: newUrl,
-          meta: {
-            prompt: `Face Swap Try-on #${editHistory.length + 1}`,
-            strength: 1,
-            durationMs: 0,
-            model: 'try-on-faceswap',
-            actionType: 'tryon' as any,
-            createdAt: new Date().toISOString()
-          }
-        }
-        
-        setEditHistory(prev => [...prev, newItem])
-        setSelectedImageIndex(editHistory.length) // Yeni sonucu seç
-        setLastModelKeyForTryOn(modelKey)
-        
-        // tryOnResult'ı temizle
-        setTryOnResult(null)
-        console.log('Face swap\'li model ile try-on başarılı')
-      } else {
-        console.error('Try-on hatası:', result.error)
-        alert(`Try-on hatası: ${result.error || 'Bilinmeyen hata'}`)
-      }
-    } catch (error) {
-      console.error('Try-on API hatası:', error)
-      alert('Try-on sırasında bir hata oluştu. Lütfen tekrar deneyin.')
-    } finally {
-      setIsProcessing(false)
-    }
-  }
+  // Face swap akışları kaldırıldı
 
   // Normal try-on işlemi (orijinal model ile)
   const handleTryOnResult = async (
@@ -294,6 +171,13 @@ export default function EditPage() {
     additionalClothing?: any[],
     options?: { region?: 'upper' | 'lower' | 'dress'; fit?: 'normal' | 'slim' | 'oversize'; forceReplaceUpper?: boolean }
   ) => {
+    console.log('[EditPage] Try-on işlemi başlatılıyor:', {
+      hasClothingData: !!clothingImageData,
+      clothingType,
+      hasModel: !!selectedModel,
+      dataLength: clothingImageData?.length || 0
+    })
+    
     setIsProcessing(true)
     
     try {
@@ -302,10 +186,7 @@ export default function EditPage() {
       // Model görselini base64'e çevir
       let modelBase64: string
       
-      if (faceSwappedModel) {
-        // Face swap sonucu zaten base64 formatında
-        modelBase64 = faceSwappedModel.split(',')[1]
-      } else if (selectedModel.startsWith('data:')) {
+      if (selectedModel.startsWith('data:')) {
         // Self modunda kullanıcı fotoğrafı data URL (base64) olarak geliyor
         modelBase64 = selectedModel.split(',')[1]
       } else {
@@ -346,10 +227,11 @@ export default function EditPage() {
         options: options || {}
       }
 
-      console.log('Nano Banana API çağrısı:', { 
+      console.log('[EditPage] Nano Banana API çağrısı:', { 
         isMultiGarment: !!(additionalClothing && additionalClothing.length > 0),
         clothingType,
-        additionalCount: additionalClothing?.length || 0
+        additionalCount: additionalClothing?.length || 0,
+        requestBodyKeys: Object.keys(requestBody)
       })
 
       // Nano Banana API'ye çağrı yap
@@ -361,43 +243,68 @@ export default function EditPage() {
         body: JSON.stringify(requestBody)
       })
 
+      console.log('[EditPage] API Response Status:', response.status, response.statusText)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('[EditPage] API Error Response:', errorText)
+        throw new Error(`API çağrısı başarısız: ${response.status} - ${errorText}`)
+      }
+
       const result = await response.json()
+      console.log('[EditPage] API Response Data:', {
+        success: result.success,
+        hasData: !!result.data,
+        hasGeneratedImage: !!result.data?.generatedImage,
+        error: result.error
+      })
 
       if (result.success && result.data.generatedImage) {
         const imageDataUrl = `data:image/png;base64,${result.data.generatedImage}`
-        const currentModelKey = faceSwappedModel || selectedModel
-        
-        // Yeni try-on sonucunu sadece history'e ekle (tryOnResult kullanmayı bırak)
-        const newItem: EditHistoryItem = {
-          id: `tryon_${Date.now()}_${editHistory.length + 1}`,
+        const currentModelKey = selectedModel
+
+        // Try-on sonucunu hem göster hem de geçmişe ekle ve otomatik seç
+        setTryOnResult(imageDataUrl)
+        setProcessedImage(imageDataUrl)
+        setLastModelKeyForTryOn(currentModelKey)
+
+        // Geçmiş maddesi oluştur (AI Edit ile aynı tip yapıyı kullanır)
+        const historyItem: EditHistoryItem = {
+          id: `tryon_${Date.now()}`,
           imageUrl: imageDataUrl,
           meta: {
-            prompt: `Try-on #${editHistory.length + 1}`,
+            prompt: 'virtual try-on',
             strength: 1,
-            durationMs: 0,
-            model: 'try-on',
-            actionType: 'tryon' as any,
+            durationMs: result.data?.processingTime ? 0 : 0,
+            model: result.data?.model || 'gemini-2.5-flash-image-preview',
+            actionType: 'preset',
             createdAt: new Date().toISOString()
           }
         }
-        
-        setEditHistory(prev => [...prev, newItem])
-        setLastModelKeyForTryOn(currentModelKey)
-        
-        // Try-on sonrası paneli otomatik aç ve YENİ SONUCU seçili yap
-        setIsAiPanelOpen(true)
-        setSelectedImageIndex(editHistory.length) // Yeni eklenen item'ın index'i
-        
-        // tryOnResult'ı temizle, artık sadece history kullanacağız
-        setTryOnResult(null)
-        
+
+        setEditHistory(prev => {
+          const next = [...prev, historyItem]
+          // Yeni eklenen öğeyi seçili yap
+          setSelectedImageIndex(next.length - 1)
+          return next
+        })
+
+        // AI panelini kapalı tut - try-on sol panelde bağımsız
+        setIsAiPanelOpen(false)
+
         console.log('Virtual try-on başarılı:', {
           isMultiGarment: result.data.isMultiGarment,
-          garmentCount: result.data.garmentCount
+          garmentCount: result.data.garmentCount,
+          appendedToHistory: true
         })
       } else {
         console.error('API hatası:', result.error)
-        alert(`Virtual try-on başarısız: ${result.error || 'Bilinmeyen hata'}`)
+        // Quota hatası için özel mesaj
+        if (result.error?.includes('kotası aşıldı') || result.error?.includes('quota')) {
+          alert(`🚫 API Kullanım Limiti Aşıldı\n\n${result.error}\n\nÇözüm önerileri:\n• Birkaç saat sonra tekrar deneyin\n• Google Cloud Console'dan quota artırın\n• Farklı bir API key kullanın`)
+        } else {
+          alert(`Virtual try-on başarısız: ${result.error || 'Bilinmeyen hata'}`)
+        }
       }
 
     } catch (error) {
@@ -412,7 +319,7 @@ export default function EditPage() {
   const handleVideoShowcase = async () => {
     // Seçili görsel varsa onu kullan, yoksa history'den en son try-on sonucunu al
     const currentImage = selectedImageIndex === -1 
-      ? (faceSwappedModel || selectedModel)
+      ? (selectedModel)
       : editHistory[selectedImageIndex]?.imageUrl
     
     if (!currentImage || (!currentImage.startsWith('data:') && editHistory.length === 0)) {
@@ -592,24 +499,9 @@ export default function EditPage() {
               additionalClothing?: any[],
               options?: { region?: 'upper' | 'lower' | 'dress'; fit?: 'normal' | 'slim' | 'oversize'; forceReplaceUpper?: boolean }
             ) => {
-              // Self mode tespiti: selectedModel data URL ise Face Swap akışını atla
-              if (selectedModel?.startsWith('data:')) {
-                await handleTryOnResult(clothingImageData, clothingType, additionalClothing, options)
-                return
-              }
-              // Eğer yüz değiştirme yapılmış model varsa, bu akışa yönlendir
-              if (faceSwappedModel) {
-                await handleTryOnWithSwappedModel(clothingImageData, clothingType, additionalClothing, options)
-                return
-              }
               await handleTryOnResult(clothingImageData, clothingType, additionalClothing, options)
             }}
             registerTryOnTrigger={(fn) => setTryOnTrigger(fn)}
-            onUserPhotoUpload={(base64: string) => {
-              setUserPhotoBase64(base64)
-              // Kullanıcı fotoğrafı değiştiğinde face swap sonucunu temizle
-              setFaceSwappedModel(null)
-            }}
           />
         </div>
 
@@ -632,14 +524,14 @@ export default function EditPage() {
           {/* Model Görüntüleyici + Alt Kontroller */}
           <div className="flex-1 flex flex-col">
             <ModelViewer
-              userPhoto={tryOnResult || faceSwappedModel || selectedModel}
+              userPhoto={selectedModel}
               processedImage={processedImage}
               selectedClothes={selectedClothes}
-              isProcessing={isProcessing || isFaceSwapping}
+              isProcessing={isProcessing}
               zoomLevel={zoomLevel}
               onZoomChange={setZoomLevel}
               resetSignal={viewerResetKey}
-              onPhotoUpload={(photo) => setUserPhoto(photo)}
+              onPhotoUpload={(photo) => {/* self fotoğraf upload akışı burada yönetilebilir */}}
               onVideoShowcase={handleVideoShowcase}
               isVideoGenerating={isVideoGenerating}
             />
@@ -795,7 +687,7 @@ export default function EditPage() {
 
         {/* Sağ: Dikey Thumbnail Galerisi - AI Panel'in sağında */}
         <ThumbnailGallery
-          originalImage={faceSwappedModel || selectedModel} // Her zaman orijinal modeli göster
+          originalImage={selectedModel} // Her zaman orijinal modeli göster
           history={editHistory}
           selectedIndex={selectedImageIndex}
           onSelect={(idx) => {

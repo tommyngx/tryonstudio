@@ -1,4 +1,20 @@
-# Memory - AI Edit Panel, Thumbnail Gallery & Face Swap
+# Memory - AI Edit Panel, Thumbnail Gallery
+### Try-On Sonucunu Geçmişe Ekleme (2025-09-07 13:50 +03:00)
+- Başarılı virtual try-on sonucu artık `editHistory` listesine ekleniyor ve otomatik seçiliyor; aynı zamanda ana görüntüleyicide gösteriliyor.
+- Amaç: Üretilen sonucun her zaman sağdaki dikey thumbnail galeride görünmesi ve kullanıcıların geçmişte gezinerek karşılaştırabilmesi.
+- Dosya: `src/app/edit/page.tsx` (fonksiyon: `handleTryOnResult` içinde başarılı yanıt işleme)
+
+### Upper Prompt Güçlendirme (2025-09-07 13:47 +03:00)
+- Üst giyim için kullanılan prompt netleştirildi: "Ensure the TOP garment is clearly and visibly changed on the model to MATCH the provided CLOTHING IMAGE (color, print/wordmarks, neckline, sleeves, silhouette, and fit must be recognizable at first glance)."
+- Amaç: Özellikle düz renk veya düşük kontrastlı tasarımlarda bile model üzerindeki değişimin ilk bakışta anlaşılır olmasını sağlamak.
+- Dosya: `src/app/api/nano-banana/route.ts` (fonksiyon: `createUpperOnlyPrompt`).
+
+
+### Face Swap Kaldırma (2025-09-07 13:27 +03:00)
+- Face Swap özelliği projeden çıkarıldı. UI (Clothing Panel), Edit sayfası state/akış, API uçları ve config/helper referansları temizlendi.
+- `src/app/api/face-swap/route.ts` ve `src/app/api/ai/face-swap/route.ts` artık 410 Gone döner.
+- `src/app/api/nano-banana/route.ts` içinde Face Swap ile ilgili parametre ve dallar kaldırıldı; bu parametreler gelirse 410 döner.
+- Self (Kendiniz) modu aynen devam ediyor: Kullanıcı fotoğrafı doğrudan model olarak seçilir, Face Swap yok.
 ### ModelViewer Safe Area Clamp (2025-09-07 09:41 +03:00)
 - Pan/zoom artık güvenli alan ile sınırlandırılıyor: Container boyutu + görselin doğal (intrinsic) boyutları ölçülüyor, object-contain baz boyut hesaplanıyor (scale=1), ardından ölçek sonrası boyutlara göre pan clamp uygulanıyor.
 - Translate ve scale ayrı katmanlarda: Dış katman `translate3d(panX, panY, 0)`; iç katman `transform: translate(-50%, -50%) scale(s)` ve `width/height = baseW/baseH`.
@@ -13,7 +29,7 @@
 - Üst çubuktaki zoom kontrolü ile senkron için `onZoomChange` prop'u eklendi ve `EditPage` içinde `setZoomLevel` bağlandı.
 
 ### Kendiniz Akışı (2025-09-07 00:05 +03:00)
-- "Kendiniz" seçeneği eklendi. Bu modda Face Swap UI GÖSTERİLMEZ.
+- "Kendiniz" seçeneği eklendi. Bu modda Face Swap YOK; kullanıcı fotoğrafı doğrudan model olarak kullanılır.
 - Kullanıcı fotoğrafını yüklediğinde bu fotoğraf doğrudan model olarak seçilir (`onModelSelect(imageUrl)`).
 - Alt akış (AI ile Dene) ve try-on mantığı değişmeden çalışır; seçilen model artık kullanıcının fotoğrafıdır.
 - Dosya: `src/components/edit/clothing-panel.tsx` (self bölümü, gizli file input, `handleUserPhotoUpload` içinde auto-select).

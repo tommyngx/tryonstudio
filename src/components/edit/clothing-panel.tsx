@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Upload, Info, X, Loader2, Sparkles, Camera, User } from 'lucide-react'
+import { Plus, Upload, Info, X, Loader2, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 import { allMenClothing, getMenClothingByType, ClothingSet } from '@/data/men-clothing'
 
@@ -11,7 +11,6 @@ interface UploadedClothing {
   id: string
   name: string
   type: 'single' | 'upper' | 'lower'
-  clothingCategory: 'upper' | 'lower' | 'dress' // Kullanıcının seçtiği kategori
   imageUrl: string
   imageData: string // base64 data
   uploadDate: Date
@@ -25,11 +24,9 @@ interface ClothingPanelProps {
   onTryOn?: (clothingImageData: string, clothingType: string, additionalClothing?: any[], options?: { region?: 'upper' | 'lower' | 'dress'; fit?: 'normal' | 'slim' | 'oversize'; forceReplaceUpper?: boolean }) => void
   // Parent, panel içindeki "AI ile Dene" tetikleyicisini kayıt edebilir
   registerTryOnTrigger?: (fn: (() => Promise<void> | void) | null) => void
-  // Face swap için kullanıcı fotoğrafı callback'i
-  onUserPhotoUpload?: (userPhotoBase64: string) => void
 }
 
-export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel, onModelSelect, onTryOn, registerTryOnTrigger, onUserPhotoUpload }: ClothingPanelProps) {
+export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel, onModelSelect, onTryOn, registerTryOnTrigger }: ClothingPanelProps) {
   const [activeTab, setActiveTab] = useState<'single' | 'combo'>('single')
   // Cinsiyet sekmesi: erkek, kadın veya kendiniz
   const [genderTab, setGenderTab] = useState<'men' | 'women' | 'self'>('men') // Cinsiyet sekmesi
@@ -39,41 +36,62 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
   const [isUploading, setIsUploading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedUploadedItem, setSelectedUploadedItem] = useState<string | null>(null)
-  const [userPhoto, setUserPhoto] = useState<string | null>(null) // Kullanıcı fotoğrafı
-  const [isFaceSwapEnabled, setIsFaceSwapEnabled] = useState(false) // Face swap modu
-  const [showCategorySelector, setShowCategorySelector] = useState<string | null>(null) // Kategori seçici göster
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const userPhotoInputRef = useRef<HTMLInputElement>(null)
   // Hedef bölge ve kesim seçenekleri
   const [targetRegion, setTargetRegion] = useState<'upper' | 'lower' | 'dress'>('upper')
   const [fitMode, setFitMode] = useState<'normal' | 'slim' | 'oversize'>('normal')
 
   // Seçenekler bloğu: her zaman YÜKLEME BÖLÜMÜNDEN SONRA render edilecek
   const OptionsBlock = () => (
-    <div className="mt-6 mb-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-3 relative z-0">
-      <div>
-        <label className="block text-xs text-gray-600 mb-1">Hedef Bölge</label>
-        <select
-          value={targetRegion}
-          onChange={(e) => setTargetRegion(e.target.value as any)}
-          className="w-full text-xs border border-gray-300 rounded px-2 py-1 bg-white"
-        >
-          <option value="upper">Üst</option>
-          <option value="lower">Alt</option>
-          <option value="dress">Elbise/Takım</option>
-        </select>
+    <div className="mt-6 mb-4 pt-4 border-t border-gray-200 space-y-4 relative z-0">
+      {/* Hedef Bölge */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Hedef Bölge</label>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { value: 'upper', label: 'Üst', icon: '👔' },
+            { value: 'lower', label: 'Alt', icon: '👖' },
+            { value: 'dress', label: 'Elbise', icon: '👗' }
+          ].map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setTargetRegion(option.value as any)}
+              className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
+                targetRegion === option.value
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-600'
+              }`}
+            >
+              <span className="text-lg mb-1">{option.icon}</span>
+              <span className="text-xs font-medium">{option.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
-      <div>
-        <label className="block text-xs text-gray-600 mb-1">Kesim</label>
-        <select
-          value={fitMode}
-          onChange={(e) => setFitMode(e.target.value as any)}
-          className="w-full text-xs border border-gray-300 rounded px-2 py-1 bg-white"
-        >
-          <option value="normal">Normal</option>
-          <option value="slim">Slim</option>
-          <option value="oversize">Oversize</option>
-        </select>
+
+      {/* Kesim Stili */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Kesim Stili</label>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { value: 'normal', label: 'Normal', desc: 'Standart' },
+            { value: 'slim', label: 'Slim', desc: 'Dar kesim' },
+            { value: 'oversize', label: 'Oversize', desc: 'Bol kesim' }
+          ].map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setFitMode(option.value as any)}
+              className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
+                fitMode === option.value
+                  ? 'border-green-500 bg-green-50 text-green-700'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-600'
+              }`}
+            >
+              <span className="text-xs font-medium">{option.label}</span>
+              <span className="text-[10px] text-gray-500 mt-0.5">{option.desc}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -91,60 +109,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
     }
   }, [genderTab, onModelSelect])
   
-  // Kullanıcı fotoğrafı yükleme işlemi
-  const handleUserPhotoUpload = async (files: FileList) => {
-    if (!files || files.length === 0) return
-    
-    setIsUploading(true)
-    
-    try {
-      const file = files[0]
-      
-      // Dosya formatı kontrolü
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-      if (!allowedTypes.includes(file.type)) {
-        alert('Desteklenen formatlar: JPEG, PNG, WebP')
-        return
-      }
-      
-      // Dosya boyutu kontrolü (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Dosya boyutu 5MB\'dan küçük olmalıdır')
-        return
-      }
-      
-      // Base64'e çevir
-      const base64Data = await convertFileToBase64(file)
-      const imageUrl = URL.createObjectURL(file)
-      
-      // Daha önce bir userPhoto varsa blob URL'ini serbest bırak
-      if (userPhoto) {
-        try { URL.revokeObjectURL(userPhoto) } catch {}
-      }
-      setUserPhoto(imageUrl)
-      
-      // "Kendiniz" modunda yüklenen fotoğrafı DOĞRUDAN MODEL olarak data URL (base64) formatında seç
-      if (genderTab === 'self' && onModelSelect) {
-        onModelSelect(base64Data) // data URL
-      }
-
-      // Parent component'e base64 data'yı ilet (faceswap akışında kullanılabilir, fakat self modunda zorunlu değil)
-      if (onUserPhotoUpload) {
-        const base64Only = base64Data.split(',')[1] // "data:image/..." kısmını kaldır
-        onUserPhotoUpload(base64Only)
-      }
-      
-    } catch (error) {
-      console.error('Kullanıcı fotoğrafı yükleme hatası:', error)
-      alert('Fotoğraf yüklenirken hata oluştu')
-    } finally {
-      setIsUploading(false)
-      // Not: Aynı fotoğrafı tekrar seçebilmek için input değerini sıfırla
-      if (userPhotoInputRef.current) {
-        userPhotoInputRef.current.value = ''
-      }
-    }
-  }
+  // Face Swap modu kaldırıldı: kullanıcı yüzü yükleme akışı ve toggle kaldırıldı
 
   // Dosya yükleme işlemi (tek parça için)
   const handleFileUpload = async (files: FileList) => {
@@ -176,7 +141,6 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         id: `uploaded_${Date.now()}`,
         name: file.name.replace(/\.[^/.]+$/, ""), // Uzantıyı kaldır
         type: 'single',
-        clothingCategory: 'upper', // Varsayılan olarak üst giyim, kullanıcı değiştirebilir
         imageUrl,
         imageData: base64Data.split(',')[1], // "data:image/..." kısmını kaldır
         uploadDate: new Date()
@@ -226,7 +190,6 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         id: `upper_${Date.now()}`,
         name: file.name.replace(/\.[^/.]+$/, ""),
         type: 'upper',
-        clothingCategory: 'upper',
         imageUrl,
         imageData: base64Data.split(',')[1],
         uploadDate: new Date()
@@ -276,7 +239,6 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         id: `lower_${Date.now()}`,
         name: file.name.replace(/\.[^/.]+$/, ""),
         type: 'lower',
-        clothingCategory: 'lower',
         imageUrl,
         imageData: base64Data.split(',')[1],
         uploadDate: new Date()
@@ -340,15 +302,6 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
     }
   }
 
-  // Kıyafet kategorisi değiştirme
-  const handleCategoryChange = (itemId: string, newCategory: 'upper' | 'lower' | 'dress') => {
-    setUploadedClothes(prev => prev.map(item => 
-      item.id === itemId 
-        ? { ...item, clothingCategory: newCategory }
-        : item
-    ))
-    setShowCategorySelector(null)
-  }
   
   // Virtual Try-On işlemi
   const handleVirtualTryOn = async (clothingImageData: string, clothingType: string) => {
@@ -357,12 +310,19 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       return
     }
     
-    // Seçili kıyafetin kategorisini kullan
-    const selectedItem = uploadedClothes.find(item => item.id === selectedUploadedItem)
-    const specificType = selectedItem ? selectedItem.clothingCategory : clothingType
+    // Debug: Try-on başlatma logları
+    console.log('[ClothingPanel] Try-on başlatılıyor:', {
+      hasModel: !!selectedModel,
+      hasClothingData: !!clothingImageData,
+      clothingType,
+      clothingDataLength: clothingImageData?.length || 0
+    })
     
-    // Kullanıcının seçtiği hedef bölgeyi önceliklendirelim
-    const region = targetRegion || specificType
+    // Hedef bölge ayarını kullan
+    const selectedItem = uploadedClothes.find(item => item.id === selectedUploadedItem)
+    
+    // Kullanıcının seçtiği hedef bölgeyi kullan
+    const region = targetRegion
     // Region=upper ise UI göstermeden zorla değiştir davranışını otomatik etkinleştir
     const options = { region, fit: fitMode, forceReplaceUpper: region === 'upper' }
     
@@ -371,11 +331,16 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
     // Böylece tek bir merkezde (Edit sayfası) inference çağrısı yapılır ve çift çağrı/yanlış veri rolü sorunları engellenir.
     try {
       if (onTryOn) {
+        console.log('[ClothingPanel] onTryOn callback çağrılıyor...')
         await onTryOn(clothingImageData, region, undefined, options)
+        console.log('[ClothingPanel] Try-on işlemi tamamlandı')
+      } else {
+        console.error('[ClothingPanel] onTryOn callback bulunamadı!')
+        alert('Try-on işlemi yapılandırılmamış. Lütfen sayfayı yenileyin.')
       }
     } catch (error) {
-      console.error('Virtual try-on tetikleme hatası:', error)
-      alert('Virtual try-on işlemi başlatılamadı')
+      console.error('[ClothingPanel] Virtual try-on tetikleme hatası:', error)
+      alert(`Virtual try-on işlemi başarısız: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`)
     }
   }
 
@@ -446,87 +411,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         </div>
       </div>
 
-      {/* Face Swap Toggle (Kendiniz modunda gizli) */}
-      {genderTab !== 'self' && (
-      <div className="px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <User className="w-4 h-4 text-purple-500" />
-            <span className="text-sm font-medium text-gray-900">Face Swap Modu</span>
-          </div>
-          <button
-            onClick={() => setIsFaceSwapEnabled(!isFaceSwapEnabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              isFaceSwapEnabled ? 'bg-purple-500' : 'bg-gray-200'
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                isFaceSwapEnabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </div>
-        {isFaceSwapEnabled && (
-          <p className="text-xs text-gray-500 mt-1">
-            Kendi fotoğrafınızı yükleyerek manken modelin yüzü ile değiştirin
-          </p>
-        )}
-      </div>
-      )}
-
-      {/* User Photo Upload Area - Face Swap Mode (Kendiniz modunda gizli) */}
-      {genderTab !== 'self' && isFaceSwapEnabled && (
-        <div className="p-4 border-b border-gray-100">
-          <input
-            ref={userPhotoInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => e.target.files && handleUserPhotoUpload(e.target.files)}
-          />
-          
-          {!userPhoto ? (
-            <div 
-              className="border-2 border-dashed border-purple-300 rounded-lg p-6 text-center hover:border-purple-400 hover:bg-purple-50/50 transition-colors cursor-pointer"
-              onClick={() => {
-                if (userPhotoInputRef.current) userPhotoInputRef.current.value = ''
-                userPhotoInputRef.current?.click()
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <Camera className="w-8 h-8 text-purple-500 mb-2" />
-                <p className="text-sm font-medium text-purple-600">Fotoğrafınızı Yükleyin</p>
-                <p className="text-xs text-gray-500 mt-1">Yüzünüz net görünen bir fotoğraf seçin</p>
-                <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WebP (Max 5MB)</p>
-              </div>
-            </div>
-          ) : (
-            <div className="relative">
-              <div className="aspect-square w-24 mx-auto rounded-lg overflow-hidden border-2 border-purple-200">
-                <img src={userPhoto} alt="Kullanıcı fotoğrafı" className="w-full h-full object-cover" />
-              </div>
-              <div className="text-center mt-2">
-                <p className="text-sm font-medium text-green-600">Fotoğraf yüklendi</p>
-                <button
-                  onClick={() => {
-                    // Önceki userPhoto blob URL'ini serbest bırak
-                    if (userPhoto) {
-                      try { URL.revokeObjectURL(userPhoto) } catch {}
-                    }
-                    setUserPhoto(null)
-                    if (onUserPhotoUpload) onUserPhotoUpload('')
-                    if (userPhotoInputRef.current) userPhotoInputRef.current.value = ''
-                  }}
-                  className="text-xs text-red-500 hover:text-red-700 mt-1"
-                >
-                  Kaldır
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Face Swap modu ve kullanıcı yüzü yükleme alanı kaldırıldı */}
 
       {/* Content Area */}
       <div className="flex-1 p-4 overflow-y-auto">
@@ -709,50 +594,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                     <h3 className="text-xs font-medium text-gray-900 truncate">{item.name}</h3>
                     <div className="flex items-center justify-between mt-1">
                       <p className="text-xs text-gray-500">{item.type === 'single' ? 'Tek parça' : 'Üst & Alt'}</p>
-                      {/* Kategori seçici butonu */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setShowCategorySelector(showCategorySelector === item.id ? null : item.id)
-                        }}
-                        className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                        title="Kıyafet kategorisini değiştir"
-                      >
-                        {item.clothingCategory === 'upper' ? 'Üst' : item.clothingCategory === 'lower' ? 'Alt' : 'Elbise'}
-                      </button>
                     </div>
-                    
-                    {/* Kategori seçici dropdown */}
-                    {showCategorySelector === item.id && (
-                      <div className="absolute z-10 mt-1 right-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-[120px]">
-                        <div className="space-y-1">
-                          <button
-                            onClick={() => handleCategoryChange(item.id, 'upper')}
-                            className={`w-full text-left text-xs px-2 py-1 rounded hover:bg-gray-100 ${
-                              item.clothingCategory === 'upper' ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
-                            }`}
-                          >
-                            👔 Üst Giyim
-                          </button>
-                          <button
-                            onClick={() => handleCategoryChange(item.id, 'lower')}
-                            className={`w-full text-left text-xs px-2 py-1 rounded hover:bg-gray-100 ${
-                              item.clothingCategory === 'lower' ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
-                            }`}
-                          >
-                            👖 Alt Giyim
-                          </button>
-                          <button
-                            onClick={() => handleCategoryChange(item.id, 'dress')}
-                            className={`w-full text-left text-xs px-2 py-1 rounded hover:bg-gray-100 ${
-                              item.clothingCategory === 'dress' ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
-                            }`}
-                          >
-                            👗 Elbise
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </motion.div>
               ))}
@@ -885,44 +727,10 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
             </motion.div>
           </div>
           ) : (
-            // Modeliniz Bölümü: Face Swap yönlendirmesi ve hızlı yükleme
+            // Self modu: Face Swap kaldırıldı. Bilgilendirici mesaj bırakıldı.
             <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
-              <div className="flex items-start gap-3">
-                <User className="w-5 h-5 text-purple-600 mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-purple-900">Modeliniz</h4>
-                  <p className="text-xs text-purple-800 mt-0.5">Kendi fotoğrafınızı yükleyin; fotoğrafınız doğrudan model olarak kullanılacaktır. Yükledikten sonra alttaki "AI ile Dene" butonu ile devam edin.</p>
-                  {/* Self modu için gizli input (Face Swap UI gizli olduğunda da kullanılabilir) */}
-                  <input
-                    ref={userPhotoInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => e.target.files && handleUserPhotoUpload(e.target.files)}
-                  />
-                  <div className="mt-3 flex items-center gap-2">
-                    <button
-                      onClick={() => userPhotoInputRef.current?.click()}
-                      className="px-2.5 py-1.5 text-xs rounded-md bg-purple-600 text-white hover:bg-purple-700"
-                    >
-                      Fotoğrafınızı Yükleyin
-                    </button>
-                  </div>
-                  {userPhoto && (
-                    <div className="mt-3 flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-md overflow-hidden border-2 border-purple-200">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={userPhoto} alt="Kullanıcı fotoğrafı" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="text-xs text-purple-900">
-                        Fotoğraf yüklendi. Denemeye hazırsınız.
-                      </div>
-                    </div>
-                  )}
-                  <div className="mt-3 text-[11px] text-purple-800">
-                    Seçili model: <span className="font-medium">{selectedModel ? 'Var' : 'Yok (Lütfen bir model seçin)'}</span>
-                  </div>
-                </div>
+              <div className="text-xs text-purple-900">
+                Modeliniz seçiliyken orta alandaki görüntüleyiciden (yükleme butonu) kendi fotoğrafınızı ekleyebilirsiniz. Face Swap modu kaldırıldı.
               </div>
             </div>
           )}
@@ -1053,13 +861,6 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         </div>
         <motion.button
           onClick={async () => {
-            // Face swap modu aktifse ve kullanıcı fotoğrafı varsa önce face swap yap
-            if (isFaceSwapEnabled && userPhoto && selectedModel) {
-              // Face swap işlemi burada yapılacak - parent component'e bildirilecek
-              console.log('Face swap işlemi başlatılacak')
-              // TODO: Face swap callback'i eklenecek
-            }
-            
             const selectedItem = uploadedClothes.find(u => u.id === selectedUploadedItem)
             if (selectedItem && selectedModel) {
               await handleVirtualTryOn(selectedItem.imageData, selectedItem.type)
@@ -1075,9 +876,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
             !selectedModel ||
             (
               !uploadedClothes.find(u => u.id === selectedUploadedItem) && !(upperClothing && lowerClothing)
-            ) ||
-            // Face Swap bağımlı disable sadece self dışı modlarda geçerli
-            (genderTab !== 'self' && isFaceSwapEnabled && !userPhoto)
+            )
           }
           className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-colors ${
             isProcessing || !selectedModel || (!uploadedClothes.find(u => u.id === selectedUploadedItem) && !(upperClothing && lowerClothing))
@@ -1087,8 +886,6 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
           title={
             !selectedModel
               ? 'Önce bir model seçin'
-              : (genderTab !== 'self' && isFaceSwapEnabled && !userPhoto)
-                ? 'Face swap için fotoğrafınızı yükleyin'
                 : uploadedClothes.find(u => u.id === selectedUploadedItem) || (upperClothing && lowerClothing)
                   ? 'Seçili kıyafeti dene'
                   : 'Önce bir kıyafet yükleyin/seçin'

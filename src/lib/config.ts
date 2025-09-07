@@ -12,7 +12,6 @@ export const config = {
     replicate: {
       apiToken: process.env.REPLICATE_API_TOKEN,
       models: {
-        faceSwap: 'lucataco/fooocus:97e4f8d123d5b896a94d69dfc9a3fb5b99df788b9a5b8d8b5e7b1d4cbbe8d8b',
         virtualTryOn: 'cjwbw/clothe-anime:a1de95a0b8aae94b8c8b84e4e2c8d6a3e9f6b8c1d2e3f4a5b6c7d8e9f0a1b2c3',
         backgroundRemoval: 'cjwbw/rembg:fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b12e827c3c5'
       }
@@ -61,7 +60,6 @@ export const config = {
   
   // Feature flags
   features: {
-    faceSwap: true,
     virtualTryOn: true,
     videoGeneration: true,
     productSearch: true,

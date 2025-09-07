@@ -32,8 +32,9 @@ function createUpperOnlyPrompt(): string {
   return `Follow these rules strictly. Use the given MODEL PHOTO as the base and change ONLY THE UPPER GARMENT:
 
   PRIMARY GOAL:
-  - Keep the model IDENTICAL: face/identity, hair, skin tone, body proportions, pose, camera angle and BACKGROUND MUST NOT change.
+  - Keep the model IDENTICAL: face/identity, hair, skin tone, body proportions, pose, camera angle and BACKGROUND MUST NOT change. 
   - Dress ONLY THE UPPER GARMENT using the provided CLOTHING IMAGE as the exact garment to apply; do not alter lower garment, scene or background.
+  - Ensure the TOP garment is clearly and visibly changed on the model to MATCH the provided CLOTHING IMAGE (color, print/wordmarks, neckline, sleeves, silhouette, and fit must be recognizable at first glance).
 
   VISUAL CONSISTENCY:
   - Keep lighting/shadows, perspective and scale consistent with the model photo.
@@ -42,6 +43,7 @@ function createUpperOnlyPrompt(): string {
 
   CONSTRAINTS:
   - Do NOT change face/hair/skin tone/body shape/BACKGROUND.
+  - STRICT BACKGROUND PRESERVATION: Keep the BACKGROUND PIXEL-PER-PIXEL IDENTICAL to the model photo. Do NOT replace, blur, stylize, repaint, or alter background textures, colors, or lighting.
   - Preserve EXISTING BRAND LOGOS, PRINTS, EMBROIDERY, LABELS, and GRAPHICS from the clothing image EXACTLY as they are.
   - Keep logo/print position, scale, orientation, perspective warp, and colors faithful to the clothing image; do not blur or remove them.
   - Do NOT hallucinate or add new logos/text/graphics that are not present in the clothing image.
@@ -94,33 +96,7 @@ function createDressPrompt(): string {
   - Do NOT change framing or resolution.`;
 }
 
-// Face swap için özel prompt
-function createFaceSwapPrompt(): string {
-  return `Follow these rules strictly for FACE SWAP operation:
-
-  PRIMARY GOAL:
-  - Take the FACE from the first image (user photo) and seamlessly place it on the second image (target model)
-  - Keep the target model's body, pose, clothing, background, and scene EXACTLY the same
-  - Only replace the face/head area with natural blending
-
-  FACE SWAP REQUIREMENTS:
-  - Preserve the user's facial features, skin tone, and facial structure
-  - Match lighting, shadows, and perspective of the target image
-  - Ensure natural edge blending around face/neck/hairline
-  - Keep the target's hair, clothing, body proportions, and background unchanged
-
-  VISUAL CONSISTENCY:
-  - Maintain the target image's lighting conditions and camera angle
-  - Apply realistic shadows and highlights to the swapped face
-  - Ensure skin tone consistency and natural transitions
-  - No visible seams, halos, or artificial edges
-
-  CONSTRAINTS:
-  - Do NOT change the target's body, clothing, pose, or background
-  - Do NOT alter the target's hair unless it overlaps with face area
-  - Do NOT add accessories, makeup, or modify facial expressions drastically
-  - Do NOT change image resolution, framing, or composition`;
-}
+// Face swap prompt ve akışı kaldırıldı
 
 // Çoklu kıyafet (üst+alt) için özel prompt oluştur
 function createMultiGarmentPrompt(upperType: string, lowerType: string): string {
@@ -137,6 +113,7 @@ function createMultiGarmentPrompt(upperType: string, lowerType: string): string 
 
   CONSTRAINTS:
   - Do NOT change face/hair/skin tone/body shape/BACKGROUND.
+  - STRICT BACKGROUND PRESERVATION: Keep the BACKGROUND PIXEL-PER-PIXEL IDENTICAL to the model photo. Do NOT replace, blur, stylize, repaint, or alter background textures, colors, or lighting.
   - Preserve EXISTING BRAND LOGOS, PRINTS, EMBROIDERY, LABELS, and GRAPHICS from the clothing images EXACTLY as they are for each garment.
   - Keep logo/print position, scale, orientation, perspective warp, and colors faithful to each clothing image; do not blur or remove them.
   - Do NOT hallucinate or add new logos/text/graphics that are not present in the clothing images.
@@ -188,16 +165,18 @@ export async function POST(request: NextRequest) {
       operationType = 'tryon' // 'tryon' veya 'faceswap'
     } = body;
 
-    // İşlem tipine göre gerekli alanları kontrol et
-    if (operationType === 'faceswap') {
-      if (!userImage || !targetImage) {
-        return createErrorResponse('Face swap için kullanıcı fotoğrafı ve hedef model gerekli', 400);
-      }
-    } else {
-      // Normal try-on işlemi
-      if (!modelImage || !clothingImage) {
-        return createErrorResponse('Model görüntüsü ve kıyafet görüntüsü gerekli', 400);
-      }
+    // Face swap isteklerini reddet
+    if (operationType === 'faceswap' || userImage || targetImage) {
+      return NextResponse.json({
+        success: false,
+        error: 'Face Swap özelliği kaldırıldı',
+        status: 410
+      }, { status: 410 });
+    }
+
+    // Normal try-on işlemi
+    if (!modelImage || !clothingImage) {
+      return createErrorResponse('Model görüntüsü ve kıyafet görüntüsü gerekli', 400);
     }
 
     // API key kontrolü
@@ -205,35 +184,29 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Google Vision API key bulunamadı', 500);
     }
 
-    let normalizedType = 'upper'; // Face swap için varsayılan
-    let modelMimeType, clothingMimeType, userMimeType, targetMimeType;
+    let normalizedType = 'upper';
+    let modelMimeType, clothingMimeType;
 
-    if (operationType === 'faceswap') {
-      // Face swap için MIME tipleri
-      userMimeType = getMimeTypeFromBase64(userImage);
-      targetMimeType = getMimeTypeFromBase64(targetImage);
-    } else {
-      // Normal try-on için clothingType normalizasyonu
-      normalizedType = (clothingType || '').toLowerCase();
-      if (normalizedType === 'single' || normalizedType === 'kıyafet') {
-        // Tek parça kıyafetler için akıllı tespit: varsayılan olarak dress kabul et
-        // Eğer çoklu kıyafet varsa (üst+alt), ana kıyafet upper olarak işlenir
-        normalizedType = 'dress';
-      } else if (['elbise', 'dress', 'tek parça elbise'].includes(normalizedType)) {
-        normalizedType = 'dress';
-      } else if (!['upper', 'lower', 'dress'].includes(normalizedType)) {
-        normalizedType = 'dress'; // Belirsiz durumlar için dress varsayılanı
-      }
-
-      // Kullanıcı options.region ile hedef bölge seçtiyse bunu önceliklendirelim
-      if (options?.region && ['upper', 'lower', 'dress'].includes(String(options.region))) {
-        normalizedType = options.region as 'upper' | 'lower' | 'dress';
-      }
-
-      // Base64 stringlerden MIME tiplerini belirle
-      modelMimeType = getMimeTypeFromBase64(modelImage);
-      clothingMimeType = getMimeTypeFromBase64(clothingImage);
+    // Normal try-on için clothingType normalizasyonu
+    normalizedType = (clothingType || '').toLowerCase();
+    if (normalizedType === 'single' || normalizedType === 'kıyafet') {
+      // Tek parça kıyafetler için akıllı tespit: varsayılan olarak dress kabul et
+      // Eğer çoklu kıyafet varsa (üst+alt), ana kıyafet upper olarak işlenir
+      normalizedType = 'dress';
+    } else if (['elbise', 'dress', 'tek parça elbise'].includes(normalizedType)) {
+      normalizedType = 'dress';
+    } else if (!['upper', 'lower', 'dress'].includes(normalizedType)) {
+      normalizedType = 'dress'; // Belirsiz durumlar için dress varsayılanı
     }
+
+    // Kullanıcı options.region ile hedef bölge seçtiyse bunu önceliklendirelim
+    if (options?.region && ['upper', 'lower', 'dress'].includes(String(options.region))) {
+      normalizedType = options.region as 'upper' | 'lower' | 'dress';
+    }
+
+    // Base64 stringlerden MIME tiplerini belirle
+    modelMimeType = getMimeTypeFromBase64(modelImage);
+    clothingMimeType = getMimeTypeFromBase64(clothingImage);
 
     // Gemini 2.5 Flash Image Preview modelini başlat
     const model = genAI.getGenerativeModel({ 
@@ -245,26 +218,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // İşlem tipine göre debug logları
+    // Debug logları
     try {
-      if (operationType === 'faceswap') {
-        console.log('[NanoBanana] Face swap request', {
-          operationType,
-          userImageLen: userImage?.length || 0,
-          targetImageLen: targetImage?.length || 0
-        });
-      } else {
-        const isMultiGarment = additionalClothing && additionalClothing.length > 0;
-        console.log('[NanoBanana] Try-on request', {
-          operationType,
-          clothingTypeRaw: clothingType,
-          clothingType: normalizedType,
-          modelLen: modelImage?.length || 0,
-          clothingLen: clothingImage?.length || 0,
-          isMultiGarment,
-          additionalCount: additionalClothing?.length || 0
-        });
-      }
+      const isMultiGarment = additionalClothing && additionalClothing.length > 0;
+      console.log('[NanoBanana] Try-on request', {
+        operationType,
+        clothingTypeRaw: clothingType,
+        clothingType: normalizedType,
+        modelLen: modelImage?.length || 0,
+        clothingLen: clothingImage?.length || 0,
+        isMultiGarment,
+        additionalCount: additionalClothing?.length || 0
+      });
     } catch {}
     
     let prompt: string;
@@ -279,29 +244,7 @@ export async function POST(request: NextRequest) {
       extraDirectives += `\nFORCE: Always replace the UPPER garment even if the model wears a one-piece dress; remove/override the existing top portion to place the CLOTHING IMAGE as the new top.`;
     }
 
-    if (operationType === 'faceswap') {
-      // Face swap işlemi
-      prompt = createFaceSwapPrompt();
-      
-      contents = [
-        { text: prompt + (extraDirectives ? `\n${extraDirectives}` : '') },
-        {
-          inlineData: {
-            mimeType: userMimeType,
-            data: userImage
-          }
-        },
-        {
-          inlineData: {
-            mimeType: targetMimeType,
-            data: targetImage
-          }
-        },
-        { 
-          text: `Face swap işlemi: İlk fotoğraftaki yüzü ikinci fotoğraftaki modelin üzerine doğal şekilde yerleştir.` 
-        }
-      ];
-    } else {
+    {
       // Normal try-on işlemi
       const isMultiGarment = additionalClothing && additionalClothing.length > 0;
       
@@ -384,21 +327,40 @@ export async function POST(request: NextRequest) {
 
     // Yanıtı işle
     if (!response) {
+      console.error('[NanoBanana] Google API response boş');
       return createErrorResponse('Google Nano Banana API\'den yanıt alınamadı', 500);
     }
+
+    console.log('[NanoBanana] API Response alındı:', {
+      hasCandidates: !!response.candidates,
+      candidatesLength: response.candidates?.length || 0,
+      responseKeys: Object.keys(response)
+    });
 
     // Oluşturulan görseli çıkar
     const candidates = response.candidates;
     
     if (!candidates || candidates.length === 0) {
+      console.error('[NanoBanana] API yanıtında candidate bulunamadı');
       return createErrorResponse('API yanıtında görsel bulunamadı', 500);
     }
 
     const parts = candidates[0]?.content?.parts;
     
     if (!parts) {
+      console.error('[NanoBanana] API yanıtında parts bulunamadı');
       return createErrorResponse('API yanıtında içerik bulunamadı', 500);
     }
+
+    console.log('[NanoBanana] Parts analizi:', {
+      partsLength: parts.length,
+      partTypes: parts.map(p => ({
+        hasText: !!p.text,
+        hasInlineData: !!p.inlineData,
+        textLength: p.text?.length || 0,
+        dataLength: p.inlineData?.data?.length || 0
+      }))
+    });
 
     // Görsel verisini bul
     let generatedImageData: string | null = null;
@@ -407,18 +369,34 @@ export async function POST(request: NextRequest) {
     for (const part of parts) {
       if (part.text) {
         responseText = part.text;
+        console.log('[NanoBanana] Text response:', part.text.substring(0, 200) + '...');
       }
       if (part.inlineData?.data) {
         generatedImageData = part.inlineData.data;
+        console.log('[NanoBanana] Image data bulundu:', {
+          mimeType: part.inlineData.mimeType,
+          dataLength: part.inlineData.data.length,
+          dataStart: part.inlineData.data.substring(0, 50) + '...'
+        });
       }
     }
 
     if (!generatedImageData) {
+      console.error('[NanoBanana] Görsel data bulunamadı:', {
+        responseText: responseText?.substring(0, 500),
+        partsCount: parts.length
+      });
       return createErrorResponse(
         `Görsel oluşturulamadı. API yanıtı: ${responseText || 'Bilinmeyen hata'}`, 
         500
       );
     }
+
+    console.log('[NanoBanana] Başarılı görsel oluşturuldu:', {
+      imageDataLength: generatedImageData.length,
+      hasResponseText: !!responseText,
+      operationType
+    });
 
     // Başarılı yanıt döndür
     const responseData: any = {
@@ -430,18 +408,10 @@ export async function POST(request: NextRequest) {
       processingTime: Date.now()
     };
 
-    if (operationType === 'faceswap') {
-      responseData.swappedImage = generatedImageData; // Face swap için alias
-      responseData.meta = {
-        model: 'gemini-2.5-flash-image-preview',
-        timestamp: new Date().toISOString()
-      };
-    } else {
-      const isMultiGarment = additionalClothing && additionalClothing.length > 0;
-      responseData.clothingType = normalizedType;
-      responseData.isMultiGarment = isMultiGarment;
-      responseData.garmentCount = isMultiGarment ? additionalClothing.length + 1 : 1;
-    }
+    const isMultiGarment = additionalClothing && additionalClothing.length > 0;
+    responseData.clothingType = normalizedType;
+    responseData.isMultiGarment = isMultiGarment;
+    responseData.garmentCount = isMultiGarment ? additionalClothing.length + 1 : 1;
 
     return createSuccessResponse(responseData);
 
@@ -453,8 +423,8 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Google Vision API key geçersiz', 401);
     }
     
-    if (error.message?.includes('QUOTA_EXCEEDED')) {
-      return createErrorResponse('API kullanım kotası aşıldı', 429);
+    if (error.message?.includes('QUOTA_EXCEEDED') || error.status === 429) {
+      return createErrorResponse('Google Vision API günlük kullanım kotası aşıldı. Lütfen yarın tekrar deneyin veya API planınızı yükseltin.', 429);
     }
     
     if (error.message?.includes('INVALID_ARGUMENT')) {

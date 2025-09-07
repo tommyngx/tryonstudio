@@ -37,35 +37,7 @@ export async function uploadImage(file: File): Promise<UploadResponse> {
   }
 }
 
-/**
- * Face swap API'si
- */
-export async function performFaceSwap(
-  sourceImage: string, 
-  targetImage: string
-): Promise<AIResponse> {
-  try {
-    const response = await fetch('/api/ai/face-swap', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        sourceImage,
-        targetImage
-      })
-    })
-
-    const data = await response.json()
-    return data
-  } catch (error) {
-    return {
-      success: false,
-      message: 'Face swap işlemi sırasında hata oluştu',
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata'
-    }
-  }
-}
+// Face swap helper kaldırıldı
 
 /**
  * Virtual try-on API'si

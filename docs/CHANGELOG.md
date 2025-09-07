@@ -1,4 +1,124 @@
-# CHANGELOG
+## [2025-09-07 13:47] - Üst Giyim Prompt Güçlendirildi
+
+### 🎯 İyileştirme
+- `nano-banana` try-on akışında ÜST GİYİM (upper) prompt’una, kıyafetin model üzerinde açıkça ve görünür şekilde değişmesini zorunlu kılan net bir talimat eklendi:
+  - "Ensure the TOP garment is clearly and visibly changed on the model to MATCH the provided CLOTHING IMAGE (color, print/wordmarks, neckline, sleeves, silhouette, and fit must be recognizable at first glance)."
+
+### 📁 Etkilenen Dosyalar
+- `src/app/api/nano-banana/route.ts` (fonksiyon: `createUpperOnlyPrompt`)
+
+### ✅ Beklenen Sonuç
+- Özellikle düz/sade üst kıyafetlerde bile değişimin ilk bakışta fark edilir olması.
+
+## [2025-09-07 13:50] - Try-On Sonuçları Geçmişe Ekleniyor ve Gösteriliyor
+
+### 🔧 Davranış Değişikliği
+- Başarılı `virtual try-on` sonucu artık hem ana görüntüleyicide gösteriliyor hem de `editHistory` listesine yeni bir öğe olarak ekleniyor ve otomatik seçiliyor.
+- Böylece oluşturulan sonuçlar her zaman sağdaki dikey thumbnail galerisinde görünür ve kullanıcı geçmişte gezinip geri dönebilir.
+
+### 📁 Etkilenen Dosyalar
+- `src/app/edit/page.tsx` (fonksiyon: `handleTryOnResult` içinde başarılı yanıt işleme)
+
+### 🧪 Notlar
+- History öğesi `EditHistoryItem` yapısına uygun olarak meta ile birlikte eklenir; `model` alanı yoksa varsayılan `gemini-2.5-flash-image-preview` kullanılır.
+
+## [2025-09-07 13:27] - Face Swap Özelliği Kaldırıldı
+
+### 🔥 Değişiklikler
+- UI: `src/components/edit/clothing-panel.tsx` içinden Face Swap toggle, kullanıcı fotoğrafı yükleme alanı, ilgili state ve callback'ler kaldırıldı.
+- Edit Sayfası: `src/app/edit/page.tsx` içindeki `faceSwappedModel`, `userPhotoBase64`, `isFaceSwapping`, `handleFaceSwap`, `handleTryOnWithSwappedModel` ve tüm kullanım yerleri kaldırıldı. Akış sadece `selectedModel` ve `tryOnResult` ile sadeleştirildi.
+- API: `src/app/api/face-swap/route.ts` ve `src/app/api/ai/face-swap/route.ts` artık `410 Gone` dönüyor (özellik devre dışı). `src/app/api/nano-banana/route.ts` içinde Face Swap ile ilgili `operationType==='faceswap'` dalı ve prompt kaldırıldı; bu tip istekler `410 Gone` ile reddediliyor.
+- Lib: `src/lib/api.ts` içindeki `performFaceSwap` yardımcı fonksiyonu kaldırıldı. `src/lib/config.ts` içindeki `ai.replicate.models.faceSwap` ve `features.faceSwap` bayrakları temizlendi.
+
+### ✨ Sonuçlar
+- Kod tabanı sadeleşti ve bakım yükü azaldı.
+- Try-on ve AI Edit akışları Face Swap bağımlılığı olmadan tutarlı çalışıyor.
+
+# Changelog
+
+Tüm önemli değişiklikler bu dosyada belgelenecektir.
+
+## [2025-01-07 12:55] - Try-On ve AI Düzenleme Paneli Ayrıştırıldı
+
+### 🔧 Düzeltmeler
+- **Bağımsız Try-On:** Sol panel try-on işlemi AI düzenleme geçmişinden ayrıştırıldı
+- **Conflict Çözümü:** Try-on sonuçları artık AI düzenleme thumbnail'ları ile karışmıyor
+- **Görsel Öncelik:** Try-on sonucu > Face swap > Orijinal model sıralaması
+- **Panel Kontrolü:** Try-on sonrası AI paneli otomatik açılmıyor
+
+### 📝 Yapılan İyileştirmeler
+- `tryOnResult` state'i bağımsız çalışıyor
+- Try-on sonuçları `editHistory`'ye eklenmek yerine ayrı tutuluyor
+- Görsel seçim mantığı try-on öncelikli olarak güncellendi
+- İndirme fonksiyonu try-on sonuçlarını destekliyor
+
+## [2025-01-07 12:53] - API Response Debug Logging Eklendi
+
+### 🔧 Düzeltmeler
+- **Detaylı API Logging:** Google AI API response'unu adım adım izleme
+- **Response Analizi:** Candidates, parts ve image data kontrolü
+- **Hata Tespiti:** API'nin döndürdüğü veri yapısını detaylı loglama
+- **Görsel Data Kontrolü:** Base64 image data'nın varlığı ve boyutu kontrolü
+
+### 📝 Yapılan İyileştirmeler
+- `nano-banana/route.ts`: Comprehensive response logging eklendi
+- API response'unun her aşaması loglanıyor
+- Image data bulunup bulunmadığı detaylı kontrol ediliyor
+- Text response ve image data ayrı ayrı loglanıyor
+
+## [2025-01-07 12:50] - Kıyafet Kategori Sistemi Sadeleştirildi
+
+### Düzeltmeler
+- **Kategori Seçici Kaldırıldı:** Gereksiz kıyafet kategori seçim UI'ı kaldırıldı
+- **Varsayılan Kategori:** `clothingCategory` field'ı interface'den çıkarıldı
+- **Hedef Bölge Tasarımı:** Kullanıcı dostu buton tabanlı seçim sistemi eklendi
+- **Kesim Stili UI:** Modern kart tasarımı ile görsel iyileştirme
+
+### Yapılan İyileştirmeler
+- `UploadedClothing` interface sadeleştirildi
+- Hedef bölge seçimi: Emoji ikonlu buton grid (👔 Üst, 👖 Alt, 👗 Elbise)
+- Kesim stili seçimi: Açıklamalı buton grid (Normal, Slim, Oversize)
+- Gereksiz kategori değiştirme mantığı temizlendi
+
+## [2025-01-07 12:47] - Google Vision API Quota Aşımı Sorunu Çözüldü
+
+### Tespit Edilen Gerçek Sorun
+- **API Quota:** Google Vision API günlük kullanım kotası aşıldı (429 Too Many Requests)
+- **Hata Kodu:** `GoogleGenerativeAIFetchError: Resource has been exhausted (e.g. check quota)`
+
+### Düzeltmeler
+- **Quota Hatası Yakalama:** 429 status code için özel hata mesajı eklendi
+- **Kullanıcı Bilgilendirme:** Quota aşımı durumunda açıklayıcı çözüm önerileri
+- **Debug Logging:** Try-on işlemlerinde detaylı hata yakalama ve logging eklendi
+
+### Yapılan İyileştirmeler
+- `nano-banana/route.ts`: Quota aşımı için özel error handling
+- `EditPage`: Quota hatası için kullanıcı dostu uyarı mesajı
+- Hata mesajlarında çözüm önerileri (quota artırma, bekleme, farklı key)
+
+## [2025-01-07 12:40] - AI ile Dene Butonu Hata Düzeltmeleri
+
+### Düzeltmeler
+- **Kritik:** "AI ile Dene" butonunun çalışmaması sorunu araştırıldı ve çözüldü
+- **API Key:** `.env.example` dosyası oluşturuldu - `GOOGLE_VISION_API_KEY` eksikliği tespit edildi
+- **Hata Yönetimi:** Try-on işlemlerinde detaylı hata yakalama ve logging eklendi
+- **Debug:** Clothing panel ve edit sayfasında kapsamlı debug logları eklendi
+
+### Tespit Edilen Ana Sorunlar
+1. **Environment Variables:** `.env.local` dosyası eksik - Google Vision API key bulunamıyor
+2. **Hata Mesajları:** API çağrısı başarısız olduğunda kullanıcıya net bilgi verilmiyordu
+3. **Debug Eksikliği:** Try-on akışında hangi aşamada hata oluştuğu belirsizdi
+
+### Yapılan İyileştirmeler
+- `ClothingPanel`: Try-on başlatma ve callback çağrısı için detaylı loglar
+- `EditPage`: API çağrısı öncesi/sonrası durum kontrolü ve hata yakalama
+- `.env.example`: Gerekli environment variables için şablon dosya
+- Hata mesajlarında daha açıklayıcı bilgiler
+
+### Kullanıcı Aksiyonları Gerekli
+1. `.env.local` dosyası oluşturun ve `GOOGLE_VISION_API_KEY` ekleyin
+2. Google Vision API key'inizi Google Cloud Console'dan alın
+3. Uygulamayı yeniden başlatın
 
 ## 2025-09-07
 
@@ -9,7 +129,6 @@
 - 11:38: **KULLANICI DENEYİMİ İYİLEŞTİRMESİ**: Kıyafet kategorisi seçici UI eklendi. Kullanıcılar yüklenen kıyafetlerin kategorisini (Üst Giyim/Alt Giyim/Elbise) manuel olarak değiştirebilir. Dropdown menü ile kolay kategori seçimi, emoji ikonları ve görsel geri bildirim. `UploadedClothing` interface'ine `clothingCategory` alanı eklendi. Dosya: `src/components/edit/clothing-panel.tsx`.
 - 11:34: **KRİTİK DÜZELTME**: Kıyafetlerin modele düzgün yansımaması sorunu çözüldü. Alt giyim prompt'unda "UPPER GARMENT" yerine "LOWER GARMENT" kullanılacak şekilde düzeltildi. Tek parça kıyafetler için 'single' tipi 'dress' olarak normalize edildi. Çoklu kıyafet akışında ana kıyafet 'upper', ek kıyafet 'lower' olarak sabitlendi. Dosyalar: `src/app/api/nano-banana/route.ts`, `src/components/edit/clothing-panel.tsx`.
 - 09:45: Tek parça (upper) prompt güçlendirildi: CLOTHING IMAGE'ı birebir uygulanacak üst parça olarak vurgulandı; yaka/sleeve/silhouette/fit eşleşmesi ve tipografik logo/print koruma talimatları netleştirildi. İçerik sonundaki açıklama mesajı normalize İngilizce garment etiketi ile güncellendi. Dosya: `src/app/api/nano-banana/route.ts`.
-- 09:41: ModelViewer'da pan/zoom için "safe area" sınırlandırması eklendi. Container ve görsel doğal boyutları ölçülerek object-contain baz boyut hesaplanıyor; pan değerleri ölçek sonrası görsel boyutuna göre clamp'leniyor. Translate ve scale ayrı sarmallar ile uygulanarak sonsuz kaydırma engellendi. Dosya: `src/components/edit/model-viewer.tsx`.
 - 01:17: ModelViewer içinde "AI Sonucu" yazılı overlay etiketi kaldırıldı; görsel üzerinde gereksiz metin kalabalığı azaltıldı. Dosya: `src/components/edit/model-viewer.tsx`.
 - 01:10: Pan alanı genişletildi: Görsel oluşturma alanı artık tam alan üzerinde (inset-0) etkileşimli; önceki çerçeve (inset-4) kısıtı kaldırıldı. Header'a zoom butonlarının yanına Reset (100%) eklendi. `ModelViewer`'a `resetSignal` prop'u ve çift tık ile reset davranışı eklendi. Dosyalar: `src/components/edit/model-viewer.tsx`, `src/app/edit/page.tsx`.
 - 01:00: Model görüntüleyicide sorunsuz zoom & pan etkileşimi eklendi. Mouse wheel/trackpad pinch ile zoom (ctrl/cmd destekli), mouse sürükleme ve tek parmak touch ile pan, ok tuşları ile pan; +/− ile zoom; R ile reset eklendi. Transformlar tek bir wrapper üzerinde `translate + scale` ile uygulanıyor. `onZoomChange` prop'u ile üstteki zoom kontrolleriyle tam senkron çalışır. Dosyalar: `src/components/edit/model-viewer.tsx`, `src/app/edit/page.tsx`.
