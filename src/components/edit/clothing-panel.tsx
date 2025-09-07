@@ -11,6 +11,7 @@ interface UploadedClothing {
   id: string
   name: string
   type: 'single' | 'upper' | 'lower'
+  clothingCategory: 'upper' | 'lower' | 'dress' // Kullanıcının seçtiği kategori
   imageUrl: string
   imageData: string // base64 data
   uploadDate: Date
@@ -21,7 +22,7 @@ interface ClothingPanelProps {
   onClothesSelect: (type: 'single' | 'combo', item: ClothingSet) => void
   selectedModel?: string
   onModelSelect?: (modelPath: string) => void
-  onTryOn?: (clothingImageData: string, clothingType: string, additionalClothing?: any[]) => void
+  onTryOn?: (clothingImageData: string, clothingType: string, additionalClothing?: any[], options?: { region?: 'upper' | 'lower' | 'dress'; fit?: 'normal' | 'slim' | 'oversize'; forceReplaceUpper?: boolean }) => void
   // Parent, panel içindeki "AI ile Dene" tetikleyicisini kayıt edebilir
   registerTryOnTrigger?: (fn: (() => Promise<void> | void) | null) => void
   // Face swap için kullanıcı fotoğrafı callback'i
@@ -40,8 +41,42 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
   const [selectedUploadedItem, setSelectedUploadedItem] = useState<string | null>(null)
   const [userPhoto, setUserPhoto] = useState<string | null>(null) // Kullanıcı fotoğrafı
   const [isFaceSwapEnabled, setIsFaceSwapEnabled] = useState(false) // Face swap modu
+  const [showCategorySelector, setShowCategorySelector] = useState<string | null>(null) // Kategori seçici göster
   const fileInputRef = useRef<HTMLInputElement>(null)
   const userPhotoInputRef = useRef<HTMLInputElement>(null)
+  // Hedef bölge ve kesim seçenekleri
+  const [targetRegion, setTargetRegion] = useState<'upper' | 'lower' | 'dress'>('upper')
+  const [fitMode, setFitMode] = useState<'normal' | 'slim' | 'oversize'>('normal')
+
+  // Seçenekler bloğu: her zaman YÜKLEME BÖLÜMÜNDEN SONRA render edilecek
+  const OptionsBlock = () => (
+    <div className="mt-6 mb-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-3 relative z-0">
+      <div>
+        <label className="block text-xs text-gray-600 mb-1">Hedef Bölge</label>
+        <select
+          value={targetRegion}
+          onChange={(e) => setTargetRegion(e.target.value as any)}
+          className="w-full text-xs border border-gray-300 rounded px-2 py-1 bg-white"
+        >
+          <option value="upper">Üst</option>
+          <option value="lower">Alt</option>
+          <option value="dress">Elbise/Takım</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-xs text-gray-600 mb-1">Kesim</label>
+        <select
+          value={fitMode}
+          onChange={(e) => setFitMode(e.target.value as any)}
+          className="w-full text-xs border border-gray-300 rounded px-2 py-1 bg-white"
+        >
+          <option value="normal">Normal</option>
+          <option value="slim">Slim</option>
+          <option value="oversize">Oversize</option>
+        </select>
+      </div>
+    </div>
+  )
   
   // Aktif tab'a göre kıyafetleri getir
   const clothingItems = getMenClothingByType(activeTab)
@@ -133,6 +168,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         id: `uploaded_${Date.now()}`,
         name: file.name.replace(/\.[^/.]+$/, ""), // Uzantıyı kaldır
         type: 'single',
+        clothingCategory: 'upper', // Varsayılan olarak üst giyim, kullanıcı değiştirebilir
         imageUrl,
         imageData: base64Data.split(',')[1], // "data:image/..." kısmını kaldır
         uploadDate: new Date()
@@ -178,6 +214,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         id: `upper_${Date.now()}`,
         name: file.name.replace(/\.[^/.]+$/, ""),
         type: 'upper',
+        clothingCategory: 'upper',
         imageUrl,
         imageData: base64Data.split(',')[1],
         uploadDate: new Date()
@@ -223,6 +260,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         id: `lower_${Date.now()}`,
         name: file.name.replace(/\.[^/.]+$/, ""),
         type: 'lower',
+        clothingCategory: 'lower',
         imageUrl,
         imageData: base64Data.split(',')[1],
         uploadDate: new Date()
@@ -270,6 +308,16 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       setSelectedUploadedItem(null)
     }
   }
+
+  // Kıyafet kategorisi değiştirme
+  const handleCategoryChange = (itemId: string, newCategory: 'upper' | 'lower' | 'dress') => {
+    setUploadedClothes(prev => prev.map(item => 
+      item.id === itemId 
+        ? { ...item, clothingCategory: newCategory }
+        : item
+    ))
+    setShowCategorySelector(null)
+  }
   
   // Virtual Try-On işlemi
   const handleVirtualTryOn = async (clothingImageData: string, clothingType: string) => {
@@ -278,12 +326,21 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       return
     }
     
+    // Seçili kıyafetin kategorisini kullan
+    const selectedItem = uploadedClothes.find(item => item.id === selectedUploadedItem)
+    const specificType = selectedItem ? selectedItem.clothingCategory : clothingType
+    
+    // Kullanıcının seçtiği hedef bölgeyi önceliklendirelim
+    const region = targetRegion || specificType
+    // Region=upper ise UI göstermeden zorla değiştir davranışını otomatik etkinleştir
+    const options = { region, fit: fitMode, forceReplaceUpper: region === 'upper' }
+    
     // Not: API çağrısı UI bileşeni içinde yapılmamalıdır. 
     // Bu bileşen yalnızca kullanıcının yüklediği kıyafet görselini parent'a iletir.
     // Böylece tek bir merkezde (Edit sayfası) inference çağrısı yapılır ve çift çağrı/yanlış veri rolü sorunları engellenir.
     try {
       if (onTryOn) {
-        await onTryOn(clothingImageData, clothingType)
+        await onTryOn(clothingImageData, region, undefined, options)
       }
     } catch (error) {
       console.error('Virtual try-on tetikleme hatası:', error)
@@ -314,7 +371,8 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         imageData: lowerClothing.imageData
       }]
 
-      await onTryOn(upperClothing.imageData, upperClothing.type, additionalClothing)
+      const options = { region: 'upper' as const, fit: fitMode, forceReplaceUpper: false }
+      await onTryOn(upperClothing.imageData, 'upper', additionalClothing, options)
     } catch (error) {
       console.error('Upper+Lower try-on error:', error)
       alert('Üst+Alt deneme işleminde hata oluştu')
@@ -548,7 +606,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
 
         {/* Yüklenen Kıyafetler */}
         {uploadedClothes.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-6 relative z-10">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">Yüklenen Kıyafetler</h3>
               <div className="flex items-center gap-2">
@@ -604,8 +662,52 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                   {/* Kıyafet bilgisi */}
                   <div className="p-2">
                     <h3 className="text-xs font-medium text-gray-900 truncate">{item.name}</h3>
-                    <p className="text-xs text-gray-500">{item.type === 'single' ? 'Tek parça' : 'Üst & Alt'}</p>
-                    {/* Öğenin altındaki yerel "AI ile Dene" butonu kaldırıldı; sol alttaki sabit buton kullanılacak */}
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-xs text-gray-500">{item.type === 'single' ? 'Tek parça' : 'Üst & Alt'}</p>
+                      {/* Kategori seçici butonu */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowCategorySelector(showCategorySelector === item.id ? null : item.id)
+                        }}
+                        className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                        title="Kıyafet kategorisini değiştir"
+                      >
+                        {item.clothingCategory === 'upper' ? 'Üst' : item.clothingCategory === 'lower' ? 'Alt' : 'Elbise'}
+                      </button>
+                    </div>
+                    
+                    {/* Kategori seçici dropdown */}
+                    {showCategorySelector === item.id && (
+                      <div className="absolute z-10 mt-1 right-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-[120px]">
+                        <div className="space-y-1">
+                          <button
+                            onClick={() => handleCategoryChange(item.id, 'upper')}
+                            className={`w-full text-left text-xs px-2 py-1 rounded hover:bg-gray-100 ${
+                              item.clothingCategory === 'upper' ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
+                            }`}
+                          >
+                            👔 Üst Giyim
+                          </button>
+                          <button
+                            onClick={() => handleCategoryChange(item.id, 'lower')}
+                            className={`w-full text-left text-xs px-2 py-1 rounded hover:bg-gray-100 ${
+                              item.clothingCategory === 'lower' ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
+                            }`}
+                          >
+                            👖 Alt Giyim
+                          </button>
+                          <button
+                            onClick={() => handleCategoryChange(item.id, 'dress')}
+                            className={`w-full text-left text-xs px-2 py-1 rounded hover:bg-gray-100 ${
+                              item.clothingCategory === 'dress' ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
+                            }`}
+                          >
+                            👗 Elbise
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -613,8 +715,11 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
           </div>
         )}
 
+        {/* Try-on Ayarları (her zaman görünür) */}
+        <OptionsBlock />
+
         {/* Model Seçimi Bölümü */}
-        <div className="mb-6">
+        <div className="mb-6 mt-2">
           {/* Cinsiyet Sekmeleri */}
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-900">Manken Modeller</h3>

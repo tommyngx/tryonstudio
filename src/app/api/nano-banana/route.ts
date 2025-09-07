@@ -55,11 +55,11 @@ function createUpperOnlyPrompt(): string {
 
 // Alt giyim için prompt (sadece alt değişsin)
 function createLowerOnlyPrompt(): string {
-  return `Follow these rules strictly. Use the given MODEL PHOTO as the base and change ONLY THE UPPER GARMENT:
+  return `Follow these rules strictly. Use the given MODEL PHOTO as the base and change ONLY THE LOWER GARMENT:
 
   PRIMARY GOAL:
   - Keep the model IDENTICAL: face/identity, hair, skin tone, body proportions, pose, camera angle and BACKGROUND MUST NOT change.
-  - Dress ONLY THE UPPER GARMENT; do not alter upper garment, scene or background.
+  - Dress ONLY THE LOWER GARMENT; do not alter upper garment, scene or background.
 
   VISUAL CONSISTENCY:
   - Keep lighting/shadows, perspective and scale consistent with the model photo.
@@ -216,11 +216,18 @@ export async function POST(request: NextRequest) {
       // Normal try-on için clothingType normalizasyonu
       normalizedType = (clothingType || '').toLowerCase();
       if (normalizedType === 'single' || normalizedType === 'kıyafet') {
-        normalizedType = 'upper';
+        // Tek parça kıyafetler için akıllı tespit: varsayılan olarak dress kabul et
+        // Eğer çoklu kıyafet varsa (üst+alt), ana kıyafet upper olarak işlenir
+        normalizedType = 'dress';
       } else if (['elbise', 'dress', 'tek parça elbise'].includes(normalizedType)) {
         normalizedType = 'dress';
       } else if (!['upper', 'lower', 'dress'].includes(normalizedType)) {
-        normalizedType = 'upper';
+        normalizedType = 'dress'; // Belirsiz durumlar için dress varsayılanı
+      }
+
+      // Kullanıcı options.region ile hedef bölge seçtiyse bunu önceliklendirelim
+      if (options?.region && ['upper', 'lower', 'dress'].includes(String(options.region))) {
+        normalizedType = options.region as 'upper' | 'lower' | 'dress';
       }
 
       // Base64 stringlerden MIME tiplerini belirle
@@ -262,13 +269,22 @@ export async function POST(request: NextRequest) {
     
     let prompt: string;
     let contents: any[] = [];
+    // Ek yönergeler: fit/forceReplaceUpper
+    let extraDirectives = '';
+    if (options?.fit && ['normal','slim','oversize'].includes(String(options.fit))) {
+      const fitLabel = String(options.fit);
+      extraDirectives += `\nFIT: Apply a ${fitLabel} fit silhouette (respect realistic garment drape and proportions).`;
+    }
+    if (options?.forceReplaceUpper && normalizedType === 'upper') {
+      extraDirectives += `\nFORCE: Always replace the UPPER garment even if the model wears a one-piece dress; remove/override the existing top portion to place the CLOTHING IMAGE as the new top.`;
+    }
 
     if (operationType === 'faceswap') {
       // Face swap işlemi
       prompt = createFaceSwapPrompt();
       
       contents = [
-        { text: prompt },
+        { text: prompt + (extraDirectives ? `\n${extraDirectives}` : '') },
         {
           inlineData: {
             mimeType: userMimeType,
@@ -292,14 +308,17 @@ export async function POST(request: NextRequest) {
       if (isMultiGarment) {
       // Çoklu kıyafet için (üst+alt)
       const additionalItem = additionalClothing[0];
-      const upperType = normalizedType === 'upper' ? 'upper garment' : 'lower garment';
-      const lowerType = normalizedType === 'upper' ? 'lower garment' : 'upper garment';
+      // Ana kıyafet her zaman upper, ek kıyafet lower olarak işle
+      const upperType = 'upper garment';
+      const lowerType = 'lower garment';
+      // Ana kıyafeti upper olarak ayarla
+      normalizedType = 'upper';
       
       prompt = createMultiGarmentPrompt(upperType, lowerType);
       
       // İçerikleri hazırla - model + ana kıyafet + ek kıyafet
       contents = [
-        { text: prompt },
+        { text: prompt + (extraDirectives ? `\n${extraDirectives}` : '') },
         {
           inlineData: {
             mimeType: modelMimeType,
@@ -337,7 +356,7 @@ export async function POST(request: NextRequest) {
       const typeLabel = normalizedType === 'upper' ? 'upper garment' : normalizedType === 'lower' ? 'lower garment' : 'one-piece dress'
 
       contents = [
-        { text: prompt },
+        { text: prompt + (extraDirectives ? `\n${extraDirectives}` : '') },
         {
           inlineData: {
             mimeType: modelMimeType,

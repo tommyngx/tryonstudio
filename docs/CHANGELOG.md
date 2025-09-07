@@ -2,6 +2,11 @@
 
 ## 2025-09-07
 
+- 12:03: UI düzeni iyileştirildi: Yükleme alanı üstte, "Hedef Bölge/Kesim/Üstü zorla değiştir" kontrolleri alta taşındı. Kullanıcı akışı sadeleşti ve rakip düzenine uygun hale getirildi. Dosya: `src/components/edit/clothing-panel.tsx`.
+- 12:00: Try-on seçenekleri eklendi: `region (upper/lower/dress)`, `fit (normal/slim/oversize)`, `forceReplaceUpper`. Bu seçenekler `ClothingPanel` → `EditPage` → `API` akışında iletiliyor ve promptlara ek direktif olarak yansıtılıyor. Dosyalar: `clothing-panel.tsx`, `app/edit/page.tsx`, `app/api/nano-banana/route.ts`.
+
+- 11:38: **KULLANICI DENEYİMİ İYİLEŞTİRMESİ**: Kıyafet kategorisi seçici UI eklendi. Kullanıcılar yüklenen kıyafetlerin kategorisini (Üst Giyim/Alt Giyim/Elbise) manuel olarak değiştirebilir. Dropdown menü ile kolay kategori seçimi, emoji ikonları ve görsel geri bildirim. `UploadedClothing` interface'ine `clothingCategory` alanı eklendi. Dosya: `src/components/edit/clothing-panel.tsx`.
+- 11:34: **KRİTİK DÜZELTME**: Kıyafetlerin modele düzgün yansımaması sorunu çözüldü. Alt giyim prompt'unda "UPPER GARMENT" yerine "LOWER GARMENT" kullanılacak şekilde düzeltildi. Tek parça kıyafetler için 'single' tipi 'dress' olarak normalize edildi. Çoklu kıyafet akışında ana kıyafet 'upper', ek kıyafet 'lower' olarak sabitlendi. Dosyalar: `src/app/api/nano-banana/route.ts`, `src/components/edit/clothing-panel.tsx`.
 - 09:45: Tek parça (upper) prompt güçlendirildi: CLOTHING IMAGE'ı birebir uygulanacak üst parça olarak vurgulandı; yaka/sleeve/silhouette/fit eşleşmesi ve tipografik logo/print koruma talimatları netleştirildi. İçerik sonundaki açıklama mesajı normalize İngilizce garment etiketi ile güncellendi. Dosya: `src/app/api/nano-banana/route.ts`.
 - 09:41: ModelViewer'da pan/zoom için "safe area" sınırlandırması eklendi. Container ve görsel doğal boyutları ölçülerek object-contain baz boyut hesaplanıyor; pan değerleri ölçek sonrası görsel boyutuna göre clamp'leniyor. Translate ve scale ayrı sarmallar ile uygulanarak sonsuz kaydırma engellendi. Dosya: `src/components/edit/model-viewer.tsx`.
 - 01:17: ModelViewer içinde "AI Sonucu" yazılı overlay etiketi kaldırıldı; görsel üzerinde gereksiz metin kalabalığı azaltıldı. Dosya: `src/components/edit/model-viewer.tsx`.
