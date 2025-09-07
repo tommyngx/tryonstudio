@@ -49,30 +49,32 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
   // Seçenekler bloğu: her zaman YÜKLEME BÖLÜMÜNDEN SONRA render edilecek
   const OptionsBlock = () => (
     <div className="mt-6 mb-4 pt-4 border-t border-gray-200 space-y-4 relative z-0">
-      {/* Hedef Bölge */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">{t('clothing.options.target_region')}</label>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { value: 'upper', label: t('clothing.options.regions.upper'), icon: '👔' },
-            { value: 'lower', label: t('clothing.options.regions.lower'), icon: '👖' },
-            { value: 'dress', label: t('clothing.options.regions.dress'), icon: '👗' }
-          ].map((option) => (
-            <button
-              key={option.value}
-              onClick={() => setTargetRegion(option.value as any)}
-              className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
-                targetRegion === option.value
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 hover:border-gray-300 text-gray-600'
-              }`}
-            >
-              <span className="text-lg mb-1">{option.icon}</span>
-              <span className="text-xs font-medium">{option.label}</span>
-            </button>
-          ))}
+      {/* Hedef Bölge (yalnızca tek parça akışında gösterilir) */}
+      {activeTab === 'single' && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">{t('clothing.options.target_region')}</label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { value: 'upper', label: t('clothing.options.regions.upper'), icon: '👔' },
+              { value: 'lower', label: t('clothing.options.regions.lower'), icon: '👖' },
+              { value: 'dress', label: t('clothing.options.regions.dress'), icon: '👗' }
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setTargetRegion(option.value as any)}
+                className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
+                  targetRegion === option.value
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                }`}
+              >
+                <span className="text-lg mb-1">{option.icon}</span>
+                <span className="text-xs font-medium">{option.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Kesim Stili */}
       <div className="space-y-2">

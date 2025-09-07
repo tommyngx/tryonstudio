@@ -3,6 +3,12 @@
 - TR ve EN sözlüklerine `clothing` alanı eklendi (tabs, upload alanı, hata mesajları, model seçim, durum rozetleri, buton metinleri).
 - Amaç: Metinleri merkezileştirmek ve EN adaptasyonunu hızlandırmak; komponentleri metinden bağımsızlaştırmak.
 
+## Memory - Combo Akışında Hedef Bölge Gizleme (2025-09-07 21:22 +03:00)
+- Karar: Üst+Alt (combo) akışında “Hedef Bölge” kontrolü gizlendi. Çünkü combo prompt’u zaten `upper + lower` sabit kombinasyonu ile çalışıyor; kullanıcı seçimi etkisizdi.
+- Single akışında “Hedef Bölge” kontrolü görünmeye devam eder.
+- "Fit" (normal/slim/oversize) seçeneği her iki akışta da görünür ve API'ye iletilir.
+- Etkilenen dosya: `src/components/edit/clothing-panel.tsx` (OptionsBlock içinde `activeTab==='single'` koşulu ile bölge seçimi render edilir).
+
 # Memory - i18n Altyapısı (2025-09-07 15:56 +03:00)
 - Hafif i18n iskeleti kuruldu: `src/i18n/tr.json`, `src/i18n/en.json`, `src/i18n/index.ts` (createTranslator + interpolate), `src/i18n/provider.tsx` (Context + Provider), `src/i18n/useI18n.ts` (hook), `src/i18n/types.ts`.
 - Global entegrasyon: `src/components/providers.tsx` içinde `I18nProvider` ile tüm uygulama sarmalandı (React Query üstünde çalışır durumda).

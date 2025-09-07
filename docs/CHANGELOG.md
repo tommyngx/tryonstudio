@@ -1,3 +1,16 @@
+## [2025-09-07 21:22] - Combo Sekmesinde Hedef Bölge Gizlendi
+
+### 🎯 UX Düzenlemesi
+- Üst+Alt (combo) akışında “Hedef Bölge” seçeneği artık gösterilmiyor. Combo akışı zaten `upper + lower` olarak sabit çalıştığı için kullanıcı seçimi etkisizdi.
+- Tek parça (single) akışında “Hedef Bölge” seçeneği görünmeye devam eder.
+- "Fit" (normal/slim/oversize) seçeneği her iki akışta da görünür ve API'ye iletilir.
+
+### 📁 Etkilenen Dosyalar
+- Güncellendi: `src/components/edit/clothing-panel.tsx` (OptionsBlock koşullu render: hedef bölge sadece `activeTab==='single'` iken)
+
+### ✅ Beklenen Sonuç
+- Kullanıcıda kafa karışıklığı azalır; combo akışında etkisiz bir kontrol gösterilmez.
+
 ## [2025-09-07 17:17] - Try-On Sonrası AI Panel Otomatik Açılıyor
 
 ### 🔄 Davranış Değişikliği

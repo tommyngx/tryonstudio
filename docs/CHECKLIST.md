@@ -34,6 +34,7 @@
 - [x] Face Swap özelliği kaldırıldı (UI, API uçları 410 Gone, config ve helper temizliği)
 - [x] Upper prompt güçlendirildi: "Ensure the TOP garment is clearly and visibly changed ..." direktifi eklendi (`createUpperOnlyPrompt`)
 - [x] "Your Model" (self) yükleme özelliği: Panel içinden kullanıcı fotoğrafı yüklenir, `localStorage('self_model_data_url')` ile hatırlanır ve `EditPage`'e `data URL` olarak aktarılır
+- [x] Combo akışında “Hedef Bölge” kontrolü gizlendi; Single akışında gösterilmeye devam eder. "Fit" seçeneği her iki akışta da görünür ve API'ye iletilir.
 
 ## UX - Collapsible Panel
 
