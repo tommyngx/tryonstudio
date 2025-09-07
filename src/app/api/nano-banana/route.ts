@@ -33,11 +33,11 @@ function createUpperOnlyPrompt(): string {
 
   PRIMARY GOAL:
   - Keep the model IDENTICAL: face/identity, hair, skin tone, body proportions, pose, camera angle and BACKGROUND MUST NOT change.
-  - Dress ONLY THE UPPER GARMENT; do not alter lower garment, scene or background.
+  - Dress ONLY THE UPPER GARMENT using the provided CLOTHING IMAGE as the exact garment to apply; do not alter lower garment, scene or background.
 
   VISUAL CONSISTENCY:
   - Keep lighting/shadows, perspective and scale consistent with the model photo.
-  - Fabric texture, wrinkles, seams and contact shadows must be realistic.
+  - Fabric texture, wrinkles, seams and contact shadows must be realistic. Match neckline shape, sleeve type/length, silhouette and fit of the provided garment.
   - Apply natural masking and edge blending around arms/shoulders (no halo/edge glow).
 
   CONSTRAINTS:
@@ -55,11 +55,11 @@ function createUpperOnlyPrompt(): string {
 
 // Alt giyim için prompt (sadece alt değişsin)
 function createLowerOnlyPrompt(): string {
-  return `Follow these rules strictly. Use the given MODEL PHOTO as the base and change ONLY THE LOWER GARMENT:
+  return `Follow these rules strictly. Use the given MODEL PHOTO as the base and change ONLY THE UPPER GARMENT:
 
   PRIMARY GOAL:
   - Keep the model IDENTICAL: face/identity, hair, skin tone, body proportions, pose, camera angle and BACKGROUND MUST NOT change.
-  - Dress ONLY THE LOWER GARMENT; do not alter upper garment, scene or background.
+  - Dress ONLY THE UPPER GARMENT; do not alter upper garment, scene or background.
 
   VISUAL CONSISTENCY:
   - Keep lighting/shadows, perspective and scale consistent with the model photo.
@@ -333,6 +333,9 @@ export async function POST(request: NextRequest) {
         prompt = createDressPrompt();
       }
       
+      // Normalize a clear English label for type-specific hint
+      const typeLabel = normalizedType === 'upper' ? 'upper garment' : normalizedType === 'lower' ? 'lower garment' : 'one-piece dress'
+
       contents = [
         { text: prompt },
         {
@@ -348,7 +351,7 @@ export async function POST(request: NextRequest) {
           }
         },
         { 
-          text: `Kıyafet tipi: ${clothingType}. Lütfen bu kıyafeti modelin üzerinde doğal ve gerçekçi bir şekilde göster.` 
+          text: `Garment type: ${typeLabel}. Use the CLOTHING IMAGE as the exact ${typeLabel} to place on the model. Keep pose, background and non-target garments unchanged. Preserve logos/prints exactly; do not add new graphics.` 
         }
       ];
       }

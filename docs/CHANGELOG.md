@@ -2,6 +2,8 @@
 
 ## 2025-09-07
 
+- 09:45: Tek parça (upper) prompt güçlendirildi: CLOTHING IMAGE'ı birebir uygulanacak üst parça olarak vurgulandı; yaka/sleeve/silhouette/fit eşleşmesi ve tipografik logo/print koruma talimatları netleştirildi. İçerik sonundaki açıklama mesajı normalize İngilizce garment etiketi ile güncellendi. Dosya: `src/app/api/nano-banana/route.ts`.
+- 09:41: ModelViewer'da pan/zoom için "safe area" sınırlandırması eklendi. Container ve görsel doğal boyutları ölçülerek object-contain baz boyut hesaplanıyor; pan değerleri ölçek sonrası görsel boyutuna göre clamp'leniyor. Translate ve scale ayrı sarmallar ile uygulanarak sonsuz kaydırma engellendi. Dosya: `src/components/edit/model-viewer.tsx`.
 - 01:17: ModelViewer içinde "AI Sonucu" yazılı overlay etiketi kaldırıldı; görsel üzerinde gereksiz metin kalabalığı azaltıldı. Dosya: `src/components/edit/model-viewer.tsx`.
 - 01:10: Pan alanı genişletildi: Görsel oluşturma alanı artık tam alan üzerinde (inset-0) etkileşimli; önceki çerçeve (inset-4) kısıtı kaldırıldı. Header'a zoom butonlarının yanına Reset (100%) eklendi. `ModelViewer`'a `resetSignal` prop'u ve çift tık ile reset davranışı eklendi. Dosyalar: `src/components/edit/model-viewer.tsx`, `src/app/edit/page.tsx`.
 - 01:00: Model görüntüleyicide sorunsuz zoom & pan etkileşimi eklendi. Mouse wheel/trackpad pinch ile zoom (ctrl/cmd destekli), mouse sürükleme ve tek parmak touch ile pan, ok tuşları ile pan; +/− ile zoom; R ile reset eklendi. Transformlar tek bir wrapper üzerinde `translate + scale` ile uygulanıyor. `onZoomChange` prop'u ile üstteki zoom kontrolleriyle tam senkron çalışır. Dosyalar: `src/components/edit/model-viewer.tsx`, `src/app/edit/page.tsx`.

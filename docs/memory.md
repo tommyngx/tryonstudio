@@ -1,4 +1,9 @@
 # Memory - AI Edit Panel, Thumbnail Gallery & Face Swap
+### ModelViewer Safe Area Clamp (2025-09-07 09:41 +03:00)
+- Pan/zoom artık güvenli alan ile sınırlandırılıyor: Container boyutu + görselin doğal (intrinsic) boyutları ölçülüyor, object-contain baz boyut hesaplanıyor (scale=1), ardından ölçek sonrası boyutlara göre pan clamp uygulanıyor.
+- Translate ve scale ayrı katmanlarda: Dış katman `translate3d(panX, panY, 0)`; iç katman `transform: translate(-50%, -50%) scale(s)` ve `width/height = baseW/baseH`.
+- Ölçüm: `ResizeObserver` ile container ölçümleri, `window.Image()` ile naturalWidth/Height alımı. Safe margin: min(containerW, containerH) * 0.08.
+- Zoom değişiminde mevcut pan, yeni sınırlara göre otomatik yeniden clamp'lenir. Wheel/mouse/touch/keyboard pan akışları aynı clamp fonksiyonunu kullanır.
 ### ModelViewer Etkileşimleri (2025-09-07 01:00 +03:00)
 - ModelViewer'a sorunsuz zoom & pan eklendi.
 - Zoom: Mouse wheel/trackpad pinch (ctrl/cmd) ile; klavye `+`/`-` ile. Min 25%, max 400%, step 10.

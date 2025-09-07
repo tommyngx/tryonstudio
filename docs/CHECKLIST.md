@@ -15,6 +15,7 @@
 - [x] Clothing Panel UX: Dropdown'a "Kendiniz" seçeneği eklendi; seçilince Face Swap otomatik açılır ve özel bilgilendirme bölümü görünür
 - [x] ModelViewer: Sorunsuz zoom & pan (wheel/pinch zoom, mouse/touch pan, klavye ok tuşları, +/- zoom, R reset)
 - [x] Zoom senkronizasyonu: `onZoomChange` ile üstteki butonlarla tam uyum
+- [x] ModelViewer: Pan/zoom safe area clamp (sonsuz kaydırma yok, container + intrinsic ölçüme dayalı)
 - [x] Dokümantasyon güncellemesi: CHANGELOG ve memory kaydı eklendi
 - [ ] Undo/Redo ileri-geri butonları (opsiyonel)
 - [ ] Gerçek AI edit servisine entegrasyon (API key, güvenlik)

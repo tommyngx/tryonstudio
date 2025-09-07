@@ -52,12 +52,118 @@ export function ModelViewer({
   const lastPointer = useRef<{ x: number; y: number } | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
+  // ---------------------------------------------------------------------------
+  // Ölçümler ve Güvenli Alan (Safe Area) Ayarları
+  // - containerSize: görünür alan ölçüleri
+  // - imageNatural: seçili görselin doğal (intrinsic) ölçüleri
+  // - displayedBase: scale=1 iken object-contain yerleşiminde görüntülenen temel boyut
+  // - SAFE_MARGIN_FRACTION: kullanıcıya görüntüyü alandan hafifçe çıkarma izni
+  // ---------------------------------------------------------------------------
+  const [containerSize, setContainerSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 })
+  const [imageNatural, setImageNatural] = useState<{ w: number; h: number } | null>(null)
+  const SAFE_MARGIN_FRACTION = 0.08 // %8 güvenli dış boşluk
+
   const MIN_ZOOM = 25
   const MAX_ZOOM = 400
   const ZOOM_STEP = 10
 
   // Ölçek değerini hesapla (yüzde → scale katsayısı)
   const scale = useMemo(() => Math.max(0.01, zoomLevel / 100), [zoomLevel])
+
+  // ---------------------------------------------------------------------------
+  // Aktif görüntü kaynağı: görünüm moduna göre önce/sonra
+  // Clamp hesapları için doğal boyutu yüklemek üzere geçerli src'yi belirleriz
+  // ---------------------------------------------------------------------------
+  const activeImageSrc = useMemo(() => {
+    if (viewMode === 'before') return userPhoto
+    if (viewMode === 'after') return processedImage || userPhoto
+    // split modunda da clamp için aynı ölçümler yeterli; işlenmiş varsa onu önceleriz
+    return processedImage || userPhoto
+  }, [viewMode, userPhoto, processedImage])
+
+  // ---------------------------------------------------------------------------
+  // Container ölçümleri: ResizeObserver ile sürekli güncel tut
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!containerRef.current) return
+    const el = containerRef.current
+    const ro = new ResizeObserver(entries => {
+      const cr = entries[0]?.contentRect
+      if (cr) setContainerSize({ w: Math.round(cr.width), h: Math.round(cr.height) })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // ---------------------------------------------------------------------------
+  // Görsel doğal ölçülerini yükle (intrinsic width/height)
+  // Büyük base64 string'lerde memory leak olmaması için Image objesini serbest bırakırız
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!activeImageSrc) {
+      setImageNatural(null)
+      return
+    }
+    let cancelled = false
+    const img = new window.Image()
+    img.onload = () => {
+      if (!cancelled) setImageNatural({ w: img.naturalWidth, h: img.naturalHeight })
+    }
+    img.onerror = () => {
+      if (!cancelled) setImageNatural(null)
+    }
+    img.src = activeImageSrc
+    return () => { cancelled = true }
+  }, [activeImageSrc])
+
+  // ---------------------------------------------------------------------------
+  // Object-contain temel boyut ve ölçekli boyutu hesapla
+  // baseW/baseH: scale=1 iken fit edilmiş boyut; scaledW/scaledH: ölçek sonrası
+  // ---------------------------------------------------------------------------
+  const { baseW, baseH, scaledW, scaledH, safeMargin } = useMemo(() => {
+    const cw = containerSize.w || 0
+    const ch = containerSize.h || 0
+    const iw = imageNatural?.w || 0
+    const ih = imageNatural?.h || 0
+    if (cw <= 0 || ch <= 0 || iw <= 0 || ih <= 0) {
+      return { baseW: 0, baseH: 0, scaledW: 0, scaledH: 0, safeMargin: 0 }
+    }
+    const fit = Math.min(cw / iw, ch / ih)
+    const bW = iw * fit
+    const bH = ih * fit
+    const sW = bW * scale
+    const sH = bH * scale
+    const margin = Math.round(Math.min(cw, ch) * SAFE_MARGIN_FRACTION)
+    return { baseW: bW, baseH: bH, scaledW: sW, scaledH: sH, safeMargin: margin }
+  }, [containerSize, imageNatural, scale])
+
+  // ---------------------------------------------------------------------------
+  // Pan değerlerini görüntü-bazlı güvenli sınırlara göre clamp'le
+  // Not: translate px değerlerini scale'den bağımsız uygulayabilmek için
+  // ayrı bir dış (translate) ve iç (scale) katmanı kullanacağız.
+  // ---------------------------------------------------------------------------
+  const clampPan = useCallback((x: number, y: number) => {
+    const cw = containerSize.w
+    const ch = containerSize.h
+    if (cw <= 0 || ch <= 0 || scaledW <= 0 || scaledH <= 0) return { x: 0, y: 0 }
+
+    // Eğer görüntü, viewport'tan küçükse; sadece güvenli marj kadar hareket etsin
+    const halfCw = cw / 2
+    const halfCh = ch / 2
+    const halfW = scaledW / 2
+    const halfH = scaledH / 2
+
+    const limitX = halfW <= halfCw
+      ? safeMargin
+      : (halfW - halfCw) + safeMargin
+    const limitY = halfH <= halfCh
+      ? safeMargin
+      : (halfH - halfCh) + safeMargin
+
+    const clampedX = Math.max(-limitX, Math.min(limitX, x))
+    const clampedY = Math.max(-limitY, Math.min(limitY, y))
+    return { x: clampedX, y: clampedY }
+  }, [containerSize, scaledW, scaledH, safeMargin])
 
   // Panning’i resetlemek ve zoom’u varsayılan hale getirmek için yardımcı fonksiyon
   const resetView = useCallback(() => {
@@ -81,12 +187,12 @@ export function ModelViewer({
       return
     }
 
-    // Aksi halde pan: deltaX/deltaY değerlerini uygula
-    // Magic number kullanmamak için direkt delta değerini kullanıyoruz, hassasiyet iyi.
+    // Aksi halde pan: deltaX/deltaY değerlerini uygula ve clamp'le
+    // Magic number kullanmamak için direkt delta değerini kullanıyoruz.
     e.preventDefault()
-    setPanX(prev => prev - e.deltaX)
-    setPanY(prev => prev - e.deltaY)
-  }, [isProcessing, onZoomChange, zoomLevel])
+    setPanX(prev => clampPan(prev - e.deltaX, panY).x)
+    setPanY(prev => clampPan(panX, prev - e.deltaY).y)
+  }, [isProcessing, onZoomChange, zoomLevel, clampPan, panX, panY])
 
   // Mouse sürükleme ile pan
   const onMouseDown = useCallback((e: React.MouseEvent) => {
@@ -101,10 +207,10 @@ export function ModelViewer({
     if (!isPanning || !lastPointer.current) return
     const dx = e.clientX - lastPointer.current.x
     const dy = e.clientY - lastPointer.current.y
-    setPanX(prev => prev + dx)
-    setPanY(prev => prev + dy)
+    setPanX(prev => clampPan(prev + dx, panY).x)
+    setPanY(prev => clampPan(panX, prev + dy).y)
     lastPointer.current = { x: e.clientX, y: e.clientY }
-  }, [isPanning])
+  }, [isPanning, clampPan, panX, panY])
 
   const endPan = useCallback(() => {
     // Bu blok: pan işlemini sonlandırır
@@ -129,10 +235,10 @@ export function ModelViewer({
     const t = e.touches[0]
     const dx = t.clientX - lastPointer.current.x
     const dy = t.clientY - lastPointer.current.y
-    setPanX(prev => prev + dx)
-    setPanY(prev => prev + dy)
+    setPanX(prev => clampPan(prev + dx, panY).x)
+    setPanY(prev => clampPan(panX, prev + dy).y)
     lastPointer.current = { x: t.clientX, y: t.clientY }
-  }, [isPanning])
+  }, [isPanning, clampPan, panX, panY])
 
   const onTouchEnd = useCallback(() => {
     // Bu blok: dokunma pan bitişi
@@ -145,14 +251,14 @@ export function ModelViewer({
     // Bu blok: klavye kısayolları ile pan/zoom kontrolü sağlar
     if (isProcessing) return
     const move = 20
-    if (e.key === 'ArrowLeft') { e.preventDefault(); setPanX(p => p + move) }
-    else if (e.key === 'ArrowRight') { e.preventDefault(); setPanX(p => p - move) }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setPanY(p => p + move) }
-    else if (e.key === 'ArrowDown') { e.preventDefault(); setPanY(p => p - move) }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); setPanX(p => clampPan(p + move, panY).x) }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); setPanX(p => clampPan(p - move, panY).x) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setPanY(p => clampPan(panX, p + move).y) }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); setPanY(p => clampPan(panX, p - move).y) }
     else if ((e.key === '+' || e.key === '=') && onZoomChange) { e.preventDefault(); onZoomChange(Math.min(MAX_ZOOM, zoomLevel + ZOOM_STEP)) }
     else if ((e.key === '-' || e.key === '_') && onZoomChange) { e.preventDefault(); onZoomChange(Math.max(MIN_ZOOM, zoomLevel - ZOOM_STEP)) }
     else if (e.key.toLowerCase() === 'r') { e.preventDefault(); resetView() }
-  }, [isProcessing, onZoomChange, zoomLevel, resetView])
+  }, [isProcessing, onZoomChange, zoomLevel, resetView, clampPan, panX, panY])
 
   // resetSignal değişince pan/zoom resetle
   // Bu sayede parent (EditPage) header butonu ile sıfırlama yapabilir
@@ -165,6 +271,13 @@ export function ModelViewer({
     // Zoom'u 100'e çekmesi için parent'a haber ver
     if (onZoomChange) onZoomChange(100)
   }, [resetSignal, onZoomChange])
+
+  // Zoom değişiminde, mevcut pan değerini yeni sınırlara göre tekrar clamp'le
+  useEffect(() => {
+    const c = clampPan(panX, panY)
+    if (c.x !== panX) setPanX(c.x)
+    if (c.y !== panY) setPanY(c.y)
+  }, [scale, containerSize, imageNatural, clampPan, panX, panY])
 
   // Fotoğraf yükleme
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -293,11 +406,17 @@ export function ModelViewer({
                   className="h-full w-full relative"
                 >
                   <div className="absolute inset-0 bg-transparent rounded-2xl overflow-hidden">
-                    {/* Bu blok: transform katmanı. translate + scale birlikte uygulanır. */}
+                    {/* Bu blok: transform katmanı. translate (px) ve scale ayrı sarmallarda uygulanır. */}
+                    {/* Dış katman: translate px (clamp'li) */}
                     <div
-                      className="h-full relative will-change-transform"
-                      style={{ transform: `translate(${panX}px, ${panY}px) scale(${scale})` }}
+                      className="absolute left-1/2 top-1/2 will-change-transform"
+                      style={{ transform: `translate3d(${panX}px, ${panY}px, 0)` }}
                     >
+                      {/* İç katman: ölçek ve merkezleme. base boyutta kutu üzerine scale uygularız. */}
+                      <div
+                        className="relative"
+                        style={{ width: `${baseW}px`, height: `${baseH}px`, transform: `translate(-50%, -50%) scale(${scale})` }}
+                      >
                       <Image
                         src={userPhoto}
                         alt="Orijinal fotoğraf"
@@ -305,6 +424,7 @@ export function ModelViewer({
                         className="object-contain select-none"
                         draggable={false}
                       />
+                      </div>
                       <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
                         Orijinal
                       </div>
@@ -322,11 +442,15 @@ export function ModelViewer({
                   className="h-full w-full relative"
                 >
                   <div className="absolute inset-0 bg-transparent rounded-2xl overflow-hidden">
-                    {/* Bu blok: transform katmanı. translate + scale birlikte uygulanır. */}
+                    {/* Bu blok: transform katmanı. translate (px) ve scale ayrı sarmallarda uygulanır. */}
                     <div
-                      className="h-full relative will-change-transform"
-                      style={{ transform: `translate(${panX}px, ${panY}px) scale(${scale})` }}
+                      className="absolute left-1/2 top-1/2 will-change-transform"
+                      style={{ transform: `translate3d(${panX}px, ${panY}px, 0)` }}
                     >
+                      <div
+                        className="relative"
+                        style={{ width: `${baseW}px`, height: `${baseH}px`, transform: `translate(-50%, -50%) scale(${scale})` }}
+                      >
                       {isProcessing ? (
                         <div className="h-full flex items-center justify-center bg-gray-100">
                           <div className="text-center">
@@ -358,6 +482,7 @@ export function ModelViewer({
                           </div>
                         </div>
                       )}
+                      </div>
                     </div>
                   </div>
                   
@@ -395,11 +520,15 @@ export function ModelViewer({
                   <div className="absolute inset-0 bg-transparent rounded-2xl overflow-hidden flex">
                     {/* Sol taraf - Orijinal */}
                     <div className="w-1/2 relative border-r border-gray-200">
-                      {/* Bu blok: sol görüntü için transform katmanı */}
+                      {/* Bu blok: sol görüntü için transform katmanı (translate ve scale ayrı) */}
                       <div
-                        className="absolute inset-0 will-change-transform"
-                        style={{ transform: `translate(${panX}px, ${panY}px) scale(${scale})` }}
+                        className="absolute left-1/2 top-1/2 will-change-transform"
+                        style={{ transform: `translate3d(${panX}px, ${panY}px, 0)` }}
                       >
+                        <div
+                          className="relative"
+                          style={{ width: `${baseW}px`, height: `${baseH}px`, transform: `translate(-50%, -50%) scale(${scale})` }}
+                        >
                         <Image
                           src={userPhoto}
                           alt="Orijinal"
@@ -407,6 +536,7 @@ export function ModelViewer({
                           className="object-contain select-none"
                           draggable={false}
                         />
+                        </div>
                       </div>
                       <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
                         Önce
@@ -419,9 +549,13 @@ export function ModelViewer({
                         <>
                           {/* Bu blok: sağ görüntü için transform katmanı */}
                           <div
-                            className="absolute inset-0 will-change-transform"
-                            style={{ transform: `translate(${panX}px, ${panY}px) scale(${scale})` }}
+                            className="absolute left-1/2 top-1/2 will-change-transform"
+                            style={{ transform: `translate3d(${panX}px, ${panY}px, 0)` }}
                           >
+                            <div
+                              className="relative"
+                              style={{ width: `${baseW}px`, height: `${baseH}px`, transform: `translate(-50%, -50%) scale(${scale})` }}
+                            >
                             <Image
                               src={processedImage}
                               alt="İşlenmiş"
@@ -429,6 +563,7 @@ export function ModelViewer({
                               className="object-contain select-none"
                               draggable={false}
                             />
+                            </div>
                           </div>
                           <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
                             Sonra
