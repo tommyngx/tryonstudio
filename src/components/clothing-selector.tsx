@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, Check, Shirt, ArrowRight, Package } from 'lucide-react'
 import Image from 'next/image'
+import { useI18n } from '@/i18n/useI18n'
 
 interface ClothingSelectorProps {
   onClothesSelected: (clothes: { upper?: string; lower?: string }) => void
@@ -26,6 +27,7 @@ const sampleClothes = {
 }
 
 export function ClothingSelector({ onClothesSelected }: ClothingSelectorProps) {
+  const { t } = useI18n()
   const [selectedUpper, setSelectedUpper] = useState<string | null>(null)
   const [selectedLower, setSelectedLower] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'upper' | 'lower'>('upper')
@@ -59,10 +61,8 @@ export function ClothingSelector({ onClothesSelected }: ClothingSelectorProps) {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-4">Kıyafetlerinizi Seçin</h2>
-        <p className="text-muted-foreground text-lg">
-          Üst ve alt kıyafetlerden beğendiklerinizi seçin. Kendi kıyafetinizi de yükleyebilirsiniz.
-        </p>
+        <h2 className="text-3xl font-bold mb-4">{t('clothingSelector.title')}</h2>
+        <p className="text-muted-foreground text-lg">{t('clothingSelector.description')}</p>
       </div>
 
       {/* Tab Navigation */}
@@ -77,7 +77,7 @@ export function ClothingSelector({ onClothesSelected }: ClothingSelectorProps) {
             }`}
           >
             <Shirt className="w-5 h-5" />
-            <span>Üst Giyim</span>
+            <span>{t('clothingSelector.tabs.upper')}</span>
             {selectedUpper && <Check className="w-4 h-4 text-green-600" />}
           </button>
           <button
@@ -89,7 +89,7 @@ export function ClothingSelector({ onClothesSelected }: ClothingSelectorProps) {
             }`}
           >
             <Package className="w-5 h-5" />
-            <span>Alt Giyim</span>
+            <span>{t('clothingSelector.tabs.lower')}</span>
             {selectedLower && <Check className="w-4 h-4 text-green-600" />}
           </button>
         </div>
@@ -114,8 +114,8 @@ export function ClothingSelector({ onClothesSelected }: ClothingSelectorProps) {
                 <Upload className="w-6 h-6" />
               </div>
               <div>
-                <p className="font-medium text-sm">Kendi Kıyafetinizi</p>
-                <p className="font-medium text-sm">Yükleyin</p>
+                <p className="font-medium text-sm">{t('clothingSelector.upload.custom_line1')}</p>
+                <p className="font-medium text-sm">{t('clothingSelector.upload.custom_line2')}</p>
               </div>
             </div>
           </div>
@@ -164,11 +164,11 @@ export function ClothingSelector({ onClothesSelected }: ClothingSelectorProps) {
 
       {/* Selection Summary */}
       <div className="bg-white rounded-lg border p-6 mb-8">
-        <h3 className="font-semibold mb-4">Seçimleriniz:</h3>
+        <h3 className="font-semibold mb-4">{t('clothingSelector.summary.title')}</h3>
         <div className="flex items-center justify-between">
           <div className="flex space-x-8">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-1">Üst Giyim</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('clothingSelector.summary.upper')}</p>
               <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                 {selectedUpper ? (
                   <Check className="w-6 h-6 text-green-600" />
@@ -178,7 +178,7 @@ export function ClothingSelector({ onClothesSelected }: ClothingSelectorProps) {
               </div>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-1">Alt Giyim</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('clothingSelector.summary.lower')}</p>
               <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                 {selectedLower ? (
                   <Check className="w-6 h-6 text-green-600" />
@@ -200,7 +200,7 @@ export function ClothingSelector({ onClothesSelected }: ClothingSelectorProps) {
             whileHover={isReadyToContinue ? { scale: 1.02 } : {}}
             whileTap={isReadyToContinue ? { scale: 0.98 } : {}}
           >
-            <span>Denemeye Başla</span>
+            <span>{t('clothingSelector.continue')}</span>
             <ArrowRight className="w-4 h-4" />
           </motion.button>
         </div>
@@ -208,11 +208,11 @@ export function ClothingSelector({ onClothesSelected }: ClothingSelectorProps) {
 
       {/* Tips */}
       <div className="bg-blue-50 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 mb-2">💡 İpuçları:</h3>
+        <h3 className="font-semibold text-blue-900 mb-2">{t('clothingSelector.tips.title')}</h3>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li>• En az bir kıyafet seçmelisiniz</li>
-          <li>• Kendi kıyafetinizi yükleyebilirsiniz</li>
-          <li>• Daha iyi sonuç için net, düz kıyafet fotoğrafları kullanın</li>
+          <li>{t('clothingSelector.tips.tip1')}</li>
+          <li>{t('clothingSelector.tips.tip2')}</li>
+          <li>{t('clothingSelector.tips.tip3')}</li>
         </ul>
       </div>
     </div>

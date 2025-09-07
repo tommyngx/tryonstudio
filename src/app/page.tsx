@@ -6,50 +6,28 @@ import { Upload, Sparkles, Video, ShoppingBag, ArrowRight, Camera, Shirt, Zap } 
 import { PhotoUpload } from '@/components/photo-upload'
 import { ClothingSelector } from '@/components/clothing-selector'
 import { TryOnCanvas } from '@/components/tryon-canvas'
+import { useI18n } from '@/i18n/useI18n'
 
 export default function HomePage() {
+  const { t } = useI18n()
   const [currentStep, setCurrentStep] = useState<'upload' | 'select' | 'tryon' | 'result'>('upload')
   const [userPhoto, setUserPhoto] = useState<string | null>(null)
   const [selectedClothes, setSelectedClothes] = useState<{upper?: string, lower?: string}>({})
 
   const steps = [
-    { id: 'upload', label: 'Fotoğraf Yükle', icon: Camera },
-    { id: 'select', label: 'Kıyafet Seç', icon: Shirt },
-    { id: 'tryon', label: 'Dene', icon: Sparkles },
-    { id: 'result', label: 'Sonuç', icon: Video }
+    { id: 'upload', label: t('home.steps.upload'), icon: Camera },
+    { id: 'select', label: t('home.steps.select'), icon: Shirt },
+    { id: 'tryon', label: t('home.steps.tryon'), icon: Sparkles },
+    { id: 'result', label: t('home.steps.result'), icon: Video }
   ]
 
   const features = [
-    {
-      icon: Upload,
-      title: 'Fotoğraf Yükle',
-      description: 'Yüz veya tam boy fotoğrafınızı yükleyin. AI otomatik olarak en iyi sonuç için optimize eder.'
-    },
-    {
-      icon: Sparkles,
-      title: 'AI Face Swap',
-      description: 'Gelişmiş yapay zeka ile yüzünüzü profesyonel modellere aktarın.'
-    },
-    {
-      icon: Shirt,
-      title: 'Sanal Giyim',
-      description: 'Üst ve alt kıyafetleri seçin, AI gerçekçi bir şekilde üzerinizde gösterir.'
-    },
-    {
-      icon: Video,
-      title: '360° Video',
-      description: 'Arkadan, yandan görünümlerle 360° video oluşturun.'
-    },
-    {
-      icon: ShoppingBag,
-      title: 'Ürün Bul',
-      description: 'Google Lens ile beğendiğiniz kıyafetleri bulun ve satın alın.'
-    },
-    {
-      icon: Zap,
-      title: 'Hızlı İşlem',
-      description: 'Saniyeler içinde profesyonel kalitede sonuçlar alın.'
-    }
+    { icon: Upload, title: t('home.features.upload.title'), description: t('home.features.upload.desc') },
+    { icon: Sparkles, title: t('home.features.face_swap.title'), description: t('home.features.face_swap.desc') },
+    { icon: Shirt, title: t('home.features.vtryon.title'), description: t('home.features.vtryon.desc') },
+    { icon: Video, title: t('home.features.video.title'), description: t('home.features.video.desc') },
+    { icon: ShoppingBag, title: t('home.features.find.title'), description: t('home.features.find.desc') },
+    { icon: Zap, title: t('home.features.fast.title'), description: t('home.features.fast.desc') },
   ]
 
   return (
@@ -65,14 +43,13 @@ export default function HomePage() {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
-              AI ile 
+              {t('home.hero.title_prefix')}
               <span className="bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent">
-                {" "}Giyim Deneme
+                {" "}{t('home.hero.title_highlight')}
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">
-              Fotoğrafınızı yükleyin, kıyafetleri seçin ve yapay zeka ile gerçekçi deneme deneyimi yaşayın. 
-              360° video oluşturun ve beğendiğiniz ürünleri hemen bulun.
+              {t('home.hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
               <motion.button
@@ -81,7 +58,7 @@ export default function HomePage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Studio'da Dene
+                {t('home.hero.cta_studio')}
                 <ArrowRight className="ml-2 h-5 w-5 inline" />
               </motion.button>
               
@@ -91,7 +68,7 @@ export default function HomePage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Rehberli Deneme
+                {t('home.hero.cta_guided')}
                 <Sparkles className="ml-2 h-5 w-5 inline" />
               </motion.button>
             </div>
@@ -163,10 +140,8 @@ export default function HomePage() {
             
             {currentStep === 'result' && (
               <div className="text-center py-20">
-                <h2 className="text-3xl font-bold mb-4">Sonuçlarınız Hazır!</h2>
-                <p className="text-muted-foreground mb-8">
-                  AI ile oluşturulmuş görseliniz ve 360° videonuz hazır.
-                </p>
+                <h2 className="text-3xl font-bold mb-4">{t('home.result.title')}</h2>
+                <p className="text-muted-foreground mb-8">{t('home.result.subtitle')}</p>
                 {/* Sonuç bileşeni burada olacak */}
               </div>
             )}
@@ -178,12 +153,8 @@ export default function HomePage() {
       <section id="features" className="py-20 bg-gray-50">
         <div className="container">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold tracking-tight mb-4">
-              Güçlü AI Özellikleri
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              En son yapay zeka teknolojileri ile gerçekçi sanal giyim deneyimi
-            </p>
+            <h2 className="text-4xl font-bold tracking-tight mb-4">{t('home.features_title')}</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{t('home.features_subtitle')}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -210,12 +181,8 @@ export default function HomePage() {
       <section id="how-it-works" className="py-20">
         <div className="container">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold tracking-tight mb-4">
-              Nasıl Çalışır?
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              4 basit adımda AI ile kıyafet deneme deneyimi
-            </p>
+            <h2 className="text-4xl font-bold tracking-tight mb-4">{t('home.how_title')}</h2>
+            <p className="text-xl text-muted-foreground">{t('home.how_subtitle')}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -226,10 +193,10 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{step.label}</h3>
                 <p className="text-muted-foreground text-sm">
-                  {step.id === 'upload' && 'Yüz veya tam boy fotoğrafınızı yükleyin'}
-                  {step.id === 'select' && 'Üst ve alt kıyafetlerinizi seçin'}
-                  {step.id === 'tryon' && 'AI ile gerçekçi deneme yapın'}
-                  {step.id === 'result' && 'Sonuçları görüp paylaşın'}
+                  {step.id === 'upload' && t('home.how_steps.upload')}
+                  {step.id === 'select' && t('home.how_steps.select')}
+                  {step.id === 'tryon' && t('home.how_steps.tryon')}
+                  {step.id === 'result' && t('home.how_steps.result')}
                 </p>
               </div>
             ))}

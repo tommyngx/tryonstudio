@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Pause, Volume2, VolumeX, Maximize2, X } from 'lucide-react'
+import { useI18n } from '@/i18n/useI18n'
 
 interface VideoPlayerProps {
   videoUrl: string | null
@@ -11,11 +12,13 @@ interface VideoPlayerProps {
   title?: string
 }
 
-export function VideoPlayer({ videoUrl, isVisible, onClose, title = "360° Video Showcase" }: VideoPlayerProps) {
+export function VideoPlayer({ videoUrl, isVisible, onClose, title }: VideoPlayerProps) {
+  const { t } = useI18n()
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const titleToShow = title || t('videoPlayer.title_default')
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -68,7 +71,7 @@ export function VideoPlayer({ videoUrl, isVisible, onClose, title = "360° Video
         <div className="relative bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-4 overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{titleToShow}</h3>
             <button
               onClick={onClose}
               className="p-1 hover:bg-gray-100 rounded-full transition-colors"
@@ -147,12 +150,12 @@ export function VideoPlayer({ videoUrl, isVisible, onClose, title = "360° Video
           <div className="p-4 bg-gray-50 border-t border-gray-200">
             <div className="flex items-center justify-between text-sm text-gray-600">
               <div className="flex items-center space-x-4">
-                <span>🎬 AI Generated 360° Video</span>
+                <span>{t('videoPlayer.footer_generated')}</span>
                 <span>•</span>
-                <span>Google Veo 3</span>
+                <span>{t('videoPlayer.footer_provider')}</span>
               </div>
               <div className="text-xs text-gray-400">
-                Video kalitesi AI model performansına bağlıdır
+                {t('videoPlayer.footer_quality_note')}
               </div>
             </div>
           </div>

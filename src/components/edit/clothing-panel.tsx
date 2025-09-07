@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Plus, Upload, Info, X, Loader2, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 import { allMenClothing, getMenClothingByType, ClothingSet } from '@/data/men-clothing'
+import { useI18n } from '@/i18n/useI18n'
 
 // Yüklenen kıyafet için interface
 interface UploadedClothing {
@@ -27,6 +28,7 @@ interface ClothingPanelProps {
 }
 
 export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel, onModelSelect, onTryOn, registerTryOnTrigger }: ClothingPanelProps) {
+  const { t } = useI18n()
   const [activeTab, setActiveTab] = useState<'single' | 'combo'>('single')
   // Cinsiyet sekmesi: erkek, kadın veya kendiniz
   const [genderTab, setGenderTab] = useState<'men' | 'women' | 'self'>('men') // Cinsiyet sekmesi
@@ -37,6 +39,9 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedUploadedItem, setSelectedUploadedItem] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  // Your Model (self) için kullanıcı fotoğrafı yükleme referansı ve state
+  const selfModelInputRef = useRef<HTMLInputElement>(null)
+  const [selfModelDataUrl, setSelfModelDataUrl] = useState<string | null>(null)
   // Hedef bölge ve kesim seçenekleri
   const [targetRegion, setTargetRegion] = useState<'upper' | 'lower' | 'dress'>('upper')
   const [fitMode, setFitMode] = useState<'normal' | 'slim' | 'oversize'>('normal')
@@ -46,12 +51,12 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
     <div className="mt-6 mb-4 pt-4 border-t border-gray-200 space-y-4 relative z-0">
       {/* Hedef Bölge */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Hedef Bölge</label>
+        <label className="block text-sm font-medium text-gray-700">{t('clothing.options.target_region')}</label>
         <div className="grid grid-cols-3 gap-2">
           {[
-            { value: 'upper', label: 'Üst', icon: '👔' },
-            { value: 'lower', label: 'Alt', icon: '👖' },
-            { value: 'dress', label: 'Elbise', icon: '👗' }
+            { value: 'upper', label: t('clothing.options.regions.upper'), icon: '👔' },
+            { value: 'lower', label: t('clothing.options.regions.lower'), icon: '👖' },
+            { value: 'dress', label: t('clothing.options.regions.dress'), icon: '👗' }
           ].map((option) => (
             <button
               key={option.value}
@@ -71,12 +76,12 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
 
       {/* Kesim Stili */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Kesim Stili</label>
+        <label className="block text-sm font-medium text-gray-700">{t('clothing.options.fit_style')}</label>
         <div className="grid grid-cols-3 gap-2">
           {[
-            { value: 'normal', label: 'Normal', desc: 'Standart' },
-            { value: 'slim', label: 'Slim', desc: 'Dar kesim' },
-            { value: 'oversize', label: 'Oversize', desc: 'Bol kesim' }
+            { value: 'normal', label: t('clothing.options.fits.normal_label'), desc: t('clothing.options.fits.normal_desc') },
+            { value: 'slim', label: t('clothing.options.fits.slim_label'), desc: t('clothing.options.fits.slim_desc') },
+            { value: 'oversize', label: t('clothing.options.fits.oversize_label'), desc: t('clothing.options.fits.oversize_desc') }
           ].map((option) => (
             <button
               key={option.value}
@@ -106,6 +111,15 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       onModelSelect('/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg')
     } else if (genderTab === 'women' && onModelSelect) {
       onModelSelect('/images/women/a29ec4e4-0344-4dcb-9c57-ec6d367567ad.jpg')
+    } else if (genderTab === 'self') {
+      // Self sekmesine geçildiğinde varsa localStorage'daki kullanıcı modelini yükle
+      try {
+        const saved = localStorage.getItem('self_model_data_url')
+        if (saved) {
+          setSelfModelDataUrl(saved)
+          onModelSelect && onModelSelect(saved)
+        }
+      } catch {}
     }
   }, [genderTab, onModelSelect])
   
@@ -123,13 +137,13 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       // Dosya formatı kontrolü (HEIC/HEIF desteği eklendi)
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/heic', 'image/heif']
       if (!allowedTypes.includes(file.type)) {
-        alert('Desteklenen formatlar: JPEG, PNG, WebP, GIF, BMP')
+        alert(t('clothing.errors.formats'))
         return
       }
       
       // Dosya boyutu kontrolü (10MB)
       if (file.size > 10 * 1024 * 1024) {
-        alert('Dosya boyutu 10MB\'dan küçük olmalıdır')
+        alert(t('clothing.errors.file_too_large'))
         return
       }
       
@@ -152,7 +166,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       
     } catch (error) {
       console.error('Dosya yükleme hatası:', error)
-      alert('Dosya yüklenirken hata oluştu')
+      alert(t('clothing.errors.upload_failed'))
     } finally {
       setIsUploading(false)
       // ÖNEMLİ: Aynı dosyayı yeniden seçebilmek için gizli file input'un değerini sıfırla
@@ -205,7 +219,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       
     } catch (error) {
       console.error('Üst giyim yükleme hatası:', error)
-      alert('Üst giyim yüklenirken hata oluştu')
+      alert(t('clothing.errors.upper_upload_failed'))
     } finally {
       setIsUploading(false)
     }
@@ -254,7 +268,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       
     } catch (error) {
       console.error('Alt giyim yükleme hatası:', error)
-      alert('Alt giyim yüklenirken hata oluştu')
+      alert(t('clothing.errors.lower_upload_failed'))
     } finally {
       setIsUploading(false)
     }
@@ -268,6 +282,36 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       reader.onerror = reject
       reader.readAsDataURL(file)
     })
+  }
+
+  // Kullanıcı model fotoğrafı yükleme (self)
+  const handleSelfModelUpload = async (files: FileList) => {
+    if (!files || files.length === 0) return
+    const file = files[0]
+    try {
+      // Desteklenen formatlar ve boyut kontrolü (10MB)
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/heic', 'image/heif']
+      if (!allowedTypes.includes(file.type)) {
+        alert(t('clothing.errors.formats_with_heic'))
+        return
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert(t('clothing.errors.file_too_large'))
+        return
+      }
+
+      const dataUrl = await convertFileToBase64(file) // data:*;base64,...
+      setSelfModelDataUrl(dataUrl)
+      try { localStorage.setItem('self_model_data_url', dataUrl) } catch {}
+      // Parent'a bildir
+      onModelSelect && onModelSelect(dataUrl)
+      console.log('[ClothingPanel] Self model uploaded and selected. Length:', dataUrl.length)
+    } catch (e) {
+      console.error('[ClothingPanel] Self model upload error:', e)
+      alert(t('clothing.errors.upload_failed'))
+    } finally {
+      if (selfModelInputRef.current) selfModelInputRef.current.value = ''
+    }
   }
   
   // Drag & Drop işlemleri
@@ -306,7 +350,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
   // Virtual Try-On işlemi
   const handleVirtualTryOn = async (clothingImageData: string, clothingType: string) => {
     if (!selectedModel) {
-      alert('Lütfen önce bir model seçin')
+      alert(t('clothing.errors.need_model'))
       return
     }
     
@@ -336,11 +380,11 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         console.log('[ClothingPanel] Try-on işlemi tamamlandı')
       } else {
         console.error('[ClothingPanel] onTryOn callback bulunamadı!')
-        alert('Try-on işlemi yapılandırılmamış. Lütfen sayfayı yenileyin.')
+        alert(t('clothing.errors.tryon_not_configured'))
       }
     } catch (error) {
       console.error('[ClothingPanel] Virtual try-on tetikleme hatası:', error)
-      alert(`Virtual try-on işlemi başarısız: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`)
+      alert(t('clothing.errors.tryon_failed', { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }))
     }
   }
 
@@ -352,7 +396,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
     }
 
     if (!upperClothing || !lowerClothing) {
-      alert('Üst ve alt giyim yükleyin')
+      // Bu mesaj UI içinde statü etiketleriyle verildiği için ayrıca alert göstermiyoruz
       return
     }
 
@@ -371,7 +415,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       await onTryOn(upperClothing.imageData, 'upper', additionalClothing, options)
     } catch (error) {
       console.error('Upper+Lower try-on error:', error)
-      alert('Üst+Alt deneme işleminde hata oluştu')
+      alert(t('clothing.errors.upper_lower_failed'))
     } finally {
       setIsProcessing(false)
     }
@@ -382,7 +426,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Kıyafet seç</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('clothing.header_title')}</h2>
           <Info className="w-5 h-5 text-gray-400" />
         </div>
         
@@ -396,7 +440,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Tek parça
+            {t('clothing.tabs.single')}
           </button>
           <button
             onClick={() => setActiveTab('combo')}
@@ -406,7 +450,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Üst & Alt
+            {t('clothing.tabs.combo')}
           </button>
         </div>
       </div>
@@ -423,6 +467,15 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
           multiple={false}
           className="hidden"
           onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
+        />
+        {/* Gizli self model input */}
+        <input
+          ref={selfModelInputRef}
+          type="file"
+          accept="image/*"
+          multiple={false}
+          className="hidden"
+          onChange={(e) => e.target.files && handleSelfModelUpload(e.target.files)}
         />
 
         {/* Upload Areas - Tab'a göre değişir */}
@@ -443,17 +496,17 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                   <div className="flex items-center justify-center gap-3">
                     <Loader2 className="w-6 h-6 md:w-8 md:h-8 text-blue-500 animate-spin" />
                     <div className="text-left">
-                      <p className="text-base font-medium text-blue-600 leading-tight">Yükleniyor...</p>
-                      <p className="text-sm text-gray-500">Lütfen bekleyin</p>
+                      <p className="text-base font-medium text-blue-600 leading-tight">{t('clothing.upload.loading')}</p>
+                      <p className="text-sm text-gray-500">{t('clothing.upload.please_wait')}</p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-3 md:gap-4">
                     <Plus className="w-6 h-6 md:w-8 md:h-8 text-teal-500" />
                     <div className="text-left">
-                      <p className="text-base font-medium text-teal-600 leading-tight">Tek Parça Kıyafet Ekle</p>
-                      <p className="text-sm text-gray-500">Veya buraya sürükleyip bırakın</p>
-                      <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WebP, GIF, BMP (Max 10MB)</p>
+                      <p className="text-base font-medium text-teal-600 leading-tight">{t('clothing.upload.single_title')}</p>
+                      <p className="text-sm text-gray-500">{t('clothing.upload.single_hint')}</p>
+                      <p className="text-xs text-gray-400 mt-1">{t('clothing.upload.formats')}</p>
                     </div>
                   </div>
                 )}
@@ -465,7 +518,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
           <div className="mb-6 space-y-4">
             {/* Üst Giyim Upload Area */}
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-900">Üst Giyim</h3>
+              <h3 className="text-sm font-medium text-gray-900">{t('clothing.upload.upper_title')}</h3>
               <div 
                 className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-colors cursor-pointer relative"
                 onClick={() => {
@@ -483,13 +536,13 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                   <div className="flex flex-col items-center">
                     <img src={upperClothing.imageUrl} alt={upperClothing.name} className="w-16 h-16 object-cover rounded-lg mb-2" />
                     <p className="text-sm font-medium text-green-600">{upperClothing.name}</p>
-                    <p className="text-xs text-gray-500">Üst giyim hazır</p>
+                    <p className="text-xs text-gray-500">{t('clothing.upload.upper_ready')}</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
                     <Plus className="w-6 h-6 text-blue-500 mb-2" />
-                    <p className="text-sm font-medium text-blue-600">Üst Giyim Ekle</p>
-                    <p className="text-xs text-gray-500">Tişört, gömlek, ceket vb.</p>
+                    <p className="text-sm font-medium text-blue-600">{t('clothing.upload.upper_add')}</p>
+                    <p className="text-xs text-gray-500">{t('clothing.upload.upper_examples')}</p>
                   </div>
                 )}
               </div>
@@ -497,7 +550,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
 
             {/* Alt Giyim Upload Area */}
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-900">Alt Giyim</h3>
+              <h3 className="text-sm font-medium text-gray-900">{t('clothing.upload.lower_title')}</h3>
               <div 
                 className="border-2 border-dashed border-green-300 rounded-lg p-6 text-center hover:border-green-400 hover:bg-green-50/50 transition-colors cursor-pointer relative"
                 onClick={() => {
@@ -515,13 +568,13 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                   <div className="flex flex-col items-center">
                     <img src={lowerClothing.imageUrl} alt={lowerClothing.name} className="w-16 h-16 object-cover rounded-lg mb-2" />
                     <p className="text-sm font-medium text-green-600">{lowerClothing.name}</p>
-                    <p className="text-xs text-gray-500">Alt giyim hazır</p>
+                    <p className="text-xs text-gray-500">{t('clothing.upload.lower_ready')}</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
                     <Plus className="w-6 h-6 text-green-500 mb-2" />
-                    <p className="text-sm font-medium text-green-600">Alt Giyim Ekle</p>
-                    <p className="text-xs text-gray-500">Pantolon, şort, etek vb.</p>
+                    <p className="text-sm font-medium text-green-600">{t('clothing.upload.lower_add')}</p>
+                    <p className="text-xs text-gray-500">{t('clothing.upload.lower_examples')}</p>
                   </div>
                 )}
               </div>
@@ -535,9 +588,9 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         {uploadedClothes.length > 0 && (
           <div className="mb-6 relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">Yüklenen Kıyafetler</h3>
+              <h3 className="text-sm font-semibold text-gray-900">{t('clothing.upload.uploaded_title')}</h3>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">{uploadedClothes.length} öğe</span>
+                <span className="text-xs text-gray-500">{t('clothing.upload.uploaded_count', { count: String(uploadedClothes.length) })}</span>
                 {/* Küçük ekle butonu: gizli input'u tetikler */}
                 <button
                   onClick={() => {
@@ -545,9 +598,9 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                     fileInputRef.current?.click()
                   }}
                   className="px-2 py-1 text-[11px] rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  title="Yeni kıyafet ekle"
+                  title={t('clothing.upload.new_item')}
                 >
-                  + Ekle
+                  {t('clothing.upload.add_short')}
                 </button>
               </div>
             </div>
@@ -593,7 +646,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                   <div className="p-2">
                     <h3 className="text-xs font-medium text-gray-900 truncate">{item.name}</h3>
                     <div className="flex items-center justify-between mt-1">
-                      <p className="text-xs text-gray-500">{item.type === 'single' ? 'Tek parça' : 'Üst & Alt'}</p>
+                      <p className="text-xs text-gray-500">{item.type === 'single' ? t('clothing.items.type_single') : t('clothing.items.type_combo')}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -609,19 +662,19 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         <div className="mb-6 mt-2">
           {/* Cinsiyet Sekmeleri */}
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-900">Manken Modeller</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t('clothing.model.section_title')}</h3>
             {/* Cinsiyet seçimi için şık dropdown - Toggle yerine */}
             {/* Bu select, genderTab state'ini günceller; useEffect ile model otomatik ayarlanır */}
             <div className="relative">
               <select
-                aria-label="Cinsiyet seçimi"
+                aria-label={t('clothing.model.gender_aria')}
                 value={genderTab}
                 onChange={(e) => setGenderTab(e.target.value as 'men' | 'women' | 'self')}
                 className="appearance-none bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-md pl-3 pr-8 py-2 shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-purple-300 focus:border-purple-400 transition-colors"
               >
-                <option value="men">👨 Erkek</option>
-                <option value="women">👩 Kadın</option>
-                <option value="self">🧑 Modeliniz</option>
+                <option value="men">{t('clothing.model.men')}</option>
+                <option value="women">{t('clothing.model.women')}</option>
+                <option value="self">{t('clothing.model.self')}</option>
               </select>
               {/* Dropdown ok ikonu */}
               <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
@@ -648,7 +701,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 <div className="aspect-[3/4] bg-gray-50 relative">
                   <Image
                     src="/images/men/8a46ed29-5dd4-45c6-924c-555332e0f9e0.jpg"
-                    alt="Erkek Model"
+                    alt={t('clothing.model.male_alt')}
                     fill
                     className="object-cover"
                   />
@@ -662,7 +715,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 )}
                 
                 <div className="p-2">
-                  <p className="text-xs font-medium text-gray-900">Model 1</p>
+                  <p className="text-xs font-medium text-gray-900">{t('clothing.model.model_name')}</p>
                 </div>
               </motion.div>
             ) : (
@@ -680,7 +733,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 <div className="aspect-[3/4] bg-gray-50 relative">
                   <Image
                     src="/images/women/a29ec4e4-0344-4dcb-9c57-ec6d367567ad.jpg"
-                    alt="Kadın Model"
+                    alt={t('clothing.model.female_alt')}
                     fill
                     className="object-cover"
                   />
@@ -694,7 +747,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 )}
                 
                 <div className="p-2">
-                  <p className="text-xs font-medium text-gray-900">Model 1</p>
+                  <p className="text-xs font-medium text-gray-900">{t('clothing.model.model_name')}</p>
                 </div>
               </motion.div>
             )}
@@ -710,7 +763,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
               whileTap={{ scale: 0.98 }}
             >
               <Plus className="w-6 h-6 text-gray-400 mb-1" />
-              <p className="text-xs text-gray-500">Model Ekle</p>
+              <p className="text-xs text-gray-500">{t('clothing.model.add_model')}</p>
             </motion.div>
             
             <motion.div
@@ -723,15 +776,60 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
               whileTap={{ scale: 0.98 }}
             >
               <Plus className="w-6 h-6 text-gray-400 mb-1" />
-              <p className="text-xs text-gray-500">Model Ekle</p>
+              <p className="text-xs text-gray-500">{t('clothing.model.add_model')}</p>
             </motion.div>
           </div>
           ) : (
-            // Self modu: Face Swap kaldırıldı. Bilgilendirici mesaj bırakıldı.
-            <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
-              <div className="text-xs text-purple-900">
-                Modeliniz seçiliyken orta alandaki görüntüleyiciden (yükleme butonu) kendi fotoğrafınızı ekleyebilirsiniz. Face Swap modu kaldırıldı.
+            // Self modu: Kendi modelini yükleme UI
+            <div className="space-y-3">
+              {/* Başlık ve ipucu */}
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold text-gray-900">{t('clothing.model.self_upload_title')}</h4>
+                {selfModelDataUrl ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
+                    {t('clothing.model.self_selected_badge')}
+                  </span>
+                ) : null}
               </div>
+
+              {/* Yükleme Alanı veya Önizleme */}
+              {!selfModelDataUrl ? (
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 hover:bg-purple-50/40 transition-colors cursor-pointer"
+                  onClick={() => selfModelInputRef.current?.click()}
+                >
+                  <Plus className="w-6 h-6 text-purple-500 mb-2 mx-auto" />
+                  <p className="text-sm font-medium text-purple-700">{t('clothing.model.self_upload_button')}</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('clothing.model.self_hint')}</p>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={selfModelDataUrl} alt={t('clothing.model.self_preview_alt')} className="w-14 h-18 object-cover rounded-md border" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-700 font-medium truncate">{t('clothing.model.self_selected_badge')}</p>
+                    <p className="text-[11px] text-gray-500 truncate">{t('clothing.model.self_hint')}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => selfModelInputRef.current?.click()}
+                      className="px-2 py-1 text-[11px] rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                      {t('clothing.model.self_change_button')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        try { localStorage.removeItem('self_model_data_url') } catch {}
+                        setSelfModelDataUrl(null)
+                        onModelSelect && onModelSelect('')
+                      }}
+                      className="px-2 py-1 text-[11px] rounded-md border border-red-300 text-red-600 hover:bg-red-50"
+                    >
+                      {t('clothing.model.self_remove_button')}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -849,14 +947,14 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         {/* Mini status line */}
         <div className="flex items-center justify-between mb-2 text-[11px] text-gray-600">
           <span className="px-2 py-0.5 rounded-full bg-gray-100 border border-gray-200">
-            {selectedModel ? 'Model seçildi' : 'Model bekleniyor'}
+            {selectedModel ? t('clothing.status.model_selected') : t('clothing.status.model_waiting')}
           </span>
           <span className="px-2 py-0.5 rounded-full bg-gray-100 border border-gray-200">
             {uploadedClothes.find(u => u.id === selectedUploadedItem)
-              ? 'Seçili: Tek parça'
+              ? t('clothing.status.selected_single')
               : (upperClothing && lowerClothing)
-                ? 'Seçili: Üst + Alt'
-                : 'Kıyafet bekleniyor'}
+                ? t('clothing.status.selected_combo')
+                : t('clothing.status.clothing_waiting')}
           </span>
         </div>
         <motion.button
@@ -885,14 +983,14 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
           }`}
           title={
             !selectedModel
-              ? 'Önce bir model seçin'
+              ? t('clothing.button.title_need_model')
                 : uploadedClothes.find(u => u.id === selectedUploadedItem) || (upperClothing && lowerClothing)
-                  ? 'Seçili kıyafeti dene'
-                  : 'Önce bir kıyafet yükleyin/seçin'
+                  ? t('clothing.button.title_try_selected')
+                  : t('clothing.button.title_need_clothing')
           }
         >
           <Sparkles className="w-5 h-5" />
-          <span className="text-sm">AI ile Dene</span>
+          <span className="text-sm">{t('clothing.button.try')}</span>
         </motion.button>
       </div>
     </div>

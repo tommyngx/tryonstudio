@@ -23,6 +23,7 @@
 - [x] Try-on sonucu geçmişe eklenir ve otomatik seçilir; thumbnail galerisinde görünür
 - [x] Tekrar yükleme hatası: Gizli `input[type="file"]` değerleri yükleme sonrası ve tıklama öncesi sıfırlanıyor (re-upload garanti)
 - [x] Blob URL yönetimi: Kaldırma/değiştirme akışlarında `URL.revokeObjectURL(...)` ile nesne URL’leri serbest bırakılıyor
+- [x] Clothing Panel: "Your Model" (self) sekmesinde kullanıcı model fotoğrafı yükleme/önizleme/değiştir/kaldır UI'si ve `onModelSelect` entegrasyonu
 - [ ] Undo/Redo ileri-geri butonları (opsiyonel)
 - [ ] Gerçek AI edit servisine entegrasyon (API key, güvenlik)
 - [ ] İndirme/Paylaşma entegrasyonları (export options)
@@ -32,6 +33,7 @@
 
 - [x] Face Swap özelliği kaldırıldı (UI, API uçları 410 Gone, config ve helper temizliği)
 - [x] Upper prompt güçlendirildi: "Ensure the TOP garment is clearly and visibly changed ..." direktifi eklendi (`createUpperOnlyPrompt`)
+- [x] "Your Model" (self) yükleme özelliği: Panel içinden kullanıcı fotoğrafı yüklenir, `localStorage('self_model_data_url')` ile hatırlanır ve `EditPage`'e `data URL` olarak aktarılır
 
 ## UX - Collapsible Panel
 
@@ -39,3 +41,14 @@
 - [x] Panel açıkken sol kenarda collapse handle (Chevron) ile kapatma
 - [x] Klavye kısayolları: Esc (kapat), Ctrl/Cmd + E (aç/kapa)
 - [x] Panel açık/kapalı durumu localStorage ile kalıcı
+
+## i18n Rollout Checklist
+
+- [x] i18n iskeleti oluşturuldu (`src/i18n/`): `tr.json`, `en.json`, `index.ts`, `provider.tsx`, `useI18n.ts`, `types.ts`
+- [x] Global provider entegrasyonu (`src/components/providers.tsx` içinde `I18nProvider`)
+- [x] `src/app/edit/page.tsx` sözlüğe geçirildi ve `t()` ile metinler kullanılıyor
+- [x] `src/components/edit/clothing-panel.tsx` i18n’e geçirildi
+- [x] `src/components/clothing-selector.tsx`, `src/components/conditional-footer.tsx` ve diğer UI bileşenleri i18n’e geçirildi
+- [x] Dil seçici (TR/EN) minimal UI eklendi (varsayılan TR)
+- [x] EN çevirileri tamamlandı ve toggle ile doğrulandı
+- [ ] Smoke testler: kritik anahtarların render kontrolü (opsiyonel)

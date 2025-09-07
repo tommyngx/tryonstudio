@@ -23,9 +23,11 @@ import { useRouter } from 'next/navigation'
 import { ThumbnailGallery, EditHistoryItem } from '@/components/edit/thumbnail-gallery'
 import { AiEditPanel } from '@/components/edit/ai-edit-panel'
 import { AiResponseMeta } from '@/components/edit/ai-response-card'
+import { useI18n } from '@/i18n/useI18n'
 
 export default function EditPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const [selectedClothes, setSelectedClothes] = useState<{
     single?: any
     combo?: any
@@ -50,7 +52,7 @@ export default function EditPage() {
       ? (tryOnResult || selectedModel) 
       : editHistory[selectedImageIndex]?.imageUrl
     if (!selected) {
-      alert('İndirilecek görsel bulunamadı')
+      alert(t('alerts.no_image_to_download'))
       return
     }
 
@@ -80,7 +82,7 @@ export default function EditPage() {
       if (revoke) revoke()
     } catch (e) {
       console.error('Download error', e)
-      alert('Görsel indirilemedi')
+      alert(t('alerts.download_failed'))
     }
   }
 
@@ -248,7 +250,7 @@ export default function EditPage() {
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[EditPage] API Error Response:', errorText)
-        throw new Error(`API çağrısı başarısız: ${response.status} - ${errorText}`)
+        throw new Error(t('tryon.api_call_failed', { status: String(response.status), text: errorText }))
       }
 
       const result = await response.json()
@@ -289,8 +291,8 @@ export default function EditPage() {
           return next
         })
 
-        // AI panelini kapalı tut - try-on sol panelde bağımsız
-        setIsAiPanelOpen(false)
+        // AI panelini otomatik aç - kullanıcı Try with AI sonrası düzenlemeye devam edebilsin
+        setIsAiPanelOpen(true)
 
         console.log('Virtual try-on başarılı:', {
           isMultiGarment: result.data.isMultiGarment,
@@ -301,15 +303,15 @@ export default function EditPage() {
         console.error('API hatası:', result.error)
         // Quota hatası için özel mesaj
         if (result.error?.includes('kotası aşıldı') || result.error?.includes('quota')) {
-          alert(`🚫 API Kullanım Limiti Aşıldı\n\n${result.error}\n\nÇözüm önerileri:\n• Birkaç saat sonra tekrar deneyin\n• Google Cloud Console'dan quota artırın\n• Farklı bir API key kullanın`)
+          alert(t('alerts.api_quota_exceeded', { error: result.error }))
         } else {
-          alert(`Virtual try-on başarısız: ${result.error || 'Bilinmeyen hata'}`)
+          alert(t('alerts.tryon_failed', { error: result.error || 'Bilinmeyen hata' }))
         }
       }
 
     } catch (error) {
       console.error('Virtual try-on error:', error)
-      alert('Virtual try-on işlemi başarısız oldu')
+      alert(t('alerts.tryon_failed_generic'))
     } finally {
       setIsProcessing(false)
     }
@@ -323,7 +325,7 @@ export default function EditPage() {
       : editHistory[selectedImageIndex]?.imageUrl
     
     if (!currentImage || (!currentImage.startsWith('data:') && editHistory.length === 0)) {
-      alert('Önce virtual try-on işlemi yapın')
+      alert(t('alerts.video_require_tryon'))
       return
     }
 
@@ -377,7 +379,7 @@ export default function EditPage() {
           setGeneratedVideo('/demo-video.mp4') // Public klasöründen demo video
           setShowVideoPlayer(true)
           
-          alert('🎬 Video Generation Demo!\n\n⚠️ Bu simulated response (gerçek API için valid key gerekli)\n📹 Demo video player ile test ediliyor\n\nAPI: ' + (result.data.apiResponse || 'Unknown'))
+          alert(t('video.demo_alert', { api: result.data.apiResponse || 'Unknown' }))
           return
         }
         
@@ -390,12 +392,12 @@ export default function EditPage() {
         console.log('Video Data URL length:', videoDataUrl.length)
       } else {
         console.error('Video API hatası:', result.error)
-        alert(`Video oluşturma başarısız: ${result.error || 'Bilinmeyen hata'}`)
+        alert(t('alerts.video_failed_with_reason', { error: result.error || 'Bilinmeyen hata' }))
       }
 
     } catch (error) {
       console.error('Video generation error:', error)
-      alert('Video oluşturma işlemi başarısız oldu')
+      alert(t('alerts.video_failed'))
     } finally {
       setIsVideoGenerating(false)
     }
@@ -426,13 +428,13 @@ export default function EditPage() {
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Geri</span>
+            <span>{t('common.back')}</span>
           </button>
           
           <div className="h-6 w-px bg-gray-300" />
           
           <h1 className="text-xl font-semibold text-gray-900">
-            TryOnX Studio
+            {t('common.studio_title')}
           </h1>
         </div>
 
@@ -457,7 +459,7 @@ export default function EditPage() {
             <button
               onClick={() => { setZoomLevel(100); setViewerResetKey(k => k + 1) }}
               className="p-2 hover:bg-white rounded-md transition-colors"
-              title="Reset (100%)"
+              title={t('common.reset')}
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -466,12 +468,12 @@ export default function EditPage() {
           {/* Action Buttons */}
           <button onClick={handleDownload} className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
             <Download className="w-4 h-4" />
-            <span>İndir</span>
+            <span>{t('common.download')}</span>
           </button>
 
           <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
             <Share2 className="w-4 h-4" />
-            <span>Paylaş</span>
+            <span>{t('common.share')}</span>
           </button>
 
           <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
@@ -560,7 +562,7 @@ export default function EditPage() {
             <motion.button
               onClick={() => setIsAiPanelOpen(true)}
               className="absolute top-1/2 -translate-y-1/2 right-0 z-30 bg-white border border-gray-200 rounded-l-lg py-3 px-2 shadow hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-300"
-              title="AI Düzenle panelini aç"
+              title={t('common.ai_edit_open')}
               initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.25 }}
@@ -606,7 +608,7 @@ export default function EditPage() {
                   transition={{ duration: 2.1, repeat: Infinity, delay: 0.4 }}
                 />
               </motion.span>
-              <span className="sr-only">AI Düzenle</span>
+              <span className="sr-only">{t('common.ai_edit')}</span>
             </motion.button>
           )}
 
@@ -716,7 +718,7 @@ export default function EditPage() {
         videoUrl={generatedVideo}
         isVisible={showVideoPlayer}
         onClose={() => setShowVideoPlayer(false)}
-        title="🎬 AI Generated 360° Fashion Showcase"
+        title={t('video.video_title')}
       />
     </div>
   )

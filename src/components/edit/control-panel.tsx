@@ -13,6 +13,7 @@ import {
   Wand2,
   Loader2
 } from 'lucide-react'
+import { useI18n } from '@/i18n/useI18n'
 
 interface ControlPanelProps {
   onTryOn: () => void
@@ -43,6 +44,7 @@ export function ControlPanel({
   onFixedTryOn,
   canFixedTryOn = false
 }: ControlPanelProps) {
+  const { t } = useI18n()
   const [processingStep, setProcessingStep] = useState('')
   const [qualityMode, setQualityMode] = useState<'fast' | 'balanced' | 'high'>('balanced')
 
@@ -57,16 +59,16 @@ export function ControlPanel({
 
         {/* Kalite Seçimi */}
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">Kalite:</span>
+          <span className="text-sm text-gray-600">{t('controlPanel.quality.label')}</span>
           <select
             value={qualityMode}
             onChange={(e) => setQualityMode(e.target.value as any)}
             className="text-sm border border-gray-300 rounded px-2 py-1 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={isProcessing}
           >
-            <option value="fast">Hızlı</option>
-            <option value="balanced">Dengeli</option>
-            <option value="high">Yüksek</option>
+            <option value="fast">{t('controlPanel.quality.fast')}</option>
+            <option value="balanced">{t('controlPanel.quality.balanced')}</option>
+            <option value="high">{t('controlPanel.quality.high')}</option>
           </select>
         </div>
 
@@ -74,7 +76,7 @@ export function ControlPanel({
         {isProcessing && (
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-            <span>{processingStep || 'AI modeli çalışıyor...'}</span>
+            <span>{processingStep || t('controlPanel.processing_default')}</span>
           </div>
         )}
       </div>
@@ -88,7 +90,7 @@ export function ControlPanel({
           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RotateCcw className="w-4 h-4" />
-          <span className="text-sm">Yeniden</span>
+          <span className="text-sm">{t('controlPanel.buttons.retry')}</span>
         </button>
 
         {/* AI Düzenle */}
@@ -96,10 +98,10 @@ export function ControlPanel({
           onClick={onOpenAiEditPanel}
           disabled={!hasResult || isProcessing}
           className="flex items-center space-x-2 px-4 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title={hasResult ? 'AI Düzenleme panelini aç' : 'Önce bir sonuç üretin'}
+          title={hasResult ? t('controlPanel.buttons.ai_edit_title') : t('controlPanel.buttons.need_result')}
         >
           <Wand2 className="w-4 h-4" />
-          <span className="text-sm">AI Düzenle</span>
+          <span className="text-sm">{t('controlPanel.buttons.ai_edit')}</span>
         </button>
 
         {/* 360° Video */}
@@ -116,7 +118,7 @@ export function ControlPanel({
             <Video className="w-4 h-4" />
           )}
           <span className="text-sm">
-            {isVideoGenerating ? 'Video Oluşturuluyor...' : '360° Video'}
+            {isVideoGenerating ? t('controlPanel.buttons.video_generating') : t('controlPanel.buttons.video')}
           </span>
         </button>
 
@@ -126,7 +128,7 @@ export function ControlPanel({
           className="flex items-center space-x-2 px-4 py-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ShoppingCart className="w-4 h-4" />
-          <span className="text-sm">Ürün Bul</span>
+          <span className="text-sm">{t('controlPanel.buttons.find_product')}</span>
         </button>
 
         {/* Divider */}
@@ -139,7 +141,7 @@ export function ControlPanel({
           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Download className="w-4 h-4" />
-          <span className="text-sm">İndir</span>
+          <span className="text-sm">{t('common.download')}</span>
         </button>
 
         {/* Paylaş */}
@@ -148,7 +150,7 @@ export function ControlPanel({
           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Share2 className="w-4 h-4" />
-          <span className="text-sm">Paylaş</span>
+          <span className="text-sm">{t('common.share')}</span>
         </button>
 
         {/* Gelişmiş Ayarlar */}

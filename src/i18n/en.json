@@ -1,0 +1,378 @@
+{
+  "common": {
+    "back": "Back",
+    "download": "Download",
+    "share": "Share",
+    "settings": "Settings",
+    "reset": "Reset (100%)",
+    "ai_edit_open": "Open AI Edit Panel",
+    "ai_edit": "AI Edit",
+    "studio_title": "TryOnX Studio",
+    "processing": "Processing..."
+  },
+  "alerts": {
+    "no_image_to_download": "No image to download",
+    "download_failed": "Image could not be downloaded",
+    "api_quota_exceeded": "🚫 API Usage Limit Exceeded\n\n{error}\n\nTry:\n• Try again later\n• Increase quota in Google Cloud Console\n• Use a different API key",
+    "tryon_failed": "Virtual try-on failed: {error}",
+    "tryon_failed_generic": "Virtual try-on failed",
+    "video_require_tryon": "Run a virtual try-on first",
+    "video_failed": "Video generation failed",
+    "video_failed_with_reason": "Video generation failed: {error}"
+  },
+  "tryon": {
+    "start_log": "[EditPage] Try-on starting:",
+    "api_call_log": "[EditPage] Nano Banana API call:",
+    "api_response_status": "[EditPage] API Response Status:",
+    "api_error_response": "[EditPage] API Error Response:",
+    "api_call_failed": "API call failed: {status} - {text}",
+    "success_log": "Virtual try-on succeeded:",
+    "error_log": "API error:"
+  },
+  "video": {
+    "veo_start": "Veo 3 Video Generation API call starting...",
+    "api_response": "API Response:",
+    "generated_video_length": "Generated Video Data Length:",
+    "api_response_message": "API Response Message:",
+    "simulated_warning": "⚠️ Simulated video response received - Not a real video!",
+    "demo_testing": "🎬 Testing with demo video...",
+    "demo_alert": "🎬 Video Generation Demo!\n\n⚠️ This is a simulated response (valid API key required for real)\n📹 Testing with demo video player\n\nAPI: {api}",
+    "video_success": "✅ 360° video generated successfully!",
+    "video_title": "🎬 AI Generated 360° Fashion Showcase"
+  },
+  "panels": {
+    "left_panel_title": "Clothing Selection",
+    "ai_editing_in_progress": "AI editing in progress…"
+  },
+  "gallery": {
+    "selection_changed": "[Gallery] Selection changed",
+    "on_select": "[Gallery] onSelect"
+  },
+  "model": {
+    "changed_cleared": "[Model] Changed. Cleared tryOnResult and edit history."
+  },
+  "clothingSelector": {
+    "title": "Select Your Clothes",
+    "description": "Choose from upper and lower garments you like. You can also upload your own clothing.",
+    "tabs": {
+      "upper": "Upper Wear",
+      "lower": "Lower Wear"
+    },
+    "upload": {
+      "custom_line1": "Upload Your",
+      "custom_line2": "Own Clothing"
+    },
+    "summary": {
+      "title": "Your Selections:",
+      "upper": "Upper Wear",
+      "lower": "Lower Wear"
+    },
+    "continue": "Start Try-On",
+    "tips": {
+      "title": "💡 Tips:",
+      "tip1": "• You must select at least one clothing",
+      "tip2": "• You can upload your own clothing",
+      "tip3": "• For better results, use clear, plain clothing photos"
+    }
+  },
+  "footer": {
+    "copyright": "© {year} TryOnX. All rights reserved."
+  },
+  "clothing": {
+    "header_title": "Choose clothing",
+    "tabs": {
+      "single": "Single",
+      "combo": "Top & Bottom"
+    },
+    "upload": {
+      "loading": "Uploading...",
+      "please_wait": "Please wait",
+      "single_title": "Add Single Garment",
+      "single_hint": "Or drag and drop here",
+      "formats": "JPEG, PNG, WebP, GIF, BMP (Max 10MB)",
+      "upper_title": "Top Garment",
+      "upper_ready": "Top garment ready",
+      "upper_add": "Add Top Garment",
+      "upper_examples": "T-shirt, shirt, jacket, etc.",
+      "lower_title": "Bottom Garment",
+      "lower_ready": "Bottom garment ready",
+      "lower_add": "Add Bottom Garment",
+      "lower_examples": "Pants, shorts, skirt, etc.",
+      "uploaded_title": "Uploaded Garments",
+      "uploaded_count": "{count} items",
+      "new_item": "Add new garment",
+      "add_short": "+ Add"
+    },
+    "options": {
+      "target_region": "Target Region",
+      "regions": {
+        "upper": "Top",
+        "lower": "Bottom",
+        "dress": "Dress"
+      },
+      "fit_style": "Fit Style",
+      "fits": {
+        "normal_label": "Normal",
+        "normal_desc": "Standard",
+        "slim_label": "Slim",
+        "slim_desc": "Slim fit",
+        "oversize_label": "Oversize",
+        "oversize_desc": "Loose fit"
+      }
+    },
+    "model": {
+      "section_title": "Model Selection",
+      "gender_aria": "Gender selection",
+      "men": "👨 Male",
+      "women": "👩 Female",
+      "self": "🧑 Your Model",
+      "add_model": "Add Model",
+      "self_info": "When 'Your Model' is selected, you can upload your own photo from the main viewer (upload button). Face Swap mode has been removed.",
+      "self_upload_title": "Upload Your Photo",
+      "self_upload_button": "Upload a model photo",
+      "self_change_button": "Change",
+      "self_remove_button": "Remove",
+      "self_preview_alt": "Your uploaded model photo",
+      "self_selected_badge": "Selected",
+      "self_hint": "JPG, PNG, WEBP, GIF, BMP, HEIC • Max 10MB",
+      "male_alt": "Male Model",
+      "female_alt": "Female Model",
+      "model_name": "Model 1"
+    },
+    "items": {
+      "type_single": "Single",
+      "type_combo": "Top & Bottom"
+    },
+    "status": {
+      "model_selected": "Model selected",
+      "model_waiting": "Waiting for model",
+      "selected_single": "Selected: Single",
+      "selected_combo": "Selected: Top + Bottom",
+      "clothing_waiting": "Waiting for clothing"
+    },
+    "button": {
+      "try": "Try with AI",
+      "title_need_model": "Select a model first",
+      "title_try_selected": "Try selected clothing",
+      "title_need_clothing": "Upload/select a clothing first"
+    },
+    "errors": {
+      "need_model": "Please select a model first",
+      "formats": "Supported formats: JPEG, PNG, WebP, GIF, BMP",
+      "formats_with_heic": "Supported formats: JPEG, PNG, WebP, GIF, BMP, HEIC, HEIF",
+      "file_too_large": "File size must be less than 10MB",
+      "upload_failed": "An error occurred while uploading the file",
+      "upper_upload_failed": "An error occurred while uploading the top garment",
+      "lower_upload_failed": "An error occurred while uploading the bottom garment",
+      "tryon_not_configured": "Try-on is not configured. Please refresh the page.",
+      "tryon_failed": "Virtual try-on failed: {error}",
+      "upper_lower_failed": "Top+Bottom try-on encountered an error"
+    }
+  }
+  ,
+  "header": {
+    "brand": "TryOnX",
+    "nav": {
+      "features": "Features",
+      "how": "How It Works",
+      "pricing": "Pricing"
+    }
+  },
+  "aiEditPanel": {
+    "header": {
+      "title": "AI Edit",
+      "subtitle": "Edit and enhance the image using prompts"
+    },
+    "quick_actions": "Quick Actions",
+    "quick_labels": {
+      "brighten": "Brighten",
+      "darken": "Darken",
+      "colorize": "Colorize",
+      "sharpen": "Sharpen"
+    },
+    "presets": {
+      "preset1": "Make colors brighter and more vibrant",
+      "preset2": "Add professional studio lighting",
+      "preset3": "Sharpen and enhance details",
+      "preset4": "Apply a cinematic film look",
+      "preset5": "Make it minimal and clean",
+      "preset6": "Apply a vintage retro filter",
+      "preset7": "Slightly blur the background",
+      "preset8": "Make the clothing color neon"
+    },
+    "recommended": "Recommended Prompts",
+    "textarea_placeholder": "What would you like to change in your image?",
+    "strength_label": "Edit Strength",
+    "strength_min": "Light",
+    "strength_max": "Strong",
+    "submit": "Apply AI Edit",
+    "submit_loading": "Processing...",
+    "alerts": {
+      "need_image": "Create a try-on result first or select an image from history.",
+      "loading": "Processing in progress, please wait.",
+      "need_prompt": "Please enter a prompt."
+    }
+  },
+  "controlPanel": {
+    "quality": {
+      "label": "Quality:",
+      "fast": "Fast",
+      "balanced": "Balanced",
+      "high": "High"
+    },
+    "processing_default": "AI model is running...",
+    "buttons": {
+      "retry": "Retry",
+      "ai_edit_title": "Open AI Edit panel",
+      "need_result": "Generate a result first",
+      "ai_edit": "AI Edit",
+      "video_generating": "Generating Video...",
+      "video": "360° Video",
+      "find_product": "Find Product"
+    }
+  }
+  ,
+  "thumbnail": {
+    "header": "History",
+    "original": "Original",
+    "delete": "Delete",
+    "history_item": "#{index}",
+    "edit_alt": "Edit #{index}"
+  }
+  ,
+  "videoPlayer": {
+    "title_default": "360° Video Showcase",
+    "footer_generated": "🎬 AI Generated 360° Video",
+    "footer_provider": "Google Veo 3",
+    "footer_quality_note": "Video quality depends on AI model performance"
+  }
+  ,
+  "modelViewer": {
+    "aria_label": "Model viewer area (supports zoom and pan)",
+    "view": {
+      "before": "Before",
+      "after": "After",
+      "split": "Split",
+      "original_badge": "Original"
+    },
+    "upload": {
+      "drop_here": "Drop photo here",
+      "upload_title": "Upload your photo",
+      "hint": "Drag or click to select a face or full-body photo.",
+      "optimize": "AI will optimize for best results.",
+      "formats": "JPG, PNG, WEBP • Max 10MB"
+    },
+    "processing": {
+      "badge_title": "AI Processing",
+      "applying": "Applying clothes to the model..."
+    },
+    "empty_after": {
+      "cta": "Select clothing and press the \"Try\" button"
+    },
+    "selected": {
+      "title": "Selected",
+      "single": "Single: {name}",
+      "combo": "Top & Bottom: {name}"
+    },
+    "split_labels": {
+      "original": "Original",
+      "processed": "Processed"
+    },
+    "split_empty": {
+      "title": "AI Result"
+    },
+    "alts": {
+      "original_photo": "Original photo",
+      "processed_photo": "AI processed photo"
+    }
+  }
+  ,
+  "aiResponseCard": {
+    "title": "AI Edit Details",
+    "prompt": "Prompt",
+    "strength": "Strength",
+    "duration": "Duration",
+    "model": "Model",
+    "dash": "—",
+    "ms": "{value} ms"
+  }
+  ,
+  "photoUpload": {
+    "title": "Upload Your Photo",
+    "description": "Upload a face or full-body photo. AI will optimize for best results.",
+    "processing": "Processing photo...",
+    "click_to_upload": "Click to upload a photo",
+    "drop_here": "Drop the photo here",
+    "or_drag": "or drag and drop",
+    "limit": "JPG, PNG, WEBP • Max 5MB",
+    "preview_alt": "Uploaded photo",
+    "success": "Photo uploaded successfully!",
+    "tips_title": "💡 For Best Results:",
+    "tip1": "• Your face should be clearly visible",
+    "tip2": "• Prefer good lighting",
+    "tip3": "• Full-body photos yield better results",
+    "tip4": "• Use a plain background",
+    "continue": "Proceed to Clothing Selection",
+    "errors": {
+      "file_too_large_5mb": "File size must be less than 5MB",
+      "file_read": "File read error",
+      "unknown": "Unknown error"
+    }
+  }
+  ,
+  "home": {
+    "hero": {
+      "title_prefix": "AI",
+      "title_highlight": "Try-On",
+      "subtitle": "Upload your photo, choose outfits, and experience realistic AI try-on. Create a 360° video and instantly find the products you like.",
+      "cta_studio": "Try in Studio",
+      "cta_guided": "Guided Try-On"
+    },
+    "steps": {
+      "upload": "Upload Photo",
+      "select": "Select Outfit",
+      "tryon": "Try",
+      "result": "Result"
+    },
+    "features_title": "Powerful AI Features",
+    "features_subtitle": "Realistic virtual try-on with cutting-edge AI",
+    "features": {
+      "upload": {
+        "title": "Upload Photo",
+        "desc": "Upload a face or full-body photo. AI automatically optimizes for best results."
+      },
+      "face_swap": {
+        "title": "AI Face Swap",
+        "desc": "Transfer your face to professional models using advanced AI."
+      },
+      "vtryon": {
+        "title": "Virtual Try-On",
+        "desc": "Select top and bottom garments; AI renders them realistically on you."
+      },
+      "video": {
+        "title": "360° Video",
+        "desc": "Generate a 360° video with side and rear views."
+      },
+      "find": {
+        "title": "Find Products",
+        "desc": "Find and buy the clothes you like with Google Lens."
+      },
+      "fast": {
+        "title": "Fast Processing",
+        "desc": "Get professional-quality results in seconds."
+      }
+    },
+    "how_title": "How It Works",
+    "how_subtitle": "AI try-on in 4 simple steps",
+    "how_steps": {
+      "upload": "Upload a face or full-body photo",
+      "select": "Select your top and bottom outfits",
+      "tryon": "Make a realistic try-on with AI",
+      "result": "See and share your results"
+    },
+    "result": {
+      "title": "Your Results Are Ready!",
+      "subtitle": "Your AI-generated image and 360° video are ready."
+    }
+  }
+}

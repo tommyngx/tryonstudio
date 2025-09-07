@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Loader2, Download, Share2, RotateCcw, Sparkles, Video, ShoppingCart } from 'lucide-react'
 import Image from 'next/image'
+import { useI18n } from '@/i18n/useI18n'
 
 interface TryOnCanvasProps {
   userPhoto: string | null
@@ -12,6 +13,7 @@ interface TryOnCanvasProps {
 }
 
 export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCanvasProps) {
+  const { t } = useI18n()
   const [isProcessing, setIsProcessing] = useState(false)
   const [processedImage, setProcessedImage] = useState<string | null>(null)
   const [processingStep, setProcessingStep] = useState<string>('')
@@ -30,11 +32,11 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
 
     // Simülasyon adımları - gerçek API çağrıları burada olacak
     const steps = [
-      { label: 'Fotoğraf analiz ediliyor...', duration: 2000 },
-      { label: 'Vücut pozisyonu tespit ediliyor...', duration: 1500 },
-      { label: 'Kıyafetler uygulanıyor...', duration: 2500 },
-      { label: 'AI optimizasyonu yapılıyor...', duration: 2000 },
-      { label: 'Son dokunuşlar...', duration: 1000 },
+      { label: t('tryonCanvas.processing_steps.step1'), duration: 2000 },
+      { label: t('tryonCanvas.processing_steps.step2'), duration: 1500 },
+      { label: t('tryonCanvas.processing_steps.step3'), duration: 2500 },
+      { label: t('tryonCanvas.processing_steps.step4'), duration: 2000 },
+      { label: t('tryonCanvas.processing_steps.step5'), duration: 1000 },
     ]
 
     for (let i = 0; i < steps.length; i++) {
@@ -68,7 +70,7 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
 
   // 360° Video oluşturma
   const handleGenerateVideo = async () => {
-    setProcessingStep('360° video oluşturuluyor...')
+    setProcessingStep(t('tryonCanvas.buttons.video_generate'))
     setIsProcessing(true)
     
     await new Promise(resolve => setTimeout(resolve, 3000))
@@ -86,21 +88,19 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
   return (
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-4">AI Sanal Deneme</h2>
-        <p className="text-muted-foreground text-lg">
-          Yapay zeka ile kıyafetlerinizi üzerinizde görün
-        </p>
+        <h2 className="text-3xl font-bold mb-4">{t('tryonCanvas.title')}</h2>
+        <p className="text-muted-foreground text-lg">{t('tryonCanvas.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Original Photo */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-center">Orijinal Fotoğraf</h3>
+          <h3 className="text-lg font-semibold text-center">{t('tryonCanvas.original_photo')}</h3>
           <div className="tryon-canvas aspect-[3/4] bg-gray-100 relative overflow-hidden">
             {userPhoto && (
               <Image
                 src={userPhoto}
-                alt="Orijinal fotoğraf"
+                alt={t('tryonCanvas.alts.original_photo')}
                 fill
                 className="object-cover"
               />
@@ -110,7 +110,7 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
 
         {/* Processed Result */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-center">AI Sonucu</h3>
+          <h3 className="text-lg font-semibold text-center">{t('tryonCanvas.ai_result')}</h3>
           <div className="tryon-canvas aspect-[3/4] bg-gray-100 relative overflow-hidden">
             {isProcessing ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm">
@@ -133,16 +133,14 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
                   </div>
                   
                   <p className="text-sm font-medium">{processingStep}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Bu işlem birkaç saniye sürebilir
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('tryonCanvas.processing_note')}</p>
                 </div>
               </div>
             ) : processedImage ? (
               <>
                 <Image
                   src={processedImage}
-                  alt="AI işlenmiş fotoğraf"
+                  alt={t('tryonCanvas.alts.processed_photo')}
                   fill
                   className="object-cover"
                 />
@@ -159,7 +157,7 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center text-muted-foreground">
                   <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin" />
-                  <p>AI işleme başlatılıyor...</p>
+                  <p>{t('tryonCanvas.status_starting')}</p>
                 </div>
               </div>
             )}
@@ -181,7 +179,7 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
             whileTap={{ scale: 0.98 }}
           >
             <Video className="w-5 h-5" />
-            <span>360° Video Oluştur</span>
+            <span>{t('tryonCanvas.buttons.video_generate')}</span>
           </motion.button>
 
           <motion.button
@@ -191,7 +189,7 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
             whileTap={{ scale: 0.98 }}
           >
             <ShoppingCart className="w-5 h-5" />
-            <span>Ürünleri Bul & Satın Al</span>
+            <span>{t('tryonCanvas.buttons.find_products')}</span>
           </motion.button>
 
           <motion.button
@@ -201,7 +199,7 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
             whileTap={{ scale: 0.98 }}
           >
             <RotateCcw className="w-5 h-5" />
-            <span>Yeniden İşle</span>
+            <span>{t('tryonCanvas.buttons.reprocess')}</span>
           </motion.button>
 
           <motion.button
@@ -210,7 +208,7 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
             whileTap={{ scale: 0.98 }}
           >
             <Share2 className="w-5 h-5" />
-            <span>Paylaş</span>
+            <span>{t('tryonCanvas.buttons.share')}</span>
           </motion.button>
         </motion.div>
       )}
@@ -224,29 +222,29 @@ export function TryOnCanvas({ userPhoto, selectedClothes, onComplete }: TryOnCan
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            Sonuçları Görüntüle
+            {t('tryonCanvas.buttons.next')}
           </motion.button>
         </div>
       )}
 
       {/* İşlem Detayları */}
       <div className="mt-8 bg-gray-50 rounded-lg p-6">
-        <h3 className="font-semibold mb-4">İşlem Detayları</h3>
+        <h3 className="font-semibold mb-4">{t('tryonCanvas.details.title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div>
-            <p className="font-medium mb-1">Seçilen Kıyafetler:</p>
+            <p className="font-medium mb-1">{t('tryonCanvas.details.selected_clothes')}</p>
             <ul className="text-muted-foreground space-y-1">
-              {selectedClothes.upper && <li>• Üst: Seçildi</li>}
-              {selectedClothes.lower && <li>• Alt: Seçildi</li>}
+              {selectedClothes.upper && <li>{t('tryonCanvas.details.upper_selected')}</li>}
+              {selectedClothes.lower && <li>{t('tryonCanvas.details.lower_selected')}</li>}
             </ul>
           </div>
           <div>
-            <p className="font-medium mb-1">AI Modeli:</p>
-            <p className="text-muted-foreground">Virtual Try-On v2.1</p>
+            <p className="font-medium mb-1">{t('tryonCanvas.details.ai_model')}</p>
+            <p className="text-muted-foreground">{t('tryonCanvas.details.model_name')}</p>
           </div>
           <div>
-            <p className="font-medium mb-1">İşlem Süresi:</p>
-            <p className="text-muted-foreground">~8 saniye</p>
+            <p className="font-medium mb-1">{t('tryonCanvas.details.duration')}</p>
+            <p className="text-muted-foreground">{t('tryonCanvas.details.duration_value')}</p>
           </div>
         </div>
       </div>

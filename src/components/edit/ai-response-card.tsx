@@ -1,6 +1,7 @@
 'use client'
 
 import { Clock, Cpu, MessageSquare, Activity } from 'lucide-react'
+import { useI18n } from '@/i18n/useI18n'
 
 // Bu kart, AI düzenleme işlemi tamamlandığında gelen yanıtın özetini gösterir
 // Kullanıcıya yapılan düzenlemenin prompt'u, güç seviyesi, süre ve model bilgilerini sunar
@@ -19,6 +20,7 @@ interface AiResponseCardProps {
 
 export function AiResponseCard({ response }: AiResponseCardProps) {
   const { prompt, strength, durationMs, model } = response
+  const { t } = useI18n()
 
   return (
     <div className="mt-4 rounded-xl p-4 bg-gradient-to-r from-emerald-50 to-sky-50 border border-emerald-200/60">
@@ -27,7 +29,7 @@ export function AiResponseCard({ response }: AiResponseCardProps) {
         <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mr-2">
           <Activity className="w-4 h-4" />
         </div>
-        <h4 className="text-sm font-semibold text-emerald-800">AI Düzenleme Detayları</h4>
+        <h4 className="text-sm font-semibold text-emerald-800">{t('aiResponseCard.title')}</h4>
       </div>
 
       {/* İçerik */}
@@ -35,29 +37,29 @@ export function AiResponseCard({ response }: AiResponseCardProps) {
         <div className="flex items-start">
           <MessageSquare className="w-4 h-4 text-emerald-700 mt-0.5 mr-2" />
           <div>
-            <div className="text-emerald-900 font-medium">Prompt</div>
-            <div className="text-emerald-800/90 break-words">{prompt || '—'}</div>
+            <div className="text-emerald-900 font-medium">{t('aiResponseCard.prompt')}</div>
+            <div className="text-emerald-800/90 break-words">{prompt || t('aiResponseCard.dash')}</div>
           </div>
         </div>
 
         <div className="flex items-center">
           <Cpu className="w-4 h-4 text-emerald-700 mr-2" />
           <div className="text-emerald-900">
-            Güç: <span className="font-semibold">{strength.toFixed(2)}</span>
+            {t('aiResponseCard.strength')}: <span className="font-semibold">{strength.toFixed(2)}</span>
           </div>
         </div>
 
         <div className="flex items-center">
           <Clock className="w-4 h-4 text-emerald-700 mr-2" />
           <div className="text-emerald-900">
-            Süre: <span className="font-semibold">{Math.max(1, Math.round(durationMs))} ms</span>
+            {t('aiResponseCard.duration')}: <span className="font-semibold">{t('aiResponseCard.ms', { value: String(Math.max(1, Math.round(durationMs))) })}</span>
           </div>
         </div>
 
         <div className="flex items-center">
           <Activity className="w-4 h-4 text-emerald-700 mr-2" />
           <div className="text-emerald-900">
-            Model: <span className="font-semibold">{model}</span>
+            {t('aiResponseCard.model')}: <span className="font-semibold">{model}</span>
           </div>
         </div>
       </div>

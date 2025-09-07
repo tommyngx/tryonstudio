@@ -7,6 +7,7 @@ import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
 import { uploadImage, performVirtualTryOn, getFullImageUrl } from '@/lib/api'
 import { useAppStore } from '@/stores/app-store'
+import { useI18n } from '@/i18n/useI18n'
 
 interface ModelViewerProps {
   userPhoto: string | null
@@ -36,6 +37,7 @@ export function ModelViewer({
   onVideoShowcase,
   isVideoGenerating = false
 }: ModelViewerProps) {
+  const { t } = useI18n()
   const [viewMode, setViewMode] = useState<'before' | 'after' | 'split'>('after')
   const [dragPosition, setDragPosition] = useState(50) // Split view için
 
@@ -314,7 +316,7 @@ export function ModelViewer({
                 viewMode === 'before' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              Önce
+              {t('modelViewer.view.before')}
             </button>
             <button
               onClick={() => setViewMode('after')}
@@ -322,7 +324,7 @@ export function ModelViewer({
                 viewMode === 'after' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              Sonra
+              {t('modelViewer.view.after')}
             </button>
             <button
               onClick={() => setViewMode('split')}
@@ -330,7 +332,7 @@ export function ModelViewer({
                 viewMode === 'split' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              Böl
+              {t('modelViewer.view.split')}
             </button>
           </div>
         </div>
@@ -341,7 +343,7 @@ export function ModelViewer({
         <div className="absolute top-4 right-4 z-10 bg-white rounded-lg shadow-lg px-3 py-2">
           <div className="flex items-center space-x-2">
             <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
-            <span className="text-sm text-gray-600">AI işliyor...</span>
+            <span className="text-sm text-gray-600">{t('modelViewer.processing.badge_title')}</span>
           </div>
         </div>
       )}
@@ -364,15 +366,15 @@ export function ModelViewer({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {isDragActive ? 'Fotoğrafı buraya bırak' : 'Fotoğrafını yükle'}
+                  {isDragActive ? t('modelViewer.upload.drop_here') : t('modelViewer.upload.upload_title')}
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Yüz veya tam boy fotoğrafını sürükle veya tıklayarak seç.<br />
-                  AI en iyi sonuç için optimize edecek.
+                  {t('modelViewer.upload.hint')}<br />
+                  {t('modelViewer.upload.optimize')}
                 </p>
               </div>
               <div className="text-xs text-gray-500">
-                JPG, PNG, WEBP • Maksimum 10MB
+                {t('modelViewer.upload.formats')}
               </div>
             </div>
           </div>
@@ -394,7 +396,7 @@ export function ModelViewer({
             onDoubleClick={resetView}
             tabIndex={0}
             style={{ touchAction: 'none', cursor: isPanning ? 'grabbing' : 'grab' }}
-            aria-label="Model görüntüleyici alanı (zoom ve pan destekli)"
+            aria-label={t('modelViewer.aria_label')}
           >
             <AnimatePresence mode="wait">
               {viewMode === 'before' && (
@@ -419,14 +421,14 @@ export function ModelViewer({
                       >
                       <Image
                         src={userPhoto}
-                        alt="Orijinal fotoğraf"
+                        alt={t('modelViewer.alts.original_photo')}
                         fill
                         className="object-contain select-none"
                         draggable={false}
                       />
                       </div>
                       <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                        Orijinal
+                        {t('modelViewer.view.original_badge')}
                       </div>
                     </div>
                   </div>
@@ -460,15 +462,15 @@ export function ModelViewer({
                             >
                               <Sparkles className="w-12 h-12 text-blue-500 mx-auto mb-4" />
                             </motion.div>
-                            <p className="text-lg font-medium text-gray-900 mb-1">AI İşliyor</p>
-                            <p className="text-sm text-gray-600">Kıyafetler modele uygulanıyor...</p>
+                            <p className="text-lg font-medium text-gray-900 mb-1">{t('modelViewer.processing.badge_title')}</p>
+                            <p className="text-sm text-gray-600">{t('modelViewer.processing.applying')}</p>
                           </div>
                         </div>
                       ) : processedImage ? (
                         <>
                           <Image
                             src={processedImage}
-                            alt="AI işlenmiş fotoğraf"
+                            alt={t('modelViewer.alts.processed_photo')}
                             fill
                             className="object-contain select-none"
                             draggable={false}
@@ -478,7 +480,7 @@ export function ModelViewer({
                         <div className="h-full flex items-center justify-center bg-gray-100">
                           <div className="text-center text-gray-500">
                             <User className="w-12 h-12 mx-auto mb-2" />
-                            <p>Kıyafet seçip "Dene" butonuna basın</p>
+                            <p>{t('modelViewer.empty_after.cta')}</p>
                           </div>
                         </div>
                       )}
@@ -489,18 +491,18 @@ export function ModelViewer({
                   {/* Seçilen Kıyafet Gösterge */}
                   {(selectedClothes.single || selectedClothes.combo) && (
                     <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3">
-                      <h4 className="text-xs font-medium text-gray-900 mb-2">Seçili</h4>
+                      <h4 className="text-xs font-medium text-gray-900 mb-2">{t('modelViewer.selected.title')}</h4>
                       <div className="space-y-1">
                         {selectedClothes.single && (
                           <div className="flex items-center space-x-2">
                             <div className="w-4 h-4 bg-blue-200 rounded"></div>
-                            <span className="text-xs">Tek Parça: {selectedClothes.single.name}</span>
+                            <span className="text-xs">{t('modelViewer.selected.single', { name: String(selectedClothes.single.name) })}</span>
                           </div>
                         )}
                         {selectedClothes.combo && (
                           <div className="flex items-center space-x-2">
                             <div className="w-4 h-4 bg-green-200 rounded"></div>
-                            <span className="text-xs">Üst & Alt: {selectedClothes.combo.name}</span>
+                            <span className="text-xs">{t('modelViewer.selected.combo', { name: String(selectedClothes.combo.name) })}</span>
                           </div>
                         )}
                       </div>
@@ -531,7 +533,7 @@ export function ModelViewer({
                         >
                         <Image
                           src={userPhoto}
-                          alt="Orijinal"
+                          alt={t('modelViewer.split_labels.original')}
                           fill
                           className="object-contain select-none"
                           draggable={false}
@@ -539,7 +541,7 @@ export function ModelViewer({
                         </div>
                       </div>
                       <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                        Önce
+                        {t('modelViewer.view.before')}
                       </div>
                     </div>
                     
@@ -558,7 +560,7 @@ export function ModelViewer({
                             >
                             <Image
                               src={processedImage}
-                              alt="İşlenmiş"
+                              alt={t('modelViewer.split_labels.processed')}
                               fill
                               className="object-contain select-none"
                               draggable={false}
@@ -566,14 +568,14 @@ export function ModelViewer({
                             </div>
                           </div>
                           <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                            Sonra
+                            {t('modelViewer.view.after')}
                           </div>
                         </>
                       ) : (
                         <div className="h-full flex items-center justify-center bg-gray-100">
                           <div className="text-center text-gray-500">
                             <Sparkles className="w-8 h-8 mx-auto mb-2" />
-                            <p className="text-sm">AI Sonucu</p>
+                            <p className="text-sm">{t('modelViewer.split_empty.title')}</p>
                           </div>
                         </div>
                       )}

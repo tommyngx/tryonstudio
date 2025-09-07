@@ -1,3 +1,14 @@
+# Memory - Clothing Panel i18n (2025-09-07 16:04 +03:00)
+- `src/components/edit/clothing-panel.tsx` i18n'e geçirildi. Tüm kullanıcıya görünen metinler sözlüğe taşındı; `useI18n().t()` ile çağrılıyor.
+- TR ve EN sözlüklerine `clothing` alanı eklendi (tabs, upload alanı, hata mesajları, model seçim, durum rozetleri, buton metinleri).
+- Amaç: Metinleri merkezileştirmek ve EN adaptasyonunu hızlandırmak; komponentleri metinden bağımsızlaştırmak.
+
+# Memory - i18n Altyapısı (2025-09-07 15:56 +03:00)
+- Hafif i18n iskeleti kuruldu: `src/i18n/tr.json`, `src/i18n/en.json`, `src/i18n/index.ts` (createTranslator + interpolate), `src/i18n/provider.tsx` (Context + Provider), `src/i18n/useI18n.ts` (hook), `src/i18n/types.ts`.
+- Global entegrasyon: `src/components/providers.tsx` içinde `I18nProvider` ile tüm uygulama sarmalandı (React Query üstünde çalışır durumda).
+- İlk migrasyon: `src/app/edit/page.tsx` içindeki görünen sabit metinler sözlüğe taşındı ve `t()` ile kullanılacak hale getirildi. Alert mesajları, buton etiketleri, başlıklar, tooltip ve video başlığı kapsandı.
+- Varsayılan dil: TR. Persist: `localStorage('lang')`. Anahtar bulunamazsa `t()` anahtarı döndürerek UI kırılmasını engeller.
+
 # Memory - AI Edit Panel, Thumbnail Gallery
 ### Try-On Sonucunu Geçmişe Ekleme (2025-09-07 13:50 +03:00)
 - Başarılı virtual try-on sonucu artık `editHistory` listesine ekleniyor ve otomatik seçiliyor; aynı zamanda ana görüntüleyicide gösteriliyor.
@@ -115,3 +126,10 @@ Tarih: 2025-09-06 22:20 (+03:00)
   - Yükleme SONRASI `finally` içinde `fileInputRef.current.value = ''`
   - Tıklama ÖNCESİ `onClick` handler'larında `fileInputRef.current.value = ''`
 - Ek: Kullanıcı fotoğrafı ve üst/alt giyim akışlarında önceki blob URL'leri `URL.revokeObjectURL(...)` ile kaldırma/değiştirme sırasında serbest bırakıldı. Böylece bellek sızıntıları önlendi.
+
+### Self Model Yükleme UI (2025-09-07 17:07 +03:00)
+- `src/components/edit/clothing-panel.tsx` içine, `genderTab==='self'` durumunda kullanıcıya model fotoğrafını yükleme/önizleme/değiştirme/kaldırma arayüzü eklendi.
+- Teknik: Gizli dosya inputu (`selfModelInputRef`), `handleSelfModelUpload(files)` ile tip/boyut doğrulama (JPEG/PNG/WEBP/GIF/BMP/HEIC/HEIF, ≤10MB), base64 `data URL` üretimi ve `onModelSelect(dataUrl)` ile `EditPage`'e aktarım.
+- Kalıcılık: `localStorage('self_model_data_url')` ile son yüklenen self model hatırlanır; self sekmesine geçildiğinde otomatik uygulanır.
+- i18n: EN ve TR sözlüklerine `clothing.model.self_*` anahtarları eklendi (title, button, change/remove, preview_alt, selected_badge, hint).
+- Amaç: Kullanıcının kendi fotoğrafını doğrudan model olarak seçip kişiselleştirilmiş try-on deneyimi yaşaması.

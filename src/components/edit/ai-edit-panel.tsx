@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Wand2, Sun, Moon, Droplets, Diamond, SlidersHorizontal, Loader2, Sparkles, Palette, Camera, Film, Eraser, Clock, Zap, Smartphone } from 'lucide-react'
+import { useI18n } from '@/i18n/useI18n'
 
 // Sağ AI Düzenleme Paneli - Paylaşılan tasarıma göre birebir kodlandı
 // - Gradient header icon, compact layout
@@ -20,18 +21,19 @@ export interface AiEditPanelProps {
   hasImage: boolean
 }
 
-const PRESET_PROMPTS: { label: string; prompt: string; emoji: string }[] = [
-  { label: 'Daha parlak ve canlı renkler yap', prompt: 'increase color saturation and vibrance, keep natural skin tones', emoji: '🎨' },
-  { label: 'Profesyonel stüdyo ışığı ekle', prompt: 'studio lighting, soft shadows, balanced highlights, professional photography look', emoji: '💡' },
-  { label: 'Daha keskin ve net detaylar', prompt: 'increase sharpness, edge clarity, fine details', emoji: '✂️' },
-  { label: 'Sinematik görünüm ve film tonları', prompt: 'cinematic color grading, teal and orange, film look', emoji: '🎬' },
-  { label: 'Minimal ve temiz görünüm yap', prompt: 'minimal look, soft colors, reduced contrast, clean and modern', emoji: '🧼' },
-  { label: 'Vintage retro filtre uygula', prompt: 'vintage film look, warm tones, slight grain, retro vibe', emoji: '📼' },
-  { label: 'Arka planı hafifçe bulanıklaştır', prompt: 'enhance textures and micro-contrast for more details', emoji: '🔍' },
-  { label: 'Kıyafetin rengini neon yap', prompt: 'bright and vivid, high clarity, social-media ready portrait', emoji: '📱' },
+const PRESET_PROMPTS: { labelKey: string; prompt: string; emoji: string }[] = [
+  { labelKey: 'aiEditPanel.presets.preset1', prompt: 'increase color saturation and vibrance, keep natural skin tones', emoji: '🎨' },
+  { labelKey: 'aiEditPanel.presets.preset2', prompt: 'studio lighting, soft shadows, balanced highlights, professional photography look', emoji: '💡' },
+  { labelKey: 'aiEditPanel.presets.preset3', prompt: 'increase sharpness, edge clarity, fine details', emoji: '✂️' },
+  { labelKey: 'aiEditPanel.presets.preset4', prompt: 'cinematic color grading, teal and orange, film look', emoji: '🎬' },
+  { labelKey: 'aiEditPanel.presets.preset5', prompt: 'minimal look, soft colors, reduced contrast, clean and modern', emoji: '🧼' },
+  { labelKey: 'aiEditPanel.presets.preset6', prompt: 'vintage film look, warm tones, slight grain, retro vibe', emoji: '📼' },
+  { labelKey: 'aiEditPanel.presets.preset7', prompt: 'enhance textures and micro-contrast for more details', emoji: '🔍' },
+  { labelKey: 'aiEditPanel.presets.preset8', prompt: 'bright and vivid, high clarity, social-media ready portrait', emoji: '📱' },
 ]
 
 export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanelProps) {
+  const { t } = useI18n()
   const [prompt, setPrompt] = useState('')
   const [strength, setStrength] = useState(0.7)
   const [loading, setLoading] = useState(false)
@@ -84,11 +86,11 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
 
     if (!canSubmit) {
       if (!hasImage) {
-        alert('Önce bir try-on sonucu oluşturun veya bir geçmiş görseli seçin.')
+        alert(t('aiEditPanel.alerts.need_image'))
       } else if (loading) {
-        alert('İşlem devam ediyor, lütfen bekleyin.')
+        alert(t('aiEditPanel.alerts.loading'))
       } else if (prompt.trim().length === 0) {
-        alert('Lütfen bir prompt girin.')
+        alert(t('aiEditPanel.alerts.need_prompt'))
       }
       return
     }
@@ -122,8 +124,8 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
                 <Wand2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-gray-900">AI Düzenle</h3>
-                <p className="text-xs text-gray-600">Görseli promptlarla düzenleyin ve geliştirin</p>
+                <h3 className="text-base font-semibold text-gray-900">{t('aiEditPanel.header.title')}</h3>
+                <p className="text-xs text-gray-600">{t('aiEditPanel.header.subtitle')}</p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/50 text-gray-700 transition-colors">
@@ -139,7 +141,7 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
               <div className="p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-amber-500" />
-                  <h4 className="text-sm font-semibold text-gray-900">Hızlı Aksiyonlar</h4>
+                  <h4 className="text-sm font-semibold text-gray-900">{t('aiEditPanel.quick_actions')}</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -148,7 +150,7 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
                     className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 hover:border-amber-300 hover:shadow-sm disabled:opacity-50 transition-all duration-200"
                   >
                     <Sun className="w-4 h-4 text-amber-600" />
-                    <span className="text-xs font-medium text-amber-800">Aydınlat</span>
+                    <span className="text-xs font-medium text-amber-800">{t('aiEditPanel.quick_labels.brighten')}</span>
                   </button>
                   <button
                     disabled={!hasImage || loading}
@@ -156,7 +158,7 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
                     className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg bg-gradient-to-br from-slate-50 to-gray-50 border border-slate-200 hover:border-slate-300 hover:shadow-sm disabled:opacity-50 transition-all duration-200"
                   >
                     <Moon className="w-4 h-4 text-slate-600" />
-                    <span className="text-xs font-medium text-slate-800">Koyulaştır</span>
+                    <span className="text-xs font-medium text-slate-800">{t('aiEditPanel.quick_labels.darken')}</span>
                   </button>
                   <button
                     disabled={!hasImage || loading}
@@ -164,7 +166,7 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
                     className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg bg-gradient-to-br from-cyan-50 to-blue-50 border border-cyan-200 hover:border-cyan-300 hover:shadow-sm disabled:opacity-50 transition-all duration-200"
                   >
                     <Palette className="w-4 h-4 text-cyan-600" />
-                    <span className="text-xs font-medium text-cyan-800">Renklendir</span>
+                    <span className="text-xs font-medium text-cyan-800">{t('aiEditPanel.quick_labels.colorize')}</span>
                   </button>
                   <button
                     disabled={!hasImage || loading}
@@ -172,7 +174,7 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
                     className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 hover:border-violet-300 hover:shadow-sm disabled:opacity-50 transition-all duration-200"
                   >
                     <Zap className="w-4 h-4 text-violet-600" />
-                    <span className="text-xs font-medium text-violet-800">Keskinleştir</span>
+                    <span className="text-xs font-medium text-violet-800">{t('aiEditPanel.quick_labels.sharpen')}</span>
                   </button>
                 </div>
               </div>
@@ -181,18 +183,18 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
               <div className="p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2 mb-3">
                   <Film className="w-4 h-4 text-purple-500" />
-                  <h4 className="text-sm font-semibold text-gray-900">Önerilen Promptlar</h4>
+                  <h4 className="text-sm font-semibold text-gray-900">{t('aiEditPanel.recommended')}</h4>
                 </div>
                 <div className="grid grid-cols-1 gap-1.5">
                   {PRESET_PROMPTS.slice(0, 6).map((p) => (
                     <button
-                      key={p.label}
+                      key={p.labelKey}
                       disabled={!hasImage || loading}
                       onClick={() => handlePreset(p.prompt)}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 hover:shadow-sm disabled:opacity-50 text-left transition-all duration-200 group"
                     >
                       <span className="text-sm group-hover:scale-110 transition-transform">{p.emoji}</span>
-                      <span className="text-xs text-gray-700 leading-relaxed flex-1">{p.label}</span>
+                      <span className="text-xs text-gray-700 leading-relaxed flex-1">{t(p.labelKey)}</span>
                     </button>
                   ))}
                 </div>
@@ -210,7 +212,7 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
                       if (e.target.value.length <= 500) setPrompt(e.target.value)
                     }}
                     onKeyDown={handleKeyDown}
-                    placeholder="Görselinizde ne değişmesini istiyorsunuz?"
+                    placeholder={t('aiEditPanel.textarea_placeholder')}
                     rows={2}
                     disabled={!hasImage || loading}
                     className={`w-full text-sm rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all ${
@@ -227,7 +229,7 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
                 {/* Slider - Compact */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-gray-700">Düzenleme Gücü</label>
+                    <label className="text-xs font-semibold text-gray-700">{t('aiEditPanel.strength_label')}</label>
                     <div className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-bold rounded-md">
                       {Math.round(strength * 100)}%
                     </div>
@@ -261,8 +263,8 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
                   </div>
                   
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Hafif</span>
-                    <span>Güçlü</span>
+                    <span>{t('aiEditPanel.strength_min')}</span>
+                    <span>{t('aiEditPanel.strength_max')}</span>
                   </div>
                 </div>
               </div>
@@ -282,12 +284,12 @@ export function AiEditPanel({ isOpen, onClose, onSubmit, hasImage }: AiEditPanel
                   {loading ? (
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>İşleniyor...</span>
+                      <span>{t('aiEditPanel.submit_loading')}</span>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-2">
                       <Wand2 className="w-4 h-4" />
-                      <span>AI ile Düzenle</span>
+                      <span>{t('aiEditPanel.submit')}</span>
                     </div>
                   )}
                 </motion.button>

@@ -1,3 +1,88 @@
+## [2025-09-07 17:17] - Try-On Sonrası AI Panel Otomatik Açılıyor
+
+### 🔄 Davranış Değişikliği
+- "Try with AI" (virtual try-on) işlemi başarıyla tamamlandığında sağdaki AI Düzenleme Paneli artık otomatik olarak açılır.
+- Amaç: Kullanıcının deneme sonucu üzerinden hızlıca düzenlemeye devam edebilmesini sağlamak.
+
+### 📁 Etkilenen Dosyalar
+- Güncellendi: `src/app/edit/page.tsx` (`handleTryOnResult` içerisinde `setIsAiPanelOpen(true)`).
+
+## [2025-09-07 17:07] - Clothing Panel: "Your Model" Yükleme UI Eklendi
+
+### ✨ Yeni Özellik
+- "Your Model" (self) sekmesi aktifken kullanıcı artık kendi model fotoğrafını panel içinden yükleyebilir, önizleyebilir, değiştirebilir veya kaldırabilir.
+- Yüklenen fotoğraf `data URL` olarak `onModelSelect` ile `EditPage`'e aktarılır; `handleTryOnResult` zaten data URL'i desteklediği için try-on akışı sorunsuz çalışır.
+
+### 🔧 Teknik Ayrıntılar
+- `src/components/edit/clothing-panel.tsx`:
+  - Yeni state/ref: `selfModelDataUrl`, `selfModelInputRef`.
+  - Yeni handler: `handleSelfModelUpload(files)`; tip/boyut doğrulaması (JPEG/PNG/WEBP/GIF/BMP/HEIC/HEIF, <=10MB), base64 dönüşümü ve `onModelSelect(dataUrl)` çağrısı.
+  - UI: self sekmesinde gizli input, yükleme kartı, önizleme, "Change" ve "Remove" aksiyonları.
+  - Kalıcılık: `localStorage('self_model_data_url')` ile son yüklenen self model hatırlanır; self sekmesine geçince otomatik yüklenir.
+- `src/i18n/en.json`: `clothing.model.*` altına self upload metinleri eklendi (`self_upload_title`, `self_upload_button`, `self_change_button`, `self_remove_button`, `self_preview_alt`, `self_selected_badge`, `self_hint`).
+
+### ✅ Beklenen Sonuç
+- Kullanıcılar kendi fotoğraflarını kolayca model olarak kullanabilir ve try-on deneyimini kişiselleştirebilir.
+
+## [2025-09-07 16:55] - Uygulama Geneli i18n Tamamlandı (TR/EN)
+
+### 🔤 Kapsam ve Durum
+- Landing ve Edit akışının tamamındaki kullanıcıya görünen tüm metinler `t()` ile sözlüklerden okunacak şekilde i18n'e geçirildi.
+- TR varsayılan dil, EN sözlüğü aynı anahtar yapısı ile dolduruldu. Dil değiştirici (TR/EN) header üzerinde hazır.
+
+### 📁 Etkilenen/Yeni Dosyalar
+- Güncellendi: `src/app/page.tsx` (Landing `home.*`)
+- Güncellendi: `src/app/edit/page.tsx` (mevcut i18n kullanımı korunup genişletildi)
+- Güncellendi: `src/components/conditional-header.tsx` (nav etiketleri + dil toggle)
+- Güncellendi: `src/components/conditional-footer.tsx` (telif metni)
+- Güncellendi: `src/components/clothing-selector.tsx`
+- Güncellendi: `src/components/photo-upload.tsx`
+- Güncellendi: `src/components/tryon-canvas.tsx`
+- Güncellendi: `src/components/edit/clothing-panel.tsx`
+- Güncellendi: `src/components/edit/control-panel.tsx`
+- Güncellendi: `src/components/edit/ai-edit-panel.tsx`
+- Güncellendi: `src/components/edit/ai-response-card.tsx`
+- Güncellendi: `src/components/edit/thumbnail-gallery.tsx`
+- Güncellendi: `src/components/edit/video-player.tsx`
+- Güncellendi: `src/components/edit/model-viewer.tsx`
+- Güncellendi: `src/i18n/tr.json`, `src/i18n/en.json` (home, header, footer, clothing, clothingSelector, controlPanel, aiEditPanel(+presets), aiResponseCard, thumbnail, videoPlayer, modelViewer, photoUpload, tryonCanvas)
+
+### ✅ Notlar
+- Interpolasyon: `{year}`, `{index}`, `{name}`, `{value}`, `{status}`, `{text}` gibi dinamik değerler destekleniyor.
+- Anahtar bulunamadığında `t()` anahtar stringini döndürerek UI kırılmasını önler (geliştirme sırasında görünür uyarı etkisi yaratır).
+- Debug/console log metinleri geliştirici amaçlı olup i18n kapsamı dışında bırakıldı; istenirse ayrıca İngilizceleştirilebilir.
+
+## [2025-09-07 16:04] - Clothing Panel i18n'e geçirildi
+
+### 🔤 Dönüşüm
+- `src/components/edit/clothing-panel.tsx` içindeki tüm kullanıcıya görünen metinler `t()` ile sözlüklerden okunacak şekilde dönüştürüldü.
+- Etkilenen metinler: başlıklar, tab etiketleri, yükleme alanı metinleri, format/hata mesajları, model seçim alanı, durum rozetleri ve alt kısımdaki "AI ile Dene" buton metni/tooltips.
+
+### 📁 Etkilenen Dosyalar
+- Güncellendi: `src/components/edit/clothing-panel.tsx`
+- Güncellendi: `src/i18n/tr.json` (clothing bölümü eklendi)
+- Güncellendi: `src/i18n/en.json` (clothing bölümü eklendi)
+
+### ✅ Not
+- Interpolasyon kullanımı: öğe sayısı gibi dinamik metinlerde `{count}` değişkeni desteklenir.
+
+## [2025-09-07 15:56] - i18n Altyapısı: TR Kaynak Dil ve Edit Page Migrasyonu
+
+### ✨ Yeni
+- Hafif i18n iskeleti eklendi: JSON sözlükler (`tr.json`, `en.json`), `createTranslator(t)` yardımcı fonksiyonu, `I18nProvider` ve `useI18n()` hook.
+- Varsayılan dil Türkçe olacak şekilde global provider entegre edildi (`src/components/providers.tsx`).
+- `src/app/edit/page.tsx` içindeki görünen sabit metinler sözlüğe taşınarak `t()` ile kullanılacak hale getirildi (alert mesajları, buton etiketleri, başlıklar, tooltipler, video başlığı).
+
+### 📁 Etkilenen/Yeni Dosyalar
+- Yeni: `src/i18n/tr.json`, `src/i18n/en.json`, `src/i18n/index.ts`, `src/i18n/provider.tsx`, `src/i18n/useI18n.ts`, `src/i18n/types.ts`
+- Güncellendi: `src/components/providers.tsx` (I18nProvider sarmalaması)
+- Güncellendi: `src/app/edit/page.tsx` (UI metinleri `t()` ile)
+
+### ✅ Notlar
+- Anahtar bulunamadığında `t()` anahtarı döndürerek kırılmayı önler.
+- Basit interpolasyon desteği: `{name}`, `{count}` vb. değişkenler şablonda yerini alır.
+- TR tamamlandıktan sonra EN çevirileri aynı anahtar yapısı ile hızla doldurulabilir.
+
 ## [2025-09-07 13:47] - Üst Giyim Prompt Güçlendirildi
 
 ### 🎯 İyileştirme

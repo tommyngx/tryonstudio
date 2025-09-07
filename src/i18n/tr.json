@@ -1,0 +1,407 @@
+{
+  "common": {
+    "back": "Geri",
+    "download": "İndir",
+    "share": "Paylaş",
+    "settings": "Ayarlar",
+    "reset": "Reset (100%)",
+    "ai_edit_open": "AI Düzenle panelini aç",
+    "ai_edit": "AI Düzenle",
+    "studio_title": "TryOnX Studio",
+    "processing": "İşleniyor..."
+  },
+  "alerts": {
+    "no_image_to_download": "İndirilecek görsel bulunamadı",
+    "download_failed": "Görsel indirilemedi",
+    "api_quota_exceeded": "🚫 API Kullanım Limiti Aşıldı\n\n{error}\n\nÇözüm önerileri:\n• Birkaç saat sonra tekrar deneyin\n• Google Cloud Console'dan quota artırın\n• Farklı bir API key kullanın",
+    "tryon_failed": "Virtual try-on başarısız: {error}",
+    "tryon_failed_generic": "Virtual try-on işlemi başarısız oldu",
+    "video_require_tryon": "Önce virtual try-on işlemi yapın",
+    "video_failed": "Video oluşturma işlemi başarısız oldu",
+    "video_failed_with_reason": "Video oluşturma başarısız: {error}"
+  },
+  "tryon": {
+    "start_log": "[EditPage] Try-on işlemi başlatılıyor:",
+    "api_call_log": "[EditPage] Nano Banana API çağrısı:",
+    "api_response_status": "[EditPage] API Response Status:",
+    "api_error_response": "[EditPage] API Error Response:",
+    "api_call_failed": "API çağrısı başarısız: {status} - {text}",
+    "success_log": "Virtual try-on başarılı:",
+    "error_log": "API hatası:"
+  },
+  "video": {
+    "veo_start": "Veo 3 Video Generation API çağrısı başlatılıyor...",
+    "api_response": "API Response:",
+    "generated_video_length": "Generated Video Data Length:",
+    "api_response_message": "API Response Message:",
+    "simulated_warning": "⚠️ Simulated video response alındı - Gerçek video değil!",
+    "demo_testing": "🎬 Demo video ile test edilecek...",
+    "demo_alert": "🎬 Video Generation Demo!\n\n⚠️ Bu simulated response (gerçek API için valid key gerekli)\n📹 Demo video player ile test ediliyor\n\nAPI: {api}",
+    "video_success": "✅ 360° video başarıyla oluşturuldu!",
+    "video_title": "🎬 AI Generated 360° Fashion Showcase"
+  },
+  "panels": {
+    "left_panel_title": "Kıyafet Seçimi",
+    "ai_editing_in_progress": "AI editing in progress…"
+  },
+  "gallery": {
+    "selection_changed": "[Gallery] Selection changed",
+    "on_select": "[Gallery] onSelect"
+  },
+  "model": {
+    "changed_cleared": "[Model] Changed. Cleared tryOnResult and edit history."
+  },
+  "clothing": {
+    "header_title": "Kıyafet seç",
+    "tabs": {
+      "single": "Tek parça",
+      "combo": "Üst & Alt"
+    },
+    "upload": {
+      "loading": "Yükleniyor...",
+      "please_wait": "Lütfen bekleyin",
+      "single_title": "Tek Parça Kıyafet Ekle",
+      "single_hint": "Veya buraya sürükleyip bırakın",
+      "formats": "JPEG, PNG, WebP, GIF, BMP (Max 10MB)",
+      "upper_title": "Üst Giyim",
+      "upper_ready": "Üst giyim hazır",
+      "upper_add": "Üst Giyim Ekle",
+      "upper_examples": "Tişört, gömlek, ceket vb.",
+      "lower_title": "Alt Giyim",
+      "lower_ready": "Alt giyim hazır",
+      "lower_add": "Alt Giyim Ekle",
+      "lower_examples": "Pantolon, şort, etek vb.",
+      "uploaded_title": "Yüklenen Kıyafetler",
+      "uploaded_count": "{count} öğe",
+      "new_item": "Yeni kıyafet ekle",
+      "add_short": "+ Ekle"
+    },
+    "options": {
+      "target_region": "Hedef Bölge",
+      "regions": {
+        "upper": "Üst",
+        "lower": "Alt",
+        "dress": "Elbise"
+      },
+      "fit_style": "Kesim Stili",
+      "fits": {
+        "normal_label": "Normal",
+        "normal_desc": "Standart",
+        "slim_label": "Slim",
+        "slim_desc": "Dar kesim",
+        "oversize_label": "Oversize",
+        "oversize_desc": "Bol kesim"
+      }
+    },
+    "model": {
+      "section_title": "Manken Modeller",
+      "gender_aria": "Cinsiyet seçimi",
+      "men": "👨 Erkek",
+      "women": "👩 Kadın",
+      "self": "🧑 Modeliniz",
+      "add_model": "Model Ekle",
+      "self_info": "Modeliniz seçiliyken orta alandaki görüntüleyiciden (yükleme butonu) kendi fotoğrafınızı ekleyebilirsiniz. Face Swap modu kaldırıldı.",
+      "self_upload_title": "Kendi Fotoğrafınızı Yükleyin",
+      "self_upload_button": "Model fotoğrafı yükle",
+      "self_change_button": "Değiştir",
+      "self_remove_button": "Kaldır",
+      "self_preview_alt": "Yüklediğiniz model fotoğrafı",
+      "self_selected_badge": "Seçildi",
+      "self_hint": "JPG, PNG, WEBP, GIF, BMP, HEIC • Maks 10MB",
+      "male_alt": "Erkek Model",
+      "female_alt": "Kadın Model",
+      "model_name": "Model 1"
+    },
+    "items": {
+      "type_single": "Tek parça",
+      "type_combo": "Üst & Alt"
+    },
+    "status": {
+      "model_selected": "Model seçildi",
+      "model_waiting": "Model bekleniyor",
+      "selected_single": "Seçili: Tek parça",
+      "selected_combo": "Seçili: Üst + Alt",
+      "clothing_waiting": "Kıyafet bekleniyor"
+    },
+    "button": {
+      "try": "AI ile Dene",
+      "title_need_model": "Önce bir model seçin",
+      "title_try_selected": "Seçili kıyafeti dene",
+      "title_need_clothing": "Önce bir kıyafet yükleyin/seçin"
+    },
+    "errors": {
+      "need_model": "Lütfen önce bir model seçin",
+      "formats": "Desteklenen formatlar: JPEG, PNG, WebP, GIF, BMP",
+      "formats_with_heic": "Desteklenen formatlar: JPEG, PNG, WebP, GIF, BMP, HEIC, HEIF",
+      "file_too_large": "Dosya boyutu 10MB'dan küçük olmalıdır",
+      "upload_failed": "Dosya yüklenirken hata oluştu",
+      "upper_upload_failed": "Üst giyim yüklenirken hata oluştu",
+      "lower_upload_failed": "Alt giyim yüklenirken hata oluştu",
+      "tryon_not_configured": "Try-on işlemi yapılandırılmamış. Lütfen sayfayı yenileyin.",
+      "tryon_failed": "Virtual try-on işlemi başarısız: {error}",
+      "upper_lower_failed": "Üst+Alt deneme işleminde hata oluştu"
+    }
+  }
+  ,
+  "clothingSelector": {
+    "title": "Kıyafetlerinizi Seçin",
+    "description": "Üst ve alt kıyafetlerden beğendiklerinizi seçin. Kendi kıyafetinizi de yükleyebilirsiniz.",
+    "tabs": {
+      "upper": "Üst Giyim",
+      "lower": "Alt Giyim"
+    },
+    "upload": {
+      "custom_line1": "Kendi Kıyafetinizi",
+      "custom_line2": "Yükleyin"
+    },
+    "summary": {
+      "title": "Seçimleriniz:",
+      "upper": "Üst Giyim",
+      "lower": "Alt Giyim"
+    },
+    "continue": "Denemeye Başla",
+    "tips": {
+      "title": "💡 İpuçları:",
+      "tip1": "• En az bir kıyafet seçmelisiniz",
+      "tip2": "• Kendi kıyafetinizi yükleyebilirsiniz",
+      "tip3": "• Daha iyi sonuç için net, düz kıyafet fotoğrafları kullanın"
+    }
+  },
+  "footer": {
+    "copyright": "© {year} TryOnX. Tüm hakları saklıdır."
+  }
+  ,
+  "controlPanel": {
+    "quality": {
+      "label": "Kalite:",
+      "fast": "Hızlı",
+      "balanced": "Dengeli",
+      "high": "Yüksek"
+    },
+    "processing_default": "AI modeli çalışıyor...",
+    "buttons": {
+      "retry": "Yeniden",
+      "ai_edit_title": "AI Düzenleme panelini aç",
+      "need_result": "Önce bir sonuç üretin",
+      "ai_edit": "AI Düzenle",
+      "video_generating": "Video Oluşturuluyor...",
+      "video": "360° Video",
+      "find_product": "Ürün Bul"
+    }
+  }
+  ,
+  "header": {
+    "brand": "TryOnX",
+    "nav": {
+      "features": "Özellikler",
+      "how": "Nasıl Çalışır",
+      "pricing": "Fiyatlandırma"
+    }
+  },
+  "aiEditPanel": {
+    "header": {
+      "title": "AI Düzenle",
+      "subtitle": "Görseli promptlarla düzenleyin ve geliştirin"
+    },
+    "quick_actions": "Hızlı Aksiyonlar",
+    "quick_labels": {
+      "brighten": "Aydınlat",
+      "darken": "Koyulaştır",
+      "colorize": "Renklendir",
+      "sharpen": "Keskinleştir"
+    },
+    "recommended": "Önerilen Promptlar",
+    "textarea_placeholder": "Görselinizde ne değişmesini istiyorsunuz?",
+    "strength_label": "Düzenleme Gücü",
+    "strength_min": "Hafif",
+    "strength_max": "Güçlü",
+    "submit": "AI ile Düzenle",
+    "submit_loading": "İşleniyor...",
+    "alerts": {
+      "need_image": "Önce bir try-on sonucu oluşturun veya bir geçmiş görseli seçin.",
+      "loading": "İşlem devam ediyor, lütfen bekleyin.",
+      "need_prompt": "Lütfen bir prompt girin."
+    }
+  }
+  ,
+  "thumbnail": {
+    "header": "Geçmiş",
+    "original": "Orijinal",
+    "delete": "Sil",
+    "history_item": "#{index}",
+    "edit_alt": "Düzenleme #{index}"
+  }
+  ,
+  "videoPlayer": {
+    "title_default": "360° Video Gösterimi",
+    "footer_generated": "🎬 AI tarafından oluşturulmuş 360° Video",
+    "footer_provider": "Google Veo 3",
+    "footer_quality_note": "Video kalitesi AI model performansına bağlıdır"
+  }
+  ,
+  "modelViewer": {
+    "aria_label": "Model görüntüleyici alanı (zoom ve pan destekli)",
+    "view": {
+      "before": "Önce",
+      "after": "Sonra",
+      "split": "Böl",
+      "original_badge": "Orijinal"
+    },
+    "upload": {
+      "drop_here": "Fotoğrafı buraya bırak",
+      "upload_title": "Fotoğrafını yükle",
+      "hint": "Yüz veya tam boy fotoğrafını sürükle veya tıklayarak seç.",
+      "optimize": "AI en iyi sonuç için optimize edecek.",
+      "formats": "JPG, PNG, WEBP • Maksimum 10MB"
+    },
+    "processing": {
+      "badge_title": "AI İşliyor",
+      "applying": "Kıyafetler modele uygulanıyor..."
+    },
+    "empty_after": {
+      "cta": "Kıyafet seçip \"Dene\" butonuna basın"
+    },
+    "selected": {
+      "title": "Seçili",
+      "single": "Tek Parça: {name}",
+      "combo": "Üst & Alt: {name}"
+    },
+    "split_labels": {
+      "original": "Orijinal",
+      "processed": "İşlenmiş"
+    },
+    "split_empty": {
+      "title": "AI Sonucu"
+    },
+    "alts": {
+      "original_photo": "Orijinal fotoğraf",
+      "processed_photo": "AI işlenmiş fotoğraf"
+    }
+  }
+  ,
+  "aiResponseCard": {
+    "title": "AI Düzenleme Detayları",
+    "prompt": "Prompt",
+    "strength": "Güç",
+    "duration": "Süre",
+    "model": "Model",
+    "dash": "—",
+    "ms": "{value} ms"
+  }
+  ,
+  "photoUpload": {
+    "title": "Fotoğrafınızı Yükleyin",
+    "description": "Yüz veya tam boy fotoğrafınızı yükleyin. AI en iyi sonuç için optimize edecek.",
+    "processing": "Fotoğraf işleniyor...",
+    "click_to_upload": "Fotoğraf yüklemek için tıklayın",
+    "drop_here": "Fotoğrafı buraya bırakın",
+    "or_drag": "veya sürükleyip bırakın",
+    "limit": "JPG, PNG, WEBP • Maksimum 5MB",
+    "preview_alt": "Yüklenen fotoğraf",
+    "success": "Fotoğraf başarıyla yüklendi!",
+    "tips_title": "💡 En İyi Sonuçlar İçin:",
+    "tip1": "• Yüzünüz net görünür olmalı",
+    "tip2": "• İyi aydınlatma tercih edin",
+    "tip3": "• Tam boy fotoğraf daha iyi sonuç verir",
+    "tip4": "• Sade arka plan kullanın",
+    "continue": "Kıyafet Seçmeye Geç",
+    "errors": {
+      "file_too_large_5mb": "Dosya boyutu 5MB'dan küçük olmalıdır",
+      "file_read": "Dosya okuma hatası",
+      "unknown": "Bilinmeyen hata"
+    }
+  }
+  ,
+  "tryonCanvas": {
+    "title": "AI Sanal Deneme",
+    "subtitle": "Yapay zeka ile kıyafetlerinizi üzerinizde görün",
+    "original_photo": "Orijinal Fotoğraf",
+    "ai_result": "AI Sonucu",
+    "processing_steps": {
+      "step1": "Fotoğraf analiz ediliyor...",
+      "step2": "Vücut pozisyonu tespit ediliyor...",
+      "step3": "Kıyafetler uygulanıyor...",
+      "step4": "AI optimizasyonu yapılıyor...",
+      "step5": "Son dokunuşlar..."
+    },
+    "processing_note": "Bu işlem birkaç saniye sürebilir",
+    "status_starting": "AI işleme başlatılıyor...",
+    "buttons": {
+      "video_generate": "360° Video Oluştur",
+      "find_products": "Ürünleri Bul & Satın Al",
+      "reprocess": "Yeniden İşle",
+      "share": "Paylaş",
+      "next": "Sonuçları Görüntüle"
+    },
+    "details": {
+      "title": "İşlem Detayları",
+      "selected_clothes": "Seçilen Kıyafetler:",
+      "upper_selected": "• Üst: Seçildi",
+      "lower_selected": "• Alt: Seçildi",
+      "ai_model": "AI Modeli:",
+      "model_name": "Virtual Try-On v2.1",
+      "duration": "İşlem Süresi:",
+      "duration_value": "~8 saniye"
+    },
+    "alts": {
+      "original_photo": "Orijinal fotoğraf",
+      "processed_photo": "AI işlenmiş fotoğraf"
+    }
+  }
+  ,
+  "home": {
+    "hero": {
+      "title_prefix": "AI ile",
+      "title_highlight": "Giyim Deneme",
+      "subtitle": "Fotoğrafınızı yükleyin, kıyafetleri seçin ve yapay zeka ile gerçekçi deneme deneyimi yaşayın. 360° video oluşturun ve beğendiğiniz ürünleri hemen bulun.",
+      "cta_studio": "Studio'da Dene",
+      "cta_guided": "Rehberli Deneme"
+    },
+    "steps": {
+      "upload": "Fotoğraf Yükle",
+      "select": "Kıyafet Seç",
+      "tryon": "Dene",
+      "result": "Sonuç"
+    },
+    "features_title": "Güçlü AI Özellikleri",
+    "features_subtitle": "En son yapay zeka teknolojileri ile gerçekçi sanal giyim deneyimi",
+    "features": {
+      "upload": {
+        "title": "Fotoğraf Yükle",
+        "desc": "Yüz veya tam boy fotoğrafınızı yükleyin. AI otomatik olarak en iyi sonuç için optimize eder."
+      },
+      "face_swap": {
+        "title": "AI Face Swap",
+        "desc": "Gelişmiş yapay zeka ile yüzünüzü profesyonel modellere aktarın."
+      },
+      "vtryon": {
+        "title": "Sanal Giyim",
+        "desc": "Üst ve alt kıyafetleri seçin, AI gerçekçi bir şekilde üzerinizde gösterir."
+      },
+      "video": {
+        "title": "360° Video",
+        "desc": "Arkadan, yandan görünümlerle 360° video oluşturun."
+      },
+      "find": {
+        "title": "Ürün Bul",
+        "desc": "Google Lens ile beğendiğiniz kıyafetleri bulun ve satın alın."
+      },
+      "fast": {
+        "title": "Hızlı İşlem",
+        "desc": "Saniyeler içinde profesyonel kalitede sonuçlar alın."
+      }
+    },
+    "how_title": "Nasıl Çalışır?",
+    "how_subtitle": "4 basit adımda AI ile kıyafet deneme deneyimi",
+    "how_steps": {
+      "upload": "Yüz veya tam boy fotoğrafınızı yükleyin",
+      "select": "Üst ve alt kıyafetlerinizi seçin",
+      "tryon": "AI ile gerçekçi deneme yapın",
+      "result": "Sonuçları görüp paylaşın"
+    },
+    "result": {
+      "title": "Sonuçlarınız Hazır!",
+      "subtitle": "AI ile oluşturulmuş görseliniz ve 360° videonuz hazır."
+    }
+  }
+}

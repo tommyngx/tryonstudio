@@ -5,12 +5,14 @@ import { useDropzone } from 'react-dropzone'
 import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import { useI18n } from '@/i18n/useI18n'
 
 interface PhotoUploadProps {
   onPhotoUploaded: (photo: string) => void
 }
 
 export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
+  const { t } = useI18n()
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +28,7 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
     try {
       // Dosya boyut kontrolü (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
-        throw new Error('Dosya boyutu 5MB\'dan küçük olmalıdır')
+        throw new Error(t('photoUpload.errors.file_too_large_5mb'))
       }
 
       // Dosyayı base64'e çevir
@@ -37,12 +39,12 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
         setIsProcessing(false)
       }
       reader.onerror = () => {
-        throw new Error('Dosya okuma hatası')
+        throw new Error(t('photoUpload.errors.file_read'))
       }
       reader.readAsDataURL(file)
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Bilinmeyen hata')
+      setError(err instanceof Error ? err.message : t('photoUpload.errors.unknown'))
       setIsProcessing(false)
     }
   }, [])
@@ -72,10 +74,8 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-4">Fotoğrafınızı Yükleyin</h2>
-        <p className="text-muted-foreground text-lg">
-          Yüz veya tam boy fotoğrafınızı yükleyin. AI en iyi sonuç için optimize edecek.
-        </p>
+        <h2 className="text-3xl font-bold mb-4">{t('photoUpload.title')}</h2>
+        <p className="text-muted-foreground text-lg">{t('photoUpload.description')}</p>
       </div>
 
       <AnimatePresence mode="wait">
@@ -102,22 +102,18 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
                 {isProcessing ? (
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="font-medium">Fotoğraf işleniyor...</p>
+                    <p className="font-medium">{t('photoUpload.processing')}</p>
                   </div>
                 ) : (
                   <>
                     <div className="text-center">
                       <p className="text-lg font-medium mb-2">
-                        {isDragActive ? 'Fotoğrafı buraya bırakın' : 'Fotoğraf yüklemek için tıklayın'}
+                        {isDragActive ? t('photoUpload.drop_here') : t('photoUpload.click_to_upload')}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        veya sürükleyip bırakın
-                      </p>
+                      <p className="text-sm text-muted-foreground">{t('photoUpload.or_drag')}</p>
                     </div>
                     
-                    <div className="text-xs text-muted-foreground">
-                      JPG, PNG, WEBP • Maksimum 5MB
-                    </div>
+                    <div className="text-xs text-muted-foreground">{t('photoUpload.limit')}</div>
                   </>
                 )}
               </div>
@@ -147,7 +143,7 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
             <div className="relative bg-white rounded-xl shadow-lg overflow-hidden max-w-md mx-auto">
               <Image
                 src={uploadedImage}
-                alt="Yüklenen fotoğraf"
+                alt={t('photoUpload.preview_alt')}
                 width={400}
                 height={600}
                 className="w-full h-auto object-cover"
@@ -167,17 +163,17 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
               className="flex items-center justify-center space-x-2 text-green-600"
             >
               <CheckCircle className="w-5 h-5" />
-              <span className="font-medium">Fotoğraf başarıyla yüklendi!</span>
+              <span className="font-medium">{t('photoUpload.success')}</span>
             </motion.div>
 
             {/* Foto Türü Ipuçları */}
             <div className="bg-blue-50 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">💡 En İyi Sonuçlar İçin:</h3>
+              <h3 className="font-semibold text-blue-900 mb-2">{t('photoUpload.tips_title')}</h3>
               <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Yüzünüz net görünür olmalı</li>
-                <li>• İyi aydınlatma tercih edin</li>
-                <li>• Tam boy fotoğraf daha iyi sonuç verir</li>
-                <li>• Sade arka plan kullanın</li>
+                <li>{t('photoUpload.tip1')}</li>
+                <li>{t('photoUpload.tip2')}</li>
+                <li>{t('photoUpload.tip3')}</li>
+                <li>{t('photoUpload.tip4')}</li>
               </ul>
             </div>
 
@@ -189,7 +185,7 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Kıyafet Seçmeye Geç
+                {t('photoUpload.continue')}
               </motion.button>
             </div>
           </motion.div>
