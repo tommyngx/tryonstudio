@@ -17,6 +17,8 @@
 - [x] Zoom senkronizasyonu: `onZoomChange` ile üstteki butonlarla tam uyum
 - [x] ModelViewer: Pan/zoom safe area clamp (sonsuz kaydırma yok, container + intrinsic ölçüme dayalı)
 - [x] Dokümantasyon güncellemesi: CHANGELOG ve memory kaydı eklendi
+- [x] Tekrar yükleme hatası: Gizli `input[type="file"]` değerleri yükleme sonrası ve tıklama öncesi sıfırlanıyor (re-upload garanti)
+- [x] Blob URL yönetimi: Kaldırma/değiştirme akışlarında `URL.revokeObjectURL(...)` ile nesne URL’leri serbest bırakılıyor
 - [ ] Undo/Redo ileri-geri butonları (opsiyonel)
 - [ ] Gerçek AI edit servisine entegrasyon (API key, güvenlik)
 - [ ] İndirme/Paylaşma entegrasyonları (export options)

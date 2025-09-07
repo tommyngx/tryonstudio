@@ -2,6 +2,7 @@
 
 ## 2025-09-07
 
+- 12:24: Tekrar yükleme (aynı dosyayı seçince yüklenmeme) hatası düzeltildi. Gizli `input[type="file"]` değerleri yükleme SONRASI ve tıklama ÖNCESİ sıfırlanıyor; kullanıcı fotoğrafı ve kıyafet görselleri kaldırıldığında veya değiştirildiğinde `URL.revokeObjectURL(...)` ile blob URL'leri serbest bırakılıyor. Dosya: `src/components/edit/clothing-panel.tsx`.
 - 12:03: UI düzeni iyileştirildi: Yükleme alanı üstte, "Hedef Bölge/Kesim/Üstü zorla değiştir" kontrolleri alta taşındı. Kullanıcı akışı sadeleşti ve rakip düzenine uygun hale getirildi. Dosya: `src/components/edit/clothing-panel.tsx`.
 - 12:00: Try-on seçenekleri eklendi: `region (upper/lower/dress)`, `fit (normal/slim/oversize)`, `forceReplaceUpper`. Bu seçenekler `ClothingPanel` → `EditPage` → `API` akışında iletiliyor ve promptlara ek direktif olarak yansıtılıyor. Dosyalar: `clothing-panel.tsx`, `app/edit/page.tsx`, `app/api/nano-banana/route.ts`.
 

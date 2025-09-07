@@ -117,6 +117,10 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       const base64Data = await convertFileToBase64(file)
       const imageUrl = URL.createObjectURL(file)
       
+      // Daha önce bir userPhoto varsa blob URL'ini serbest bırak
+      if (userPhoto) {
+        try { URL.revokeObjectURL(userPhoto) } catch {}
+      }
       setUserPhoto(imageUrl)
       
       // "Kendiniz" modunda yüklenen fotoğrafı DOĞRUDAN MODEL olarak data URL (base64) formatında seç
@@ -135,6 +139,10 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       alert('Fotoğraf yüklenirken hata oluştu')
     } finally {
       setIsUploading(false)
+      // Not: Aynı fotoğrafı tekrar seçebilmek için input değerini sıfırla
+      if (userPhotoInputRef.current) {
+        userPhotoInputRef.current.value = ''
+      }
     }
   }
 
@@ -183,6 +191,10 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
       alert('Dosya yüklenirken hata oluştu')
     } finally {
       setIsUploading(false)
+      // ÖNEMLİ: Aynı dosyayı yeniden seçebilmek için gizli file input'un değerini sıfırla
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
@@ -220,6 +232,10 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         uploadDate: new Date()
       }
       
+      // Önceki üst giyim blob URL'ini serbest bırak
+      if (upperClothing?.imageUrl) {
+        try { URL.revokeObjectURL(upperClothing.imageUrl) } catch {}
+      }
       setUpperClothing(upperItem)
       // Üst giyim seçildiğinde tek parça seçimi kaldır
       setSelectedUploadedItem(null)
@@ -266,6 +282,10 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         uploadDate: new Date()
       }
       
+      // Önceki alt giyim blob URL'ini serbest bırak
+      if (lowerClothing?.imageUrl) {
+        try { URL.revokeObjectURL(lowerClothing.imageUrl) } catch {}
+      }
       setLowerClothing(lowerItem)
       // Alt giyim seçildiğinde tek parça seçimi kaldır
       setSelectedUploadedItem(null)
@@ -303,9 +323,20 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
   
   // Kıyafet silme işlemi
   const handleRemoveUploadedItem = (id: string) => {
-    setUploadedClothes(prev => prev.filter(item => item.id !== id))
+    // Silinen öğenin blob URL'ini serbest bırak
+    setUploadedClothes(prev => {
+      const toRemove = prev.find(item => item.id === id)
+      if (toRemove?.imageUrl) {
+        try { URL.revokeObjectURL(toRemove.imageUrl) } catch {}
+      }
+      return prev.filter(item => item.id !== id)
+    })
     if (selectedUploadedItem === id) {
       setSelectedUploadedItem(null)
+    }
+    // Kullanıcı aynı dosyayı yeniden seçtiğinde onChange'in tetiklenmesi için input'u sıfırla
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
 
@@ -458,7 +489,10 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
           {!userPhoto ? (
             <div 
               className="border-2 border-dashed border-purple-300 rounded-lg p-6 text-center hover:border-purple-400 hover:bg-purple-50/50 transition-colors cursor-pointer"
-              onClick={() => userPhotoInputRef.current?.click()}
+              onClick={() => {
+                if (userPhotoInputRef.current) userPhotoInputRef.current.value = ''
+                userPhotoInputRef.current?.click()
+              }}
             >
               <div className="flex flex-col items-center">
                 <Camera className="w-8 h-8 text-purple-500 mb-2" />
@@ -476,8 +510,13 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 <p className="text-sm font-medium text-green-600">Fotoğraf yüklendi</p>
                 <button
                   onClick={() => {
+                    // Önceki userPhoto blob URL'ini serbest bırak
+                    if (userPhoto) {
+                      try { URL.revokeObjectURL(userPhoto) } catch {}
+                    }
                     setUserPhoto(null)
                     if (onUserPhotoUpload) onUserPhotoUpload('')
+                    if (userPhotoInputRef.current) userPhotoInputRef.current.value = ''
                   }}
                   className="text-xs text-red-500 hover:text-red-700 mt-1"
                 >
@@ -508,7 +547,10 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
             <div className="mb-6">
               <div 
                 className="border-2 border-dashed border-gray-300 rounded-lg p-6 md:p-8 hover:border-blue-400 hover:bg-blue-50/50 transition-colors cursor-pointer relative"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  if (fileInputRef.current) fileInputRef.current.value = ''
+                  fileInputRef.current?.click()
+                }}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
@@ -613,7 +655,10 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
                 <span className="text-xs text-gray-500">{uploadedClothes.length} öğe</span>
                 {/* Küçük ekle butonu: gizli input'u tetikler */}
                 <button
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    if (fileInputRef.current) fileInputRef.current.value = ''
+                    fileInputRef.current?.click()
+                  }}
                   className="px-2 py-1 text-[11px] rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
                   title="Yeni kıyafet ekle"
                 >

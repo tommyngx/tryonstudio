@@ -92,3 +92,10 @@ Tarih: 2025-09-06 22:20 (+03:00)
 - Bu bölüm şık ve erişilebilir bir `select` dropdown ile değiştirildi. Dosya: `src/components/edit/clothing-panel.tsx`.
 - State: `genderTab` aynı şekilde korunuyor; `useEffect` (`genderTab` bağımlı) `onModelSelect` ile varsayılan modeli (erkek/kadın) otomatik atamaya devam ediyor.
 - UI Etkisi: Sadece üstteki seçim kontrolü değişti; altında yer alan "Model Grid" gösterimi ve seçim davranışı aynen korunuyor.
+
+### Re-upload Hatası ve Blob URL Yönetimi (2025-09-07 12:24 +03:00)
+- Sorun: Tek parça akışında aynı dosya yeniden seçildiğinde `onChange` tetiklenmiyor ve dosya yüklenmiyor gibi algılanıyordu. Kök neden: `input[type="file"]` değerinin yükleme sonrası sıfırlanmaması.
+- Çözüm: `src/components/edit/clothing-panel.tsx` içinde gizli dosya inputu için iki taraflı reset eklendi:
+  - Yükleme SONRASI `finally` içinde `fileInputRef.current.value = ''`
+  - Tıklama ÖNCESİ `onClick` handler'larında `fileInputRef.current.value = ''`
+- Ek: Kullanıcı fotoğrafı ve üst/alt giyim akışlarında önceki blob URL'leri `URL.revokeObjectURL(...)` ile kaldırma/değiştirme sırasında serbest bırakıldı. Böylece bellek sızıntıları önlendi.
