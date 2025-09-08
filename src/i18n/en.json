@@ -178,6 +178,35 @@
       "pricing": "Pricing"
     }
   },
+  "faceSwap": {
+    "openButton": "Face Swap",
+    "badgePersonalized": "Personalized",
+    "modal": {
+      "title": "Change Your Face",
+      "uploadLabel": "Upload a selfie",
+      "uploadHint": "For best results, use a bright and sharp photo",
+      "baseSuggested": "Suggested base models",
+      "previewTitle": "Preview",
+      "processing": "Applying your face..."
+    },
+    "quality": {
+      "lowLight": "Selfie looks too dark.",
+      "blur": "Selfie appears blurry.",
+      "noFace": "No face detected.",
+      "poseMismatch": "Face pose mismatch with base model."
+    },
+    "actions": {
+      "apply": "Apply",
+      "retry": "Retry",
+      "changeBase": "Change base model",
+      "remove": "Remove personalization"
+    },
+    "success": "Your personalized model is ready!",
+    "error": {
+      "general": "Something went wrong. Please try again.",
+      "api": "Face swap failed: {error}"
+    }
+  },
   "aiEditPanel": {
     "header": {
       "title": "AI Edit",

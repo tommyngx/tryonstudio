@@ -24,6 +24,7 @@ import { ThumbnailGallery, EditHistoryItem } from '@/components/edit/thumbnail-g
 import { AiEditPanel } from '@/components/edit/ai-edit-panel'
 import { AiResponseMeta } from '@/components/edit/ai-response-card'
 import { useI18n } from '@/i18n/useI18n'
+// FaceSwapModal no longer used; Face Swap will be handled inside AiEditPanel in a special mode
 
 export default function EditPage() {
   const router = useRouter()
@@ -45,6 +46,11 @@ export default function EditPage() {
   const [tryOnTrigger, setTryOnTrigger] = useState<(() => Promise<void> | void) | null>(null)
   // Aynı model ile yapılan ardışık try-on sonuçlarını geçmişe eklemek için kullanılan anahtar
   const [lastModelKeyForTryOn, setLastModelKeyForTryOn] = useState<string | null>(null)
+  // Face Swap modu (AI Edit Panel içinde açılır) ve kişiselleştirme rozeti
+  const [isFaceSwapMode, setIsFaceSwapMode] = useState(false)
+  const [isPersonalized, setIsPersonalized] = useState(false)
+  // Face swap sonrası oluşturulan blob URL'yi yönetmek ve bellek sızıntısını önlemek için
+  const [lastModelObjectUrl, setLastModelObjectUrl] = useState<string | null>(null)
 
   // İndir: Seçili görseli (history seçiliyse onu, değilse try-on sonucu veya orijinal) indir
   const handleDownload = async () => {
@@ -436,9 +442,23 @@ export default function EditPage() {
           <h1 className="text-xl font-semibold text-gray-900">
             {t('common.studio_title')}
           </h1>
+          {isPersonalized && (
+            <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+              {t('faceSwap.badgePersonalized')}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center space-x-3">
+          {/* Face Swap giriş butonu */}
+          <button
+            onClick={() => { setIsAiPanelOpen(true); setIsFaceSwapMode(true) }}
+            className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            title={t('faceSwap.openButton')}
+          >
+            <Camera className="w-4 h-4" />
+            <span>{t('faceSwap.openButton')}</span>
+          </button>
           {/* Zoom Controls */}
           <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
             <button
@@ -621,8 +641,41 @@ export default function EditPage() {
           {/* AI Düzenleme Paneli */}
           <AiEditPanel
             isOpen={isAiPanelOpen}
-            onClose={() => setIsAiPanelOpen(false)}
+            onClose={() => { setIsAiPanelOpen(false); setIsFaceSwapMode(false) }}
             hasImage={!!tryOnResult || editHistory.length > 0}
+            faceSwapMode={isFaceSwapMode}
+            baseModelUrl={selectedModel}
+            onFaceSwapApplied={async (res: { imageUrl?: string; personalizedModelId?: string }) => {
+              if (res?.imageUrl) {
+                try {
+                  // Gelen imageUrl data URL ise blob'a çevirip benzersiz object URL üret
+                  let nextUrl = res.imageUrl
+                  if (res.imageUrl.startsWith('data:')) {
+                    const base64 = res.imageUrl.split(',')[1]
+                    const byteChars = atob(base64)
+                    const byteNumbers = new Array(byteChars.length)
+                    for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i)
+                    const byteArray = new Uint8Array(byteNumbers)
+                    const blob = new Blob([byteArray], { type: 'image/png' })
+                    const objectUrl = URL.createObjectURL(blob)
+                    nextUrl = objectUrl
+                  }
+                  // Eski blob URL'yi serbest bırak
+                  if (lastModelObjectUrl && lastModelObjectUrl.startsWith('blob:')) {
+                    try { URL.revokeObjectURL(lastModelObjectUrl) } catch {}
+                  }
+                  if (nextUrl.startsWith('blob:')) setLastModelObjectUrl(nextUrl)
+                  setSelectedModel(nextUrl)
+                  setIsPersonalized(true)
+                  setIsFaceSwapMode(false)
+                } catch (e) {
+                  // Her ihtimale karşı fallback olarak doğrudan gelen URL'yi set et
+                  setSelectedModel(res.imageUrl)
+                  setIsPersonalized(true)
+                  setIsFaceSwapMode(false)
+                }
+              }
+            }}
             onSubmit={async ({ prompt, strength, actionType }) => {
               try {
                 setIsEditing(true)
@@ -720,6 +773,8 @@ export default function EditPage() {
         onClose={() => setShowVideoPlayer(false)}
         title={t('video.video_title')}
       />
+
+      {/* Face Swap handled inside AiEditPanel when faceSwapMode=true */}
     </div>
   )
 }

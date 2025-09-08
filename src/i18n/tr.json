@@ -198,6 +198,35 @@
       "pricing": "Fiyatlandırma"
     }
   },
+  "faceSwap": {
+    "openButton": "Face Swap",
+    "badgePersonalized": "Kişiselleştirilmiş",
+    "modal": {
+      "title": "Yüzünü Değiştir",
+      "uploadLabel": "Selfie yükle",
+      "uploadHint": "En iyi sonuç için aydınlık ve net bir fotoğraf kullan",
+      "baseSuggested": "Önerilen baz modeller",
+      "previewTitle": "Önizleme",
+      "processing": "Yüzün yerleştiriliyor..."
+    },
+    "quality": {
+      "lowLight": "Selfie çok karanlık görünüyor.",
+      "blur": "Selfie bulanık görünüyor.",
+      "noFace": "Yüz algılanamadı.",
+      "poseMismatch": "Baz model ile poz uyumsuzluğu var."
+    },
+    "actions": {
+      "apply": "Uygula",
+      "retry": "Tekrar dene",
+      "changeBase": "Baz modeli değiştir",
+      "remove": "Kişiselleştirmeyi kaldır"
+    },
+    "success": "Yeni modelin hazır!",
+    "error": {
+      "general": "Bir sorun oluştu. Lütfen tekrar deneyin.",
+      "api": "Face swap başarısız: {error}"
+    }
+  },
   "aiEditPanel": {
     "header": {
       "title": "AI Düzenle",

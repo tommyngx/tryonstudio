@@ -1,3 +1,91 @@
+## [2025-09-08 06:45] - Single/Combo Sekme Ayrışması ve Multi-Garment Alt Giyim Düzeltmesi
+
+### 🐛 Düzeltme
+- Combo akışında gönderilen alt giyim (bottom) parçasının modele uygulanmaması problemi giderildi.
+- Çözüm: Çoklu kıyafet akışında (`upper + lower`) `inlineData` bloklarının önüne açıklayıcı metinler eklendi ve sırayla hangi görselin neyi temsil ettiği netleştirildi (MODEL → UPPER → LOWER). Böylece model, hangi görselin üst ve alt parça olduğunu karıştırmadan uygular.
+
+### 🔧 Teknik Ayrıntılar
+- `src/app/api/nano-banana/route.ts` içinde multi-garment içerikleri şu sırayla gönderilir:
+  1) `text`: MODEL PHOTO açıklaması
+  2) `inlineData`: `modelImage`
+  3) `text`: UPPER GARMENT açıklaması
+  4) `inlineData`: `clothingImage` (upper)
+  5) `text`: LOWER GARMENT açıklaması
+  6) `inlineData`: `additionalClothing[0].imageData` (lower)
+
+### 🎯 UX/State Ayrışması
+- Single sekmesinde yüklenen tek parça kıyafetlerin listesi artık yalnızca `single` sekmesinde görünür; `combo` sekmesine geçince `selectedUploadedItem` sıfırlanır.
+- Sol alttaki "AI ile Dene" butonu aktif sekmeye göre doğru akışı tetikler:
+  - `single`: Seçili tek parça varsa çalışır.
+  - `combo`: Üst ve alt giyim birlikte varsa çalışır.
+
+### 📁 Etkilenen Dosyalar
+- Güncellendi: `src/components/edit/clothing-panel.tsx`
+- Güncellendi: `src/app/api/nano-banana/route.ts`
+
+### ✅ Beklenen Sonuç
+- Single yüklemeleri combo sekmesinde görünmez ve iki akış birbirini etkilemez.
+- Çoklu kıyafet denemelerinde alt parça (bottom) model üzerinde doğru şekilde uygulanır.
+
+## [2025-09-08 06:12] - InsightFace (Replicate) Face Swap Entegrasyonu
+
+### ✨ Yeni Özellik
+- Yeni API ucu: `src/app/api/face-swap-insight/route.ts` → Replicate üzerindeki InSwapper modeline proxy.
+- `AiEditPanel` Face Swap akışı önce bu ucu dener; başarısız olursa Nano Banana faceswap fallback’ine geçer.
+
+### 🔧 Teknik Ayrıntılar
+- Giriş: `{ userImage: base64, targetImage: base64 }`
+- Çıkış: `{ success: true, imageUrl: dataURL }`
+- Güvenlik: `REPLICATE_API_TOKEN` ortam değişkeni gerekli. İsteğe bağlı `REPLICATE_MODEL_VERSION` ile model versiyonu override edilebilir.
+- Doğallık için client tarafında hafif renk/aydınlık harmonizasyonu uygulanır.
+
+### 📁 Etkilenen/Yeni Dosyalar
+- Yeni: `src/app/api/face-swap-insight/route.ts`
+- Güncellendi: `src/components/edit/ai-edit-panel.tsx` (önce InsightFace, sonra Nano Banana fallback)
+
+## [2025-09-07 22:14] - Face Swap: Ardışık Yüklemelerde Model Güncelleme Düzeltmesi
+
+### 🐛 Düzeltme
+- İkinci ve sonraki Face Swap yüklemelerinde model görselinin değişmemesi sorununu giderdik.
+- Çözüm: Data URL sonucu her seferinde Blob'a çevrilip yeni bir `blob:` Object URL oluşturuluyor; önceki blob URL `URL.revokeObjectURL(...)` ile serbest bırakılıyor. Böylece React state değişimi garanti ediliyor.
+
+### 📁 Etkilenen Dosya
+- Güncellendi: `src/app/edit/page.tsx` (`onFaceSwapApplied` içinde blob URL oluşturma ve revoke mantığı)
+
+## [2025-09-07 22:02] - Face Swap Prompt Güçlendirmesi ve Akış Güncellemesi
+
+### 🔧 Teknik Güncelleme
+- `/api/nano-banana/route.ts` içinde Face Swap prompt güçlendirildi:
+  - Saç dahil tüm baş bölgesi transferi (FACE AND HAIR) vurgulandı.
+  - Sahne/ışık-tonu uyumu ve kenar/hairline blend talimatları eklendi.
+  - Düz (frontal) yüz yönelimi zorunluluğu eklendi.
+- `AiEditPanel` Face Swap Apply akışı `/api/face-swap` yerine `operationType='faceswap'` ile `/api/nano-banana` üzerinden çalışacak şekilde güncellendi (selfie + target model base64 JSON).
+
+### 📁 Etkilenen Dosyalar
+- Güncellendi: `src/app/api/nano-banana/route.ts`
+- Güncellendi: `src/components/edit/ai-edit-panel.tsx`
+
+## [2025-09-07 21:50] - Edit Header: Face Swap Girişi ve AI Panel Entegrasyonu
+
+### ✨ Yeni Özellik
+- Edit sayfası header'ına "Face Swap" butonu eklendi. Buton tıklandığında sağdaki AI Düzenleme Paneli özel bir "Face Swap modu" ile açılır.
+- Bu modda panelin üst kısmında selfie yükleme alanı, kalite uyarıları (placeholder) ve "Uygula" butonu bulunur. Başarılı olduğunda dönen `imageUrl` seçili model olarak atanır ve header yanında "Kişiselleştirilmiş" rozeti gösterilir.
+
+### 🔧 Teknik Ayrıntılar
+- `src/app/edit/page.tsx`: Face Swap butonu AI paneli `faceSwapMode=true` ile açar; `isPersonalized` rozeti eklendi.
+- `src/components/edit/ai-edit-panel.tsx`: Yeni opsiyonel prop'lar: `faceSwapMode`, `baseModelUrl`, `onFaceSwapApplied`. Üstte selfie yükleme ve "Uygula" akışı eklendi.
+- i18n: Face Swap ile ilgili metin anahtarları sözlüklere eklendi (`src/i18n/en.json`, `src/i18n/tr.json` altına `faceSwap.*`).
+- Clothing Panel DEĞİŞMEDİ: Face Swap sadece header üzerinden tetiklenir ve AI panel içinde yürür.
+
+### 📁 Etkilenen/Yeni Dosyalar
+- Güncellendi: `src/app/edit/page.tsx`
+- Güncellendi: `src/components/edit/ai-edit-panel.tsx`
+- Güncellendi: `src/i18n/en.json`, `src/i18n/tr.json`
+- (Geri Alındı) `src/components/edit/clothing-panel.tsx` içindeki geçici Face Swap entegrasyonu kaldırıldı
+
+### ⚠️ Notlar
+- Backend yüz değiştirme uç noktası `/api/face-swap` entegrasyonu ileride devreye alınacaktır. Şu an hata dönerse kullanıcıya anlaşılır mesaj gösterilir.
+
 ## [2025-09-07 21:36] - Edit Başlığı Markalama: "TryOn Studio"
 
 ### 🔤 Metin/Marka Güncellemesi

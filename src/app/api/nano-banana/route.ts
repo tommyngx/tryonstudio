@@ -27,6 +27,24 @@ function getMimeTypeFromBase64(base64String: string): string {
   return 'image/jpeg';
 }
 
+// İkinci geçiş: Kimlik doğruluğu/benzerliği güçlendirme (refinement)
+function createFaceRefinementPrompt(): string {
+  return `REFINEMENT PASS: Improve IDENTITY FIDELITY while keeping the scene unchanged.
+
+GOAL:
+- Using the USER head as the reference, ADJUST ONLY THE HEAD REGION in the CURRENT IMAGE to better match the USER's identity.
+- Keep clothing, body, pose, camera angle and BACKGROUND PIXEL-PER-PIXEL unchanged.
+
+RULES:
+- Landmark Tightening: keep inter-ocular distance, nose bridge shape, philtrum length, lip curvature, cheekbone prominence within ±2% of USER.
+- Preserve hairline shape and beard density; fix any mismatch at jawline or temples.
+- Match skin tone/lighting/grain/DoF to the CURRENT IMAGE; do not oversharpen.
+- NO changes outside the head region; strictly avoid background or garment edits.
+
+OUTPUT:
+- Photorealistic, seamless, no halos, no double edges, native resolution.`
+}
+
 // Üst giyim için prompt (sadece üst değişsin)
 function createUpperOnlyPrompt(): string {
   return `Follow these rules strictly. Use the given MODEL PHOTO as the base and change ONLY THE UPPER GARMENT:
@@ -97,6 +115,28 @@ function createDressPrompt(): string {
 }
 
 // Face swap prompt ve akışı kaldırıldı
+// Face swap için prompt
+function createFaceSwapPrompt(): string {
+  return `TASK: Replace ONLY the HEAD (face + hair) in the TARGET MODEL photo with the USER head.
+
+KEEP THE SCENE:
+- BACKGROUND, CLOTHING, BODY SHAPE/POSE and CAMERA FRAMING must remain PIXEL-PER-PIXEL IDENTICAL.
+
+WHAT TO CHANGE:
+- Transfer the USER identity (face + hairstyle) onto the target head with correct alignment and scale.
+- Harmonize to TARGET lighting and color: match skin tone and white balance to the target neck/ears; keep contrast natural.
+
+CLEAN COMPOSITE:
+- No halos, no seams, no ghost/double edges at hairline or jawline.
+- Preserve strand-level hair detail and natural beard/neck transition.
+
+CONSTRAINTS:
+- Do NOT edit background or garments. Do NOT add/remove accessories.
+- Keep resolution and composition unchanged.
+
+OPTIONAL (if needed):
+- Subtly correct face orientation towards a frontal look without distorting identity.`;
+}
 
 // Çoklu kıyafet (üst+alt) için özel prompt oluştur
 function createMultiGarmentPrompt(upperType: string, lowerType: string): string {
@@ -165,13 +205,107 @@ export async function POST(request: NextRequest) {
       operationType = 'tryon' // 'tryon' veya 'faceswap'
     } = body;
 
-    // Face swap isteklerini reddet
-    if (operationType === 'faceswap' || userImage || targetImage) {
-      return NextResponse.json({
-        success: false,
-        error: 'Face Swap özelliği kaldırıldı',
-        status: 410
-      }, { status: 410 });
+    // Face swap akışı (selfie + target model)
+    if (operationType === 'faceswap') {
+      if (!userImage || !targetImage) {
+        return createErrorResponse('Face swap requires userImage and targetImage (base64)', 400);
+      }
+
+      // API key kontrolü
+      if (!process.env.GOOGLE_VISION_API_KEY) {
+        return createErrorResponse('Google Vision API key bulunamadı', 500);
+      }
+
+      const userMimeType = getMimeTypeFromBase64(userImage);
+      const targetMimeType = getMimeTypeFromBase64(targetImage);
+
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-2.5-flash-image-preview",
+        generationConfig: {
+          temperature: 0.05, // more deterministic for facial fidelity
+          topP: 0.8,
+          maxOutputTokens: 4096,
+        },
+      });
+
+      const prompt = createFaceSwapPrompt();
+      const contents: any[] = [
+        { text: prompt },
+        // TARGET MODEL first (base scene)
+        { inlineData: { mimeType: targetMimeType, data: targetImage }},
+        // USER FACE second
+        { inlineData: { mimeType: userMimeType, data: userImage }},
+        { text: 'Execute the QUALITY PIPELINE steps precisely. Keep background, clothing, and body untouched at pixel level. Output must be photorealistic with no visible seams.' }
+      ];
+
+      console.log('[NanoBanana] FaceSwap request', {
+        modelLen: targetImage?.length || 0,
+        userLen: userImage?.length || 0,
+      });
+
+      const result = await model.generateContent(contents);
+      const response = await result.response;
+      if (!response) {
+        return createErrorResponse('Google Nano Banana API\'den yanıt alınamadı', 500);
+      }
+      const parts = response.candidates?.[0]?.content?.parts;
+      if (!parts) return createErrorResponse('API yanıtında içerik bulunamadı', 500);
+
+      let generatedImageData: string | null = null;
+      for (const part of parts) {
+        if (part.inlineData?.data) {
+          generatedImageData = part.inlineData.data;
+        }
+      }
+      if (!generatedImageData) {
+        return createErrorResponse('Görsel oluşturulamadı (faceswap).', 500);
+      }
+
+      // Optional refinement pass to improve identity fidelity
+      const doRefine = options?.refineIdentity !== false
+      const refinePasses = Math.max(0, Math.min(3, Number(options?.refineIdentityPasses ?? 1)))
+      if (doRefine && refinePasses > 0) {
+        const refinePrompt = createFaceRefinementPrompt();
+        for (let i = 0; i < refinePasses; i++) {
+          const refineContents: any[] = [
+            { text: refinePrompt },
+            // CURRENT generated image as target/base
+            { inlineData: { mimeType: 'image/png', data: generatedImageData }},
+            // USER head reference
+            { inlineData: { mimeType: userMimeType, data: userImage }},
+            { text: `Adjust only the HEAD region to match USER identity more closely (pass ${i+1}/${refinePasses}). Keep background and clothing identical.` }
+          ];
+
+          try {
+            const refineResult = await model.generateContent(refineContents);
+            const refineResp = await refineResult.response;
+            const refineParts = refineResp?.candidates?.[0]?.content?.parts;
+            let refinedImage: string | null = null;
+            if (refineParts) {
+              for (const p of refineParts) {
+                if (p.inlineData?.data) { refinedImage = p.inlineData.data; break; }
+              }
+            }
+            if (refinedImage) {
+              generatedImageData = refinedImage;
+            } else {
+              break
+            }
+          } catch (e) {
+            console.warn('[NanoBanana] Refinement pass failed, using previous image.', { pass: i+1 }, e)
+            break
+          }
+        }
+      }
+
+      return createSuccessResponse({
+        generatedImage: generatedImageData,
+        mimeType: 'image/png',
+        operationType,
+        processingTime: Date.now(),
+        refined: doRefine,
+        refinePasses
+      });
     }
 
     // Normal try-on işlemi
@@ -262,18 +396,21 @@ export async function POST(request: NextRequest) {
       // İçerikleri hazırla - model + ana kıyafet + ek kıyafet
       contents = [
         { text: prompt + (extraDirectives ? `\n${extraDirectives}` : '') },
+        { text: 'MODEL PHOTO (base scene): Do NOT change background, body or non-target garments.' },
         {
           inlineData: {
             mimeType: modelMimeType,
             data: modelImage
           }
         },
+        { text: 'UPPER GARMENT (apply as TOP on the model exactly as shown in this image):' },
         {
           inlineData: {
             mimeType: clothingMimeType,
             data: clothingImage
           }
         },
+        { text: 'LOWER GARMENT (apply as BOTTOM on the model exactly as shown in this image):' },
         {
           inlineData: {
             mimeType: getMimeTypeFromBase64(additionalItem.imageData),
@@ -281,7 +418,7 @@ export async function POST(request: NextRequest) {
           }
         },
         { 
-          text: `Çoklu kıyafet kombinasyonu: ${upperType} + ${lowerType}. Her iki kıyafeti birlikte uyumlu şekilde göster.` 
+          text: `Apply both garments together: ${upperType} + ${lowerType}. Keep lighting/perspective consistent. Preserve logos/prints exactly.` 
         }
       ];
     } else {

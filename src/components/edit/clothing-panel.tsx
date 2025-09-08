@@ -46,6 +46,15 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
   const [targetRegion, setTargetRegion] = useState<'upper' | 'lower' | 'dress'>('upper')
   const [fitMode, setFitMode] = useState<'normal' | 'slim' | 'oversize'>('normal')
 
+  // Sekmeler arası bağımsızlık: combo sekmesine geçince single seçimini temizle
+  useEffect(() => {
+    // Bu etki, single ve combo akışlarının birbirini etkilememesi için
+    // combo sekmesine geçildiğinde tek parça seçimini sıfırlar.
+    if (activeTab === 'combo' && selectedUploadedItem) {
+      setSelectedUploadedItem(null)
+    }
+  }, [activeTab, selectedUploadedItem])
+
   // Seçenekler bloğu: her zaman YÜKLEME BÖLÜMÜNDEN SONRA render edilecek
   const OptionsBlock = () => (
     <div className="mt-6 mb-4 pt-4 border-t border-gray-200 space-y-4 relative z-0">
@@ -236,8 +245,8 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
     try {
       const file = files[0]
       
-      // Dosya kontrolü
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp']
+      // Dosya kontrolü (HEIC/HEIF desteği eklendi - üst ve single ile tutarlı)
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/heic', 'image/heif']
       if (!allowedTypes.includes(file.type)) {
         alert('Desteklenen formatlar: JPEG, PNG, WebP, GIF, BMP')
         return
@@ -587,7 +596,7 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         )}
 
         {/* Yüklenen Kıyafetler */}
-        {uploadedClothes.length > 0 && (
+        {activeTab === 'single' && uploadedClothes.length > 0 && (
           <div className="mb-6 relative z-10">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">{t('clothing.upload.uploaded_title')}</h3>
@@ -961,40 +970,53 @@ export function ClothingPanel({ selectedClothes, onClothesSelect, selectedModel,
         </div>
         <motion.button
           onClick={async () => {
-            const selectedItem = uploadedClothes.find(u => u.id === selectedUploadedItem)
-            if (selectedItem && selectedModel) {
-              await handleVirtualTryOn(selectedItem.imageData, selectedItem.type)
+            // Aktif sekmeye göre doğru akışı tetikle
+            if (activeTab === 'single') {
+              const selectedItem = uploadedClothes.find(u => u.id === selectedUploadedItem)
+              if (selectedItem && selectedModel) {
+                await handleVirtualTryOn(selectedItem.imageData, selectedItem.type)
+              }
               return
             }
-            if (upperClothing && lowerClothing && selectedModel) {
-              await handleUpperLowerTryOn()
+            // combo sekmesi
+            if (activeTab === 'combo') {
+              if (upperClothing && lowerClothing && selectedModel) {
+                await handleUpperLowerTryOn()
+              }
               return
             }
           }}
           disabled={
             isProcessing ||
             !selectedModel ||
-            (
-              !uploadedClothes.find(u => u.id === selectedUploadedItem) && !(upperClothing && lowerClothing)
-            )
+            (activeTab === 'single'
+              ? !uploadedClothes.find(u => u.id === selectedUploadedItem)
+              : !(upperClothing && lowerClothing))
           }
           className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-colors ${
-            isProcessing || !selectedModel || (!uploadedClothes.find(u => u.id === selectedUploadedItem) && !(upperClothing && lowerClothing))
+            isProcessing || !selectedModel || (activeTab === 'single'
+              ? !uploadedClothes.find(u => u.id === selectedUploadedItem)
+              : !(upperClothing && lowerClothing))
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:from-teal-600 hover:to-emerald-600 shadow'
           }`}
           title={
             !selectedModel
               ? t('clothing.button.title_need_model')
-                : uploadedClothes.find(u => u.id === selectedUploadedItem) || (upperClothing && lowerClothing)
-                  ? t('clothing.button.title_try_selected')
-                  : t('clothing.button.title_need_clothing')
+                : (activeTab === 'single'
+                    ? (uploadedClothes.find(u => u.id === selectedUploadedItem)
+                        ? t('clothing.button.title_try_selected')
+                        : t('clothing.button.title_need_clothing'))
+                    : ((upperClothing && lowerClothing)
+                        ? t('clothing.button.title_try_selected')
+                        : t('clothing.button.title_need_clothing')))
           }
         >
           <Sparkles className="w-5 h-5" />
           <span className="text-sm">{t('clothing.button.try')}</span>
         </motion.button>
       </div>
+
     </div>
   )
 }

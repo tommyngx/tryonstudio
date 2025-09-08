@@ -1,3 +1,10 @@
+# Memory - Single/Combo Ayrışması ve Alt Giyim (LOWER) Düzeltmesi (2025-09-08 06:45 +03:00)
+- Karar: Single ve Combo akışları birbirinden tamamen ayrıştırıldı. Single sekmesinde yüklenen öğeler combo sekmesinde görünmez.
+- Değişiklikler:
+  - `src/components/edit/clothing-panel.tsx`: `activeTab==='combo'` olduğunda `selectedUploadedItem` temizleniyor; yüklenen tek parça listesi yalnızca `single` sekmesinde render ediliyor; alt buton aktif sekmeye göre doğru akışı tetikliyor ve disabled durumu buna göre hesaplanıyor.
+  - `src/app/api/nano-banana/route.ts`: Çoklu kıyafet (upper+lower) içeriğine açıklayıcı metinler eklendi (MODEL → UPPER → LOWER) ve sırayla inlineData verildi. Modelin alt parçayı uygulamama sorunu bu yönlendirme ile giderildi.
+- Beklenen Etki: İki akış tamamen izolasyonlu çalışır ve alt giyim parçası çoklu kombinlerde model üzerinde doğru şekilde uygulanır.
+
 # Memory - Edit Başlığı Markalama Güncellemesi (2025-09-07 21:36 +03:00)
 - Karar: Edit sayfasındaki stüdyo başlığı metni marka yönergelerine uygun olacak şekilde "TryOn Studio" olarak standardize edildi.
 - Değişiklik: i18n sözlüklerindeki `common.studio_title` anahtarı güncellendi (TR/EN).
@@ -155,6 +162,26 @@ Tarih: 2025-09-06 22:20 (+03:00)
 - Kalıcılık: `localStorage('self_model_data_url')` ile son yüklenen self model hatırlanır; self sekmesine geçildiğinde otomatik uygulanır.
 - i18n: EN ve TR sözlüklerine `clothing.model.self_*` anahtarları eklendi (title, button, change/remove, preview_alt, selected_badge, hint).
 - Amaç: Kullanıcının kendi fotoğrafını doğrudan model olarak seçip kişiselleştirilmiş try-on deneyimi yaşaması.
+
+# Memory - Face Swap Header Girişi ve Modal (2025-09-07 21:50 +03:00)
+- Karar: Face Swap akışı Clothing Panel yerine Edit sayfası header'ından tetiklenecek. UX sade ve keşfi kolay.
+- Değişiklikler:
+  - Header'a "Face Swap" butonu eklendi; tıklanınca `FaceSwapModal` açılır.
+  - Modal selfie yükleme, kalite uyarıları (placeholder) ve işlem durumunu içerir. Başarı halinde dönen `imageUrl` mevcut `selectedModel` olarak set edilir ve header başlığının yanında "Kişiselleştirilmiş" rozeti gösterilir.
+- Etkilenen/Yeni Dosyalar:
+  - Yeni: `src/components/edit/face-swap-modal.tsx`
+  - Güncellendi: `src/app/edit/page.tsx` (header butonu, modal state, rozet)
+  - Güncellendi: `src/i18n/tr.json`, `src/i18n/en.json` (yeni `faceSwap.*` anahtarları)
+  - Geri Alındı: `src/components/edit/clothing-panel.tsx` içine eklenen geçici Face Swap entegrasyonu kaldırıldı (istenen UX: header üzerinden açılır).
+- Notlar:
+  - `/api/face-swap` backend entegrasyonu bir sonraki aşamada etkinleştirilecek. Geçici olarak hata mesajı kullanıcı dostu şekilde gösteriliyor.
+
+# Memory - Face Swap Prompt Güçlendirme (2025-09-07 22:02 +03:00)
+- Karar: Face swap işlemi saç dahil baş bölgesini kapsayacak, sahneye (ışık/ton) uyumlu olacak ve sonuçta yüz yönelimi düz (frontal) olacak şekilde zorunlu kurallarla güçlendirildi.
+- Değişiklikler:
+  - `src/app/api/nano-banana/route.ts` içinde `createFaceSwapPrompt()` eklendi/güncellendi (FACE AND HAIR, scene harmonization, frontal orientation).
+  - `AiEditPanel` Apply akışı `/api/nano-banana` üzerinde `operationType='faceswap'` ile (selfie + target model base64 JSON) çalışacak şekilde güncellendi.
+- Beklenen Etki: Daha doğal kenarlar (hairline dahil), sahne uyumu ve düz bakış ile daha güvenilir yüz değiştirme sonuçları.
 
 ## Memory - Edit Başlığı Markalama Güncellemesi (2025-09-07 21:36 +03:00)
 - Karar: Edit sayfasındaki stüdyo başlığı metni marka yönergelerine uygun olacak şekilde "TryOn Studio" olarak standardize edildi.
