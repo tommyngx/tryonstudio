@@ -1,14 +1,14 @@
-# 🚀 TryOnX - AI Sanal Giyim Deneme Uygulaması
+# 🚀 TryOnX - AI Virtual Clothing Try-On Application
 
-AI ile çalışan sanal kıyafet deneme, face swap ve 360° video oluşturma uygulaması.
+An AI-powered application for virtual clothing try-on, face swap, and 360° video creation.
 
-## ✨ Özellikler
+## ✨ Features
 
-- 🤖 **AI Face Swap**: Gelişmiş yapay zeka ile yüz değiştirme
-- 👕 **Sanal Kıyafet Deneme**: Üst ve alt giyim parçalarını gerçekçi şekilde deneme
-- 📹 **360° Video Oluşturma**: Kıyafetli halınızın 360° videosunu oluşturma
-- 🔍 **Ürün Arama**: Google Lens ile beğendiğiniz kıyafetleri bulma
-- ⚡ **Hızlı İşlem**: Saniyeler içinde profesyonel sonuçlar
+- 🤖 **AI Face Swap**: Advanced AI-powered face swapping
+- 👕 **Virtual Clothing Try-On**: Realistic try-on for tops and bottoms
+- 📹 **360° Video Creation**: Generate a 360° video of yourself wearing the clothes
+- 🔍 **Product Search**: Find clothes you like with Google Lens
+- ⚡ **Fast Processing**: Professional results in seconds
 
 ## 🛠️ Tech Stack
 
@@ -19,87 +19,87 @@ AI ile çalışan sanal kıyafet deneme, face swap ve 360° video oluşturma uyg
 - **Storage**: Google Cloud Storage, Cloudinary
 - **Deployment**: Vercel
 
-## 🚀 Kurulum
+## 🚀 Setup
 
-1. **Repository'yi klonlayın:**
+1. **Clone the repository:**
    ```bash
    git clone <repository-url>
    cd tryonx
    ```
 
-2. **Bağımlılıkları yükleyin:**
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. **Environment dosyasını yapılandırın:**
+3. **Configure the environment file:**
    ```bash
    cp .env.example .env.local
    ```
    
-   `.env.local` dosyasına gerekli API anahtarlarını ekleyin.
+   Add the required API keys to the `.env.local` file.
 
-4. **Development sunucusunu başlatın:**
+4. **Start the development server:**
    ```bash
    npm run dev
    ```
 
-5. **Tarayıcıda açın:**
+5. **Open in browser:**
    [http://localhost:3000](http://localhost:3000)
 
-## 🔧 Gerekli API Anahtarları
+## 🔧 Required API Keys
 
-MVP çalıştırması için bu API anahtarlarına ihtiyacınız var:
+You need these API keys to run the MVP:
 
-- **Replicate API Token**: AI modelleri için
-- **Google Vision API Key**: Ürün arama için
-- **Cloudinary Credentials**: Görsel yönetimi için
+- **Replicate API Token**: For AI models
+- **Google Vision API Key**: For product search
+- **Cloudinary Credentials**: For image management
 
-## 📖 Kullanım
+## 📖 Usage
 
-1. **Fotoğraf Yükleme**: Yüz veya tam boy fotoğrafınızı yükleyin
-2. **Kıyafet Seçimi**: Üst ve alt kıyafetlerden beğendiklerinizi seçin
-3. **AI İşleme**: Yapay zeka ile sanal deneme yapın
-4. **Sonuç**: 360° video oluşturun ve ürünleri arayın
+1. **Upload Photo**: Upload your face or full-body photo
+2. **Select Clothing**: Choose your favorite tops and bottoms
+3. **AI Processing**: Try on clothes virtually with AI
+4. **Result**: Generate a 360° video and search for products
 
-## 🎯 MVP Özellikleri
+## 🎯 MVP Features
 
-✅ Fotoğraf yükleme ve önizleme  
-✅ Kıyafet seçim sistemi  
-✅ AI işleme simülasyonu  
-🔄 Gerçek AI API entegrasyonu  
-🔄 360° video oluşturma  
-🔄 Ürün arama entegrasyonu  
+✅ Photo upload and preview  
+✅ Clothing selection system  
+✅ AI processing simulation  
+🔄 Real AI API integration  
+🔄 360° video creation  
+🔄 Product search integration  
 
-## 🔗 Geliştirme Aşamaları
+## 🔗 Development Stages
 
-### Phase 1 - Temel MVP (✅ Tamamlandı)
-- [x] Proje yapısı ve konfigürasyon
-- [x] Ana sayfa ve bileşenler
-- [x] Fotoğraf yükleme sistemi
-- [x] Kıyafet seçim arayüzü
-- [x] AI işleme simülasyonu
+### Phase 1 - Basic MVP (✅ Completed)
+- [x] Project structure and configuration
+- [x] Homepage and components
+- [x] Photo upload system
+- [x] Clothing selection interface
+- [x] AI processing simulation
 
-### Phase 2 - AI Entegrasyonu (🔄 Devam Ediyor)
-- [ ] Replicate API entegrasyonu
-- [ ] Face swap implementasyonu
-- [ ] Virtual try-on API'si
-- [ ] Görsel kalite optimizasyonu
+### Phase 2 - AI Integration (🔄 In Progress)
+- [ ] Replicate API integration
+- [ ] Face swap implementation
+- [ ] Virtual try-on API
+- [ ] Image quality optimization
 
-### Phase 3 - Video & E-commerce (🔮 Planlanan)
+### Phase 3 - Video & E-commerce (🔮 Planned)
 - [ ] 360° video generation
 - [ ] Google Lens API
-- [ ] Ürün arama ve link sistemi
-- [ ] Sosyal medya paylaşım
+- [ ] Product search and link system
+- [ ] Social media sharing
 
-## 📄 Lisans
+## 📄 License
 
-MIT License - Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+MIT License - See [LICENSE](LICENSE) for details.
 
-## 👥 Katkı
+## 👥 Contribution
 
-Pull request'ler memnuniyetle karşılanır! Büyük değişiklikler için önce issue açarak tartışalım.
+Pull requests are welcome! For major changes, please open an issue first to discuss.
 
-## 📧 İletişim
+## 📧 Contact
 
-Sorularınız için issue açabilir veya iletişime geçebilirsiniz.
+You can open an issue for questions or get in touch.
